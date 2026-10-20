@@ -998,6 +998,40 @@ function recipeCard(r){
   </article>`;
 }
 
+function compactCookbookCard(r){
+  const photo=esc(r.photo||'assets/meal-placeholder.svg');
+  const count=planFor(r.id);
+  const selected=WEEKLY_MEAL_OPTIONS.includes(count);
+  const type=recipeMealType(r);
+  const protein=macroFor(r,'protein');
+  const calories=macroFor(r,'calories');
+  const category=r.catalogCategory==='dinner'?'DINNER':
+    r.catalogCategory==='lunch'?'LUNCH':
+    r.catalogCategory==='featured'?'FEATURED':
+    r.sourceName==='My recipe'?'MY RECIPE':
+    type==='breakfast'?'BREAKFAST':'LUNCH / DINNER';
+  const quickCounts=type==='breakfast'?[7]:[7,14];
+  const planButtons=quickCounts.map(n=>{
+    const disabled=n>weeklyMealTarget() || !recipeBatchAllowed(r,n);
+    return '<button class="'+(count===n?'active':'')+'" data-plan-id="'+esc(r.id)+'" data-plan-count="'+n+'" '+(disabled?'disabled aria-disabled="true"':'')+'>'+n+'</button>';
+  }).join('');
+  return '<article class="compact-recipe-card '+(selected?'selected':'')+'" data-recipe="'+esc(r.id)+'">'+
+    '<img class="compact-recipe-photo" src="'+photo+'" alt="'+esc(r.name)+'" onerror="this.src=\'assets/meal-placeholder.svg\'">'+
+    '<div class="compact-recipe-body">'+
+      '<div class="compact-recipe-kicker">'+category+'</div>'+
+      '<h3>'+esc(r.name)+'</h3>'+
+      '<div class="compact-recipe-meta">'+
+        (protein?'<span><b>'+esc(protein)+'g</b> P</span>':'')+
+        (calories?'<span><b>'+esc(calories)+'</b> cal</span>':'')+
+      '</div>'+
+      '<div class="compact-recipe-footer">'+
+        '<div class="compact-plan-buttons">'+planButtons+'</div>'+
+        '<span class="compact-view">'+(selected?count+' planned':'View →')+'</span>'+
+      '</div>'+
+    '</div>'+
+  '</article>';
+}
+
 function renderHome(){
   const entries=selectedEntries();
   const total=plannedMeals();
@@ -1059,52 +1093,61 @@ function renderHome(){
 
 function renderRecipes(){
   if(state.addRecipeMode) return renderAddRecipe();
+
   const total=plannedMeals();
   const target=weeklyMealTarget();
   const remaining=Math.max(0,target-total);
-  const filter=state.recipeFilter||'all';
   const query=(state.recipeSearch||'').trim().toLowerCase();
-  const builtInIds=new Set(state.catalogRecipes.map(r=>r.id));
-  const filtered=state.recipes.filter(r=>{
-    const isMine=!builtInIds.has(r.id);
-    const category=r.catalogCategory || (isMine?'mine':'featured');
-    const categoryMatch=filter==='all' || (filter==='mine'&&isMine) || category===filter;
-    const text=`${r.name||''} ${r.portion||''} ${r.sourceName||''}`.toLowerCase();
-    return categoryMatch && (!query || text.includes(query));
-  });
-  const counts={
-    breakfast:state.catalogRecipes.filter(r=>r.catalogCategory==='breakfast').length,
-    lunch:state.catalogRecipes.filter(r=>r.catalogCategory==='lunch').length,
-    dinner:state.catalogRecipes.filter(r=>r.catalogCategory==='dinner').length,
-    featured:state.catalogRecipes.filter(r=>r.catalogCategory==='featured').length,
-    mine:state.userRecipes.length
+  const matchesQuery=r=>{
+    if(!query) return true;
+    const text=((r.name||'')+' '+(r.portion||'')+' '+(r.sourceName||'')+' '+(r.catalogCategory||'')).toLowerCase();
+    return text.includes(query);
   };
-  const chips=[
-    ['all','All',state.recipes.length],['breakfast','Breakfast',counts.breakfast],['lunch','Lunch',counts.lunch],
-    ['dinner','Dinner',counts.dinner],['featured','Featured',counts.featured],['mine','My Recipes',counts.mine]
-  ];
-  const cards=filtered.length ? filtered.map(recipeCard).join('') : '<div class="empty clean-empty"><h3>No recipes found.</h3><p>Try another category or search, or add your own recipe.</p></div>';
-  const dots=Array.from({length:target/7},(_,i)=>`<i class="${total>=(i+1)*7?'on':''}"></i>`).join('');
-  return `<section class="page-intro meals-intro">
-      <div class="eyebrow">Fuelr cookbook</div>
-      <div class="title-action-row"><div><h1>Choose what you <span class="accent">actually want to eat.</span></h1><p>Start with 60 Fuelr Original breakfast, lunch and dinner ideas, keep your featured recipes, or add anything of your own.</p></div><button class="add-recipe-btn" data-add-recipe="1"><span>+</span>Add recipe</button></div>
-      <div class="meals-meta"><span>${state.catalogRecipes.length} built in</span><span>•</span><span>${state.userRecipes.length} yours</span><span>•</span><span>${total}/${target} planned</span></div>
-    </section>
-    <section class="cookbook-toolbar">
-      <div class="cookbook-search"><span>⌕</span><input id="recipeSearch" value="${esc(state.recipeSearch||'')}" placeholder="Search chicken, burrito, pancakes..."></div>
-      <div class="cookbook-filters">${chips.map(([id,label,count])=>`<button class="${filter===id?'active':''}" data-recipe-filter="${id}"><span>${label}</span><b>${count}</b></button>`).join('')}</div>
-    </section>
-    <section class="plan-status-bar">
-      <div><span class="plan-status-label">WEEKLY PLAN</span><strong>${total}/${target} meals</strong></div>
-      <div class="plan-dots">${dots}</div>
-      <span>${total===target?'Week complete':total===0?'Choose a batch':remaining+' meals left'}</span>
-    </section>
-    <section class="floating-meal-stage large-stage">
-      <div class="meal-swipe-rail cookbook-grid">${cards}</div>
-    </section>
-    <div class="sync-strip light-sync"><span class="status-dot"></span><span>Fuelr recipe library</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready'}</span></div>`;
-}
 
+  const breakfast=state.recipes.filter(r=>recipeMealType(r)==='breakfast' && matchesQuery(r));
+  const lunch=state.recipes.filter(r=>recipeMealType(r)!=='breakfast' && r.catalogCategory==='lunch' && matchesQuery(r));
+  const dinner=state.recipes.filter(r=>recipeMealType(r)!=='breakfast' && r.catalogCategory==='dinner' && matchesQuery(r));
+  const otherMain=state.recipes.filter(r=>recipeMealType(r)!=='breakfast' && !['lunch','dinner'].includes(r.catalogCategory) && matchesQuery(r));
+  const lunchDinner=[];
+  const max=Math.max(lunch.length,dinner.length);
+  for(let i=0;i<max;i++){
+    if(lunch[i]) lunchDinner.push(lunch[i]);
+    if(dinner[i]) lunchDinner.push(dinner[i]);
+  }
+  lunchDinner.push(...otherMain);
+
+  const dots=Array.from({length:target/7},(_,i)=>'<i class="'+(total>=(i+1)*7?'on':'')+'"></i>').join('');
+  const breakfastCards=breakfast.length ? breakfast.map(compactCookbookCard).join('') : '<div class="cookbook-column-empty">No breakfast recipes match.</div>';
+  const mainCards=lunchDinner.length ? lunchDinner.map(compactCookbookCard).join('') : '<div class="cookbook-column-empty">No lunch or dinner recipes match.</div>';
+
+  return '<section class="page-intro meals-intro compact-meals-intro">'+
+      '<div class="eyebrow">Fuelr cookbook</div>'+
+      '<div class="title-action-row">'+
+        '<div><h1>Pick meals <span class="accent">fast.</span></h1><p>Breakfast on the left. Lunch and dinner on the right. Tap any meal for the full recipe or use the small batch buttons to add it directly.</p></div>'+
+        '<button class="add-recipe-btn" data-add-recipe="1"><span>+</span>Add recipe</button>'+
+      '</div>'+
+      '<div class="meals-meta"><span>'+state.catalogRecipes.length+' built in</span><span>•</span><span>'+state.userRecipes.length+' yours</span><span>•</span><span>'+total+'/'+target+' planned</span></div>'+
+    '</section>'+
+    '<section class="cookbook-toolbar compact-cookbook-toolbar">'+
+      '<div class="cookbook-search"><span>⌕</span><input id="recipeSearch" value="'+esc(state.recipeSearch||'')+'" placeholder="Search all recipes..."></div>'+
+    '</section>'+
+    '<section class="plan-status-bar compact-plan-status">'+
+      '<div><span class="plan-status-label">WEEKLY PLAN</span><strong>'+total+'/'+target+' meals</strong></div>'+
+      '<div class="plan-dots">'+dots+'</div>'+
+      '<span>'+(total===target?'Week complete':total===0?'Choose your meals':remaining+' meals left')+'</span>'+
+    '</section>'+
+    '<section class="cookbook-two-column">'+
+      '<div class="cookbook-column">'+
+        '<div class="cookbook-column-head breakfast-head"><div><span>AM</span><h2>Breakfast</h2></div><b>'+breakfast.length+'</b></div>'+
+        '<div class="cookbook-column-stack">'+breakfastCards+'</div>'+
+      '</div>'+
+      '<div class="cookbook-column">'+
+        '<div class="cookbook-column-head main-head"><div><span>PM</span><h2>Lunch / Dinner</h2></div><b>'+lunchDinner.length+'</b></div>'+
+        '<div class="cookbook-column-stack">'+mainCards+'</div>'+
+      '</div>'+
+    '</section>'+
+    '<div class="sync-strip light-sync cookbook-sync-strip"><span class="status-dot"></span><span>Fuelr recipe library</span><span class="sync-spacer"></span><span>'+(state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready')+'</span></div>';
+}
 function renderAddRecipe(){
   return `<button class="link-btn back-link" data-close-add="1">← Back to meals</button>
     <section class="page-intro add-recipe-intro">
@@ -1897,8 +1940,15 @@ function bindDynamic(){
   app.querySelectorAll('[data-calendar-clear]').forEach(el=>el.addEventListener('click',()=>clearCalendarSlot(Number(el.dataset.calendarDay),el.dataset.calendarSlot)));
   app.querySelectorAll('[data-week-view]').forEach(el=>el.addEventListener('click',()=>setWeekView(el.dataset.weekView)));
   app.querySelectorAll('[data-add-recipe]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=true;state.importDraft=null;state.detailId='';render();window.scrollTo({top:0,behavior:'smooth'});}));
-  app.querySelectorAll('[data-recipe-filter]').forEach(el=>el.addEventListener('click',()=>{state.recipeFilter=el.dataset.recipeFilter||'all';render();}));
-  document.getElementById('recipeSearch')?.addEventListener('input',e=>{state.recipeSearch=e.target.value;render();});
+  document.getElementById('recipeSearch')?.addEventListener('input',e=>{
+    state.recipeSearch=e.target.value;
+    clearTimeout(window.__fuelrRecipeSearchTimer);
+    window.__fuelrRecipeSearchTimer=setTimeout(()=>{
+      render();
+      const field=document.getElementById('recipeSearch');
+      if(field){ field.focus(); field.setSelectionRange(field.value.length,field.value.length); }
+    },180);
+  });
   app.querySelectorAll('[data-close-add]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=false;state.importDraft=null;render();}));
   document.querySelectorAll('input[name="urMealType"]').forEach(el=>el.addEventListener('change',()=>document.querySelectorAll('.recipe-type-picker label').forEach(label=>label.classList.toggle('selected-default',Boolean(label.querySelector('input:checked'))))));
   document.getElementById('importRecipeUrl')?.addEventListener('click',importRecipeUrl);
