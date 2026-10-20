@@ -1,0 +1,25 @@
+{
+  "name": "fuelr-app",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Fuelr personalized meal prep system",
+  "scripts": {
+    "build": "node scripts/build-native.mjs",
+    "native:sync": "npm run build && npx cap sync",
+    "native:ios": "npm run native:sync && npx cap open ios",
+    "native:android": "npm run native:sync && npx cap open android",
+    "native:add:ios": "npm run build && npx cap add ios",
+    "native:add:android": "npm run build && npx cap add android"
+  },
+  "dependencies": {
+    "@capacitor/core": "latest",
+    "@capacitor/app": "latest",
+    "@capacitor/status-bar": "latest",
+    "@capacitor/splash-screen": "latest"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "latest",
+    "@capacitor/ios": "latest",
+    "@capacitor/android": "latest"
+  }
+}
