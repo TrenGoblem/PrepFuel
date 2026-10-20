@@ -94,7 +94,7 @@ const macroFor = (r,key) => {
   return Math.round(v*recipeBudgetFactor(r)*10)/10;
 };
 const planShape = () => selectedEntries().map(x=>x.count).sort((a,b)=>b-a).join(' + ');
-const planExamples = target => target===7 ? '7' : target===14 ? '7 + 7 or 14' : '7 + 7 + 7, 14 + 7, or 21';
+const planExamples = target => target===7 ? 'one 7-meal batch' : target===14 ? 'two 7-meal batches or one 14-meal lunch/dinner batch' : '7 breakfast + 14 lunch/dinner, or three compatible 7-meal batches';
 const weeklyMealDescription = target => target===7 ? '1 prepared meal per day' : target===14 ? '2 prepared meals per day' : '3 prepared meals per day';
 const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const SLOT_LABELS = {breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner'};
@@ -736,7 +736,8 @@ function setWeeklyMealsTarget(count){
   const next={};
   Object.entries(state.selections).forEach(([id,c])=>{
     c=Number(c);
-    if(WEEKLY_MEAL_OPTIONS.includes(c) && c<=count && used+c<=count){
+    const recipe=state.recipes.find(r=>r.id===id);
+    if(WEEKLY_MEAL_OPTIONS.includes(c) && c<=count && used+c<=count && (!recipe || recipeBatchAllowed(recipe,c))){
       next[id]=c;
       used+=c;
     }
@@ -782,6 +783,23 @@ function setMealPlan(id,count){
     }
   });
   next[id]=count;
+
+  let breakfastTotal=0;
+  let mainTotal=0;
+  Object.entries(next).forEach(([recipeId,c])=>{
+    const candidate=state.recipes.find(r=>r.id===recipeId);
+    if(recipeMealType(candidate)==='breakfast') breakfastTotal+=Number(c);
+    else mainTotal+=Number(c);
+  });
+  if(breakfastTotal>7){
+    showToast('A week has 7 breakfast slots — choose up to 7 breakfast meals');
+    return;
+  }
+  if(mainTotal>14){
+    showToast('A week has 14 lunch / dinner slots — add a breakfast batch for a 21-meal week');
+    return;
+  }
+
   state.selections=next;
 
   state.checked={};
@@ -926,12 +944,12 @@ function renderHome(){
   <section class="floating-meals-section">
     <div class="section-head clean-head"><div><h2>${entries.length?'Your weekly lineup':'Choose your lineup'}</h2><p>${remaining?remaining+' meals still open':'All '+target+' meals planned'}</p></div><button class="link-btn" data-go="recipes">See all →</button></div>
     <div class="floating-meal-stage">
-      <div class="meal-swipe-rail home-rail">${selectedCards || '<div class="empty clean-empty"><h3>Add your first recipe.</h3><p>It will appear here ready for a 7-, 14-, or 21-meal batch.</p></div>'}</div>
+      <div class="meal-swipe-rail home-rail">${selectedCards || '<div class="empty clean-empty"><h3>Add your first recipe.</h3><p>It will appear here ready for your weekly meal plan.</p></div>'}</div>
     </div>
   </section>
 
   <section class="quick-row">
-    <button class="quick-tile" data-week-view="shop"><span class="quick-kicker">GROCERY</span><strong>One combined run.</strong><small>Lists scale automatically to every 7-, 14-, or 21-meal batch.</small><span class="quick-arrow">→</span></button>
+    <button class="quick-tile" data-week-view="shop"><span class="quick-kicker">GROCERY</span><strong>One combined run.</strong><small>Lists scale automatically to your selected meal batches.</small><span class="quick-arrow">→</span></button>
     <button class="quick-tile" data-go="calendar"><span class="quick-kicker">CALENDAR</span><strong>${scheduledMeals()}/${target} placed.</strong><small>Arrange breakfast, lunch and dinner from Monday through Sunday.</small><span class="quick-arrow">→</span></button>
     <button class="quick-tile" data-go="you"><span class="quick-kicker">YOUR SYSTEM</span><strong>${target} meals/week.</strong><small>Change between 7, 14, and 21 anytime.</small><span class="quick-arrow">→</span></button>
   </section>`;
@@ -956,7 +974,7 @@ function renderRecipes(){
     </section>
     <section class="floating-meal-stage large-stage">
       <div class="meal-swipe-rail">${cards}</div>
-      <div class="swipe-hint"><span>←</span> swipe meals · choose 7, 14 or 21 <span>→</span></div>
+      <div class="swipe-hint"><span>←</span> swipe meals · choose a batch <span>→</span></div>
     </section>
     <div class="sync-strip light-sync"><span class="status-dot"></span><span>Fuelr recipe library</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready'}</span></div>
     <section class="meal-info-row">
