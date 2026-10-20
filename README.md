@@ -8,7 +8,7 @@ Fuelr is a mobile-first installable PWA for personalized weekly meal planning.
 - Valid complete plans:
   - **7** = one 7-meal batch
   - **14** = 7 + 7 or one 14-meal batch
-  - **21** = 7 + 7 + 7, 14 + 7, or one 21-meal batch
+  - **21** = 7 breakfast + 14 lunch/dinner, or three compatible 7-meal batches
 - Automatic ingredient scaling from any source serving count
 - Every listed ingredient scales, including salt, spices, sauces, oils, seasonings, protein, carbs, vegetables, and toppings
 - Recipe optimization toward the user's calculated per-meal budget cap
