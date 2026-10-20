@@ -63,7 +63,18 @@ function scaledIngredient(i,factor){
   return {...i, quantity:scaleQuantity(i.quantity,factor), usedCost:i.usedCost!=null?Number(i.usedCost)*factor:i.usedCost};
 }
 function scaledShopping(i,factor){
+  const originalQty=Number(i.buyQuantity);
+  const packageLike=/bag|pack|bottle|can|package|box|jar|tub/i.test(String(i.unit||''));
+  if(Number.isFinite(originalQty) && packageLike){
+    const buyQty=Math.max(1,Math.ceil(originalQty*factor));
+    const cost=i.checkoutCost!=null ? Number(i.checkoutCost)*(buyQty/originalQty) : i.checkoutCost;
+    return {...i,buyQuantity:formatQty(buyQty),checkoutCost:cost};
+  }
   return {...i, buyQuantity:scaleQuantity(i.buyQuantity,factor), checkoutCost:i.checkoutCost!=null?Number(i.checkoutCost)*factor:i.checkoutCost};
+}
+function scaledCheckoutTotal(r,count){
+  const factor=count/Number(r.servings||14);
+  return (r.shopping||[]).map(i=>scaledShopping(i,factor)).reduce((sum,i)=>sum+Number(i.checkoutCost||0),0);
 }
 function setMealPlan(id,count){
   count=Number(count);
@@ -280,7 +291,7 @@ function renderGrocery(){
   const entries=selectedEntries();
   const total=plannedMeals();
   const usedTotal=entries.reduce((sum,x)=>sum+(x.recipe.costPerMeal??mealTarget())*x.count,0);
-  const checkoutTotal=entries.reduce((sum,x)=>sum+Number(x.recipe.checkoutTotal||0)*(x.count/Number(x.recipe.servings||14)),0);
+  const checkoutTotal=entries.reduce((sum,x)=>sum+scaledCheckoutTotal(x.recipe,x.count),0);
   return `<section class="page-intro">
       <div class="eyebrow">Combined grocery run</div>
       <h1>One list for <span class="accent">${total || 0} meals.</span></h1>
