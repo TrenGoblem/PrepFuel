@@ -191,6 +191,7 @@ function mapCloudRecipe(row){
     clientSourceId:row.client_source_id || null,
     name:row.name,
     sourceName:row.source_name || 'My recipe',
+    sourceUrl:row.source_url || null,
     mealType:row.meal_type === 'breakfast' ? 'breakfast' : 'main',
     photo:row.signed_photo_url || row.photo_url || 'assets/meal-placeholder.svg',
     photoPath:row.photo_url || null,
