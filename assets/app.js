@@ -68,7 +68,7 @@ function recipeCard(r){
       </div>
     </div>
     <div class="meal-card-copy">
-      <div class="meal-card-label">14-MEAL BUILD</div>
+      <div class="meal-card-label">PREPFUEL OPTIMIZED</div>
       <h3>${esc(r.name)}</h3>
       <div class="meal-stats">
         ${r.macros?.protein ? `<span><b>${esc(r.macros.protein)}g</b> protein</span>`:''}
@@ -181,7 +181,17 @@ function renderRecipeDetail(r){
         <div class="eyebrow">Athlete fuel</div>
         <h1>${esc(r.name)}</h1>
         <p>${r.optimizationNote?esc(r.optimizationNote):'Scaled for one full week of athlete-sized meals.'}</p>
-        <div class="detail-price">${money(r.costPerMeal ?? state.settings.recipeCostPerMeal)} <small>/ meal</small></div>
+        <div class="optimize-strip">
+          <span>PREPFUEL OPTIMIZED</span>
+          <strong>${money(r.costPerMeal ?? state.settings.recipeCostPerMeal)}</strong>
+          <small>target ${money(state.settings.recipeCostPerMeal)} / meal</small>
+        </div>
+        ${r.original?`<div class="source-compare">
+          <div><span>SOURCE</span><strong>${esc(r.original.servings)} servings</strong><small>${r.original.portion?esc(r.original.portion):'original recipe'}</small></div>
+          <div class="compare-arrow">→</div>
+          <div><span>PREPFUEL</span><strong>${esc(r.servings)} meals</strong><small>${r.portion?esc(r.portion):'optimized portion'}</small></div>
+        </div>`:''}
+        <div class="detail-price">${money(r.costPerMeal ?? state.settings.recipeCostPerMeal)} <small>/ meal · ${esc(r.priceStatus||'estimated')}</small></div>
         <div class="macro-grid clean-macros">
           <div class="macro"><strong>${esc(r.macros?.calories ?? '—')}</strong><small>Calories</small></div>
           <div class="macro"><strong>${esc(r.macros?.protein ?? '—')}${r.macros?.protein?'g':''}</strong><small>Protein</small></div>
