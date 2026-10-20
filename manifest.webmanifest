@@ -1,0 +1,19 @@
+{
+  "name": "PrepFuel Athlete Meal System",
+  "short_name": "PrepFuel",
+  "description": "Athlete meal prep, grocery lists, recipes and school-year budget tracking.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#06080d",
+  "theme_color": "#06080d",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
