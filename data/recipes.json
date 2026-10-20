@@ -19,9 +19,10 @@
     "budgetScalingRule": "After serving normalization, calculate the source cost per meal and the current Fuelr meal-cap ratio. Budget multiplier = Fuelr meal cap ÷ source cost per meal. Use that multiplier to increase or decrease the complete recipe while preserving the creator's ingredient ratios and flavor balance. Nothing is left at the source amount just because it is a seasoning.",
     "formulaExample": "If a 10-meal source uses 2 tbsp seasoning, the unoptimized amounts are 1.4 tbsp for 7 meals, 2.8 tbsp for 14, and 4.2 tbsp for 21. Every listed ingredient follows the same source-yield conversion before budget optimization.",
     "note": "Salt and strong seasonings are never ignored: they scale with the batch. Final amounts may be rounded to practical kitchen measurements, but the 7/14/21 math starts from the source yield.",
-    "weeklyMealRule": "Each user chooses a weekly prepared-meal target of 7, 14, or 21. Valid recipe batch sizes are 7, 14, and 21, but a batch cannot exceed the user's weekly target. Valid complete weeks are 7; 7+7 or 14; and 7+7+7, 14+7, or 21.",
+    "weeklyMealRule": "Each user chooses 7, 14, or 21 prepared meals per week. The calendar has 7 breakfast slots and 14 lunch/dinner slots. A 21-meal week is therefore built from 7 breakfast meals plus 14 lunch/dinner meals, or other compatible 7-meal batches that respect those slot limits.",
     "dynamicMealCapRule": "The per-meal cap is personal: school-year food budget ÷ academic weeks ÷ selected weekly prepared meals. Changing from 14 to 21 meals lowers the per-meal target unless the user increases the budget. Fuelr dynamically adjusts optimized recipe quantities toward the user's current cap.",
-    "batchSizingRule": "A source recipe can be written for any yield. Fuelr normalizes every listed ingredient from the creator's source serving count to the selected 7-, 14-, or 21-meal batch. The catalog stores an optimized 14-meal base; 7 is one-half and 21 is one-and-a-half times that base before applying the user's live meal-cap adjustment."
+    "batchSizingRule": "A source recipe can be written for any yield. Fuelr normalizes every listed ingredient from the creator's source serving count to the selected 7-, 14-, or 21-meal batch. The catalog stores an optimized 14-meal base; 7 is one-half and 21 is one-and-a-half times that base before applying the user's live meal-cap adjustment.",
+    "calendarRule": "Fuelr includes a Monday-through-Sunday calendar with Breakfast, Lunch, and Dinner slots. Breakfast recipes stay in Breakfast. Lunch/Dinner recipes can move between Lunch and Dinner. A weekly plan can contain at most 7 breakfast meals and 14 lunch/dinner meals."
   },
   "recipes": [
     {
@@ -191,7 +192,8 @@
         "Roll tightly and toast the seam side down if desired. Cool before packing.",
         "For a 7-meal prep, refrigerate what you will eat within 3–4 days and freeze the rest if needed. For 14 meals, freeze later-week burritos and thaw in the refrigerator."
       ],
-      "scaleFactor": 1.13
+      "scaleFactor": 1.13,
+      "mealType": "main"
     },
     {
       "id": "buffalo-chicken-subs",
@@ -344,7 +346,8 @@
         "For a 7-meal prep, make 14 sub segments. For a 14-meal prep, make 28 sub segments; any spare bread segments can be frozen.",
         "Refrigerate the first 3–4 days of cooked portions. Freeze later-week portions and thaw in the refrigerator before reheating."
       ],
-      "scaleFactor": 1.15
+      "scaleFactor": 1.15,
+      "mealType": "main"
     }
   ]
 }
