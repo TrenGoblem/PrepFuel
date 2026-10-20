@@ -1,12 +1,18 @@
 {
-  "version": 2,
+  "version": 3,
   "updatedAt": "2026-10-20",
   "optimizationPolicy": {
-    "targetMealCost": 5,
-    "targetNote": "PrepFuel optimizes each recipe toward about $5 per athlete-sized meal while preserving food quality, protein, carbs and total food volume. If a source serving is too small/cheap, portions are increased; if it is too expensive, ingredient ratios or value-equivalent cuts/brands are adjusted.",
-    "produceBudgetSeparate": true,
-    "produceBudgetWeekly": 8.05,
-    "priceStatus": "estimated until store-verified"
+    "weeklyMealOptions": [
+      7,
+      14
+    ],
+    "weeklyMeals": 14,
+    "schoolYearBudget": 2500,
+    "academicWeeks": 32,
+    "targetMealCost": 5.580357142857143,
+    "separateProduceBudget": false,
+    "priceStatus": "estimated until store-verified",
+    "method": "Price the source recipe per serving, calculate target meal cost divided by source meal cost, and use that ratio as the starting quantity multiplier. Scale protein, carb bases, vegetables, cheese and other substantial ingredients close to the multiplier. Keep serving-defining items practical and adjust potent seasonings, oils and sauces by taste rather than blindly over-scaling. If the source is above the cap, scale down intelligently while protecting protein, food quality and useful volume."
   },
   "recipes": [
     {
@@ -15,18 +21,18 @@
       "sourceName": "Noah Perlo Fit",
       "photo": "images/hot-honey-steak-burrito.svg",
       "servings": 14,
-      "portion": "1 large stuffed burrito",
-      "costPerMeal": 4.93,
-      "checkoutTotal": 76.64,
+      "portion": "1 extra-loaded large burrito",
+      "costPerMeal": 5.58,
+      "checkoutTotal": 85.82,
       "priceStatus": "estimated",
       "macros": {
-        "calories": 731,
-        "protein": 64,
-        "carbs": 68,
-        "fat": 22.5
+        "calories": 820,
+        "protein": 72,
+        "carbs": 77,
+        "fat": 25
       },
-      "macrosStatus": "creator-posted source macros",
-      "optimizationNote": "This source recipe already lands almost exactly on the PrepFuel target, so the optimized version keeps the original 14-burrito quantities and protects the big steak portion. The cost strategy is to use a good-value lean top-round or sirloin-tip cut, store-brand hash browns/cheese/tortillas, and measured butter/hot honey. That keeps quality and the creator-posted macros while targeting about $4.93 per meal.",
+      "macrosStatus": "PrepFuel estimate after scaling the creator-posted 731 cal / 64g protein / 68g carbs / 22.5g fat source burrito",
+      "optimizationNote": "The estimated source build was about $4.93 per meal, so the budget multiplier is roughly 1.13×. PrepFuel keeps one tortilla per meal but pushes the filling about 15% higher to use the full $5.58 cap: more lean steak, hash browns, cheese and the same flavor profile. This keeps the burrito high-quality and turns the spare budget into more actual food instead of a separate produce allowance.",
       "original": {
         "servings": 14,
         "portion": "1 burrito",
@@ -49,88 +55,88 @@
       "ingredients": [
         {
           "item": "Lean steak, fully trimmed",
-          "quantity": "3",
+          "quantity": "3.45",
           "unit": "kg",
-          "note": "Choose top round or sirloin tip for quality/value; about 6.6 lb",
-          "usedCost": 42.9
+          "note": "about 7.6 lb; top round or sirloin tip for quality/value",
+          "usedCost": 49.34
         },
         {
           "item": "Frozen hash brown potatoes, oil free",
-          "quantity": "1.5",
+          "quantity": "1.73",
           "unit": "kg",
-          "note": "about 3.3 lb",
-          "usedCost": 4.5
+          "note": "about 3.8 lb",
+          "usedCost": 5.18
         },
         {
           "item": "Jalapeños, diced",
-          "quantity": "6",
+          "quantity": "7",
           "unit": "medium",
-          "usedCost": 1.5
+          "usedCost": 1.73
         },
         {
           "item": "Shredded Mexican cheese",
-          "quantity": "500",
+          "quantity": "575",
           "unit": "g",
-          "note": "about 17.6 oz",
-          "usedCost": 5.25
+          "note": "about 20.3 oz",
+          "usedCost": 6.04
         },
         {
           "item": "Yogurt butter",
-          "quantity": "28",
+          "quantity": "32",
           "unit": "tsp",
-          "note": "2 tsp per burrito",
-          "usedCost": 2
+          "note": "about 2.3 tsp per burrito",
+          "usedCost": 2.3
         },
         {
           "item": "Hot honey",
-          "quantity": "14",
+          "quantity": "16",
           "unit": "tbsp",
-          "note": "1 tbsp per burrito",
-          "usedCost": 3.95
+          "note": "about 1.15 tbsp per burrito",
+          "usedCost": 4.54
         },
         {
           "item": "Large low carb tortillas",
           "quantity": "14",
           "unit": "tortillas",
-          "usedCost": 8.98
+          "usedCost": 8.99
         }
       ],
       "shopping": [
         {
           "item": "Lean steak, fully trimmed",
           "category": "Protein",
-          "buyQuantity": "6.6",
+          "buyQuantity": "7.6",
           "unit": "lb",
           "preferredStore": "Aldi",
           "altStore": "Walmart",
-          "checkoutCost": 42.9,
+          "checkoutCost": 49.34,
           "priceStatus": "estimated"
         },
         {
           "item": "Frozen hash brown potatoes, oil free",
           "category": "Frozen",
-          "buyQuantity": "2",
+          "buyQuantity": "3",
           "unit": "30 oz bags",
           "preferredStore": "Aldi",
           "altStore": "Walmart",
-          "checkoutCost": 4.98,
+          "checkoutCost": 7.47,
           "priceStatus": "estimated"
         },
         {
           "item": "Jalapeños",
           "category": "Produce",
-          "buyQuantity": "6",
+          "buyQuantity": "7",
           "unit": "medium",
           "preferredStore": "Aldi",
           "altStore": "Walmart",
-          "checkoutCost": 1.5,
+          "checkoutCost": 1.75,
           "priceStatus": "estimated"
         },
         {
           "item": "Shredded Mexican cheese",
           "category": "Dairy",
-          "buyQuantity": "24",
-          "unit": "oz total",
+          "buyQuantity": "3",
+          "unit": "8 oz bags",
           "preferredStore": "Aldi",
           "altStore": "Walmart",
           "checkoutCost": 6.75,
@@ -168,14 +174,15 @@
         }
       ],
       "instructions": [
-        "Trim the steak well and cut it into small bite-size pieces so every burrito gets an even amount.",
+        "Trim the steak well and cut it into small bite-size pieces so the filling distributes evenly.",
         "Cook the hash browns until browned and crisp. Keep them fairly dry so the burritos do not get soggy.",
         "Cook the steak in batches over high heat until browned and cooked to your preferred doneness. Add the diced jalapeños near the end.",
-        "Mix the measured yogurt butter and hot honey into the steak mixture, or portion them evenly across the 14 burritos.",
-        "Lay out 14 tortillas. Divide hash browns, steak mixture and cheese evenly so every burrito is a true full meal.",
+        "Mix the measured yogurt butter and hot honey into the steak mixture, or portion them evenly across the selected batch.",
+        "Lay out one tortilla per meal. Divide the hash browns, steak mixture and cheese evenly so every burrito is a full athlete-sized meal.",
         "Roll tightly and toast the seam side down if desired. Cool before packing.",
-        "Refrigerate only the first 3–4 days of meals. Freeze the later-week burritos and thaw in the refrigerator before reheating."
-      ]
+        "For a 7-meal prep, refrigerate what you will eat within 3–4 days and freeze the rest if needed. For 14 meals, freeze later-week burritos and thaw in the refrigerator."
+      ],
+      "scaleFactor": 1.13
     },
     {
       "id": "buffalo-chicken-subs",
@@ -183,18 +190,18 @@
       "sourceName": "Noah Perlo Fit",
       "photo": "images/buffalo-chicken-subs.svg",
       "servings": 14,
-      "portion": "2 stuffed sub segments per meal",
-      "costPerMeal": 4.86,
-      "checkoutTotal": 74.93,
+      "portion": "2 heavily stuffed sub segments per meal",
+      "costPerMeal": 5.58,
+      "checkoutTotal": 85.84,
       "priceStatus": "estimated",
       "macros": {
-        "calories": 930,
-        "protein": 90,
-        "carbs": 76,
-        "fat": 31
+        "calories": 1020,
+        "protein": 103,
+        "carbs": 80,
+        "fat": 35
       },
-      "macrosStatus": "PrepFuel estimate based on creator-posted 481 cal / 43g protein / 39g carbs / 17g fat per source sub",
-      "optimizationNote": "The source version makes 12 smaller subs and is well under the $5 meal budget. PrepFuel turns it into 14 full athlete meals by making 28 sub segments—2 per meal—while increasing chicken to 4 kg, using about 1.5 ultra-thin cheese slices per sub, and cutting ranch to 1.5 tbsp per sub. That uses the budget on more protein and food volume instead of extra sauce.",
+      "macrosStatus": "PrepFuel estimate after increasing the existing optimized build toward the $5.58 meal cap; creator source was 481 cal / 43g protein / 39g carbs / 17g fat per smaller sub",
+      "optimizationNote": "The previous PrepFuel build was about $4.86 per meal, so the budget ratio is about 1.15×. Because the bread already defines the two-sub meal, PrepFuel spends the extra budget mostly on useful filling: chicken rises to about 4.74 kg for the full batch, with proportionally more cheese and ranch. The result stays the same buffalo-sub idea but gives you more protein and food volume for the full meal cap.",
       "original": {
         "servings": 12,
         "portion": "1 sub",
@@ -216,66 +223,66 @@
       "ingredients": [
         {
           "item": "Trimmed boneless skinless chicken thighs",
-          "quantity": "4",
+          "quantity": "4.74",
           "unit": "kg",
-          "note": "about 8.8 lb; increased for protein and portion size",
-          "usedCost": 33.43
+          "note": "about 10.45 lb; increased to use the meal cap on protein",
+          "usedCost": 39.65
         },
         {
           "item": "Buffalo seasoning",
-          "quantity": "10",
+          "quantity": "12",
           "unit": "packets",
-          "note": "season to taste; 10 keeps the larger batch fully coated",
-          "usedCost": 8.5
+          "note": "starting point; stop earlier if flavor is strong enough",
+          "usedCost": 10.08
         },
         {
           "item": "Avocado oil cooking spray",
           "quantity": "As needed",
           "unit": "",
           "note": "light coating only",
-          "usedCost": 0.9
+          "usedCost": 1.07
         },
         {
           "item": "Ultra-thin provolone or Swiss",
-          "quantity": "42",
+          "quantity": "50",
           "unit": "slices",
-          "note": "about 1.5 slices per sub segment",
-          "usedCost": 7.5
+          "note": "about 1.8 slices per sub segment",
+          "usedCost": 8.9
         },
         {
           "item": "Baguettes",
           "quantity": "10",
           "unit": "baguettes",
-          "note": "hollow interiors, cut each into thirds; use 28 segments and freeze the 2 extras",
+          "note": "hollow interiors, cut into 3 segments; 28 segments used for 14 meals",
           "usedCost": 13.91
         },
         {
           "item": "Fat-free ranch",
-          "quantity": "42",
+          "quantity": "50",
           "unit": "tbsp",
-          "note": "1.5 tbsp per sub segment; 3 tbsp per full meal",
-          "usedCost": 3.8
+          "note": "about 1.8 tbsp per sub segment",
+          "usedCost": 4.51
         }
       ],
       "shopping": [
         {
           "item": "Boneless skinless chicken thighs",
           "category": "Protein",
-          "buyQuantity": "8.8",
+          "buyQuantity": "10.45",
           "unit": "lb",
           "preferredStore": "Aldi",
           "altStore": "Walmart",
-          "checkoutCost": 33.43,
+          "checkoutCost": 39.65,
           "priceStatus": "estimated"
         },
         {
           "item": "Buffalo seasoning",
           "category": "Seasoning",
-          "buyQuantity": "10",
+          "buyQuantity": "12",
           "unit": "packets",
           "preferredStore": "Walmart",
           "altStore": "Aldi",
-          "checkoutCost": 8.5,
+          "checkoutCost": 10.2,
           "priceStatus": "estimated"
         },
         {
@@ -291,11 +298,11 @@
         {
           "item": "Ultra-thin provolone or Swiss",
           "category": "Dairy",
-          "buyQuantity": "3",
+          "buyQuantity": "4",
           "unit": "packs",
           "preferredStore": "Aldi",
           "altStore": "Walmart",
-          "checkoutCost": 8.97,
+          "checkoutCost": 11.96,
           "priceStatus": "estimated"
         },
         {
@@ -320,14 +327,15 @@
         }
       ],
       "instructions": [
-        "Trim the chicken thighs and cut them into bite-size pieces. Toss thoroughly with the buffalo seasoning.",
+        "Trim the chicken thighs and cut them into bite-size pieces. Toss with buffalo seasoning, starting below the full scaled amount and adding more until the coating tastes right.",
         "Cook the chicken in batches using only a light coat of avocado oil spray. Brown well and cook through.",
         "Hollow out the baguettes to remove excess bread from the center, then cut each baguette into 3 sub segments.",
-        "Build 28 sub segments with the buffalo chicken and ultra-thin provolone or Swiss. Toast until the bread is crisp and cheese melts.",
-        "Finish each sub segment with about 1.5 tbsp fat-free ranch. One PrepFuel meal is 2 sub segments.",
-        "Use 28 of the 30 baguette segments for the 14 meals; freeze the two extra empty segments or use them separately.",
-        "Refrigerate the first 3–4 days of cooked portions. Freeze the later-week portions and thaw in the refrigerator before reheating."
-      ]
+        "Build enough sub segments for your selected meal count, loading them heavily with buffalo chicken and ultra-thin provolone or Swiss. Toast until the bread is crisp and the cheese melts.",
+        "Finish with the measured fat-free ranch. One PrepFuel meal is 2 sub segments.",
+        "For a 7-meal prep, make 14 sub segments. For a 14-meal prep, make 28 sub segments; any spare bread segments can be frozen.",
+        "Refrigerate the first 3–4 days of cooked portions. Freeze later-week portions and thaw in the refrigerator before reheating."
+      ],
+      "scaleFactor": 1.15
     }
   ]
 }
