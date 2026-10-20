@@ -8,16 +8,9 @@ const DEFAULTS = {
   altStore: 'Walmart'
 };
 
-const SCHOOL_THEMES = [
-  {id:'fuelr',name:'Fuelr',abbr:'FR',primary:'#657ff0',secondary:'#1d232b',accent:'#9db4ff',onPrimary:'#ffffff'},
-  {id:'ucf',name:'University of Central Florida',abbr:'UCF',primary:'#ffc904',secondary:'#000000',accent:'#ffdf66',onPrimary:'#111111'},
-  {id:'uf',name:'University of Florida',abbr:'UF',primary:'#0021a5',secondary:'#fa4616',accent:'#fa4616',onPrimary:'#ffffff'},
-  {id:'fsu',name:'Florida State University',abbr:'FSU',primary:'#782f40',secondary:'#ceb888',accent:'#ceb888',onPrimary:'#ffffff'},
-  {id:'usf',name:'University of South Florida',abbr:'USF',primary:'#006747',secondary:'#cfc493',accent:'#cfc493',onPrimary:'#ffffff'},
-  {id:'miami',name:'University of Miami',abbr:'UM',primary:'#f47321',secondary:'#005030',accent:'#005030',onPrimary:'#ffffff'},
-  {id:'fiu',name:'Florida International University',abbr:'FIU',primary:'#081e3f',secondary:'#b6862c',accent:'#b6862c',onPrimary:'#ffffff'},
-  {id:'fau',name:'Florida Atlantic University',abbr:'FAU',primary:'#003366',secondary:'#cc0000',accent:'#cc0000',onPrimary:'#ffffff'}
-];
+const SCHOOL_THEMES = Array.isArray(window.FUELR_SCHOOLS) && window.FUELR_SCHOOLS.length
+  ? window.FUELR_SCHOOLS
+  : [{id:'fuelr',group:'Fuelr',name:'Fuelr',abbr:'FR',primary:'#657FF0',secondary:'#1D232B',accent:'#9DB4FF',onPrimary:'#FFFFFF'}];
 
 const storedSettings = JSON.parse(localStorage.getItem('pf_settings') || '{}');
 const storedSelections = JSON.parse(localStorage.getItem('pf_meal_selections') || '{}');
@@ -57,6 +50,7 @@ const state = {
     dietaryPreferences: Array.isArray(storedProfile.dietaryPreferences) ? storedProfile.dietaryPreferences : [],
     allergies: Array.isArray(storedProfile.allergies) ? storedProfile.allergies : [],
     goal: storedProfile.goal || 'performance',
+    appearance: storedProfile.appearance === 'dark' ? 'dark' : 'light',
     ...storedProfile
   },
   onboardingComplete: localStorage.getItem('fuelr_onboarding_done') === '1',
@@ -125,6 +119,16 @@ const scheduledMeals = () => Object.keys(state.schedule).filter(k=>state.schedul
 
 
 const currentSchool = () => SCHOOL_THEMES.find(s=>s.id===state.profile.schoolId) || SCHOOL_THEMES[0];
+const schoolGroups = () => [...new Set(SCHOOL_THEMES.filter(s=>s.id!=='fuelr').map(s=>s.group||'Schools'))];
+function schoolSelectOptions(selectedId=state.profile.schoolId){
+  const groups=schoolGroups().map(group=>{
+    const options=SCHOOL_THEMES.filter(s=>(s.group||'Schools')===group && s.id!=='fuelr')
+      .map(s=>`<option value="${esc(s.id)}" ${selectedId===s.id?'selected':''}>${esc(s.name)} (${esc(s.abbr)})</option>`).join('');
+    return `<optgroup label="${esc(group)}">${options}</optgroup>`;
+  }).join('');
+  return `<option value="">Select a college...</option>${groups}`;
+}
+
 function saveProfile(){ localStorage.setItem('fuelr_profile', JSON.stringify(state.profile)); }
 function saveUserRecipes(){ localStorage.setItem('fuelr_user_recipes', JSON.stringify(state.userRecipes)); }
 function applySchoolTheme(){
@@ -135,6 +139,7 @@ function applySchoolTheme(){
   root.style.setProperty('--school-accent',s.accent);
   root.style.setProperty('--school-on-primary',s.onPrimary);
   document.body.dataset.school=s.id;
+  document.body.dataset.appearance=state.profile.appearance==='dark'?'dark':'light';
 }
 function chooseSchool(id){
   state.profile.schoolId=id;
@@ -242,6 +247,7 @@ async function loadCloudUserData(){
         dietaryPreferences:state.profile.dietaryPreferences||[],
         allergies:state.profile.allergies||[],
         goal:state.profile.goal||'performance',
+        appearance:state.profile.appearance||'light',
         onboardingComplete:true
       });
     }
@@ -253,6 +259,7 @@ async function loadCloudUserData(){
       state.profile.dietaryPreferences=Array.isArray(profile.dietary_preferences)?profile.dietary_preferences:[];
       state.profile.allergies=Array.isArray(profile.allergies)?profile.allergies:[];
       state.profile.goal=profile.goal || 'performance';
+      state.profile.appearance=profile.appearance==='dark'?'dark':'light';
       state.settings.schoolYearBudget=Number(profile.school_year_budget)||DEFAULTS.schoolYearBudget;
       state.settings.academicWeeks=Number(profile.academic_weeks)||DEFAULTS.academicWeeks;
       state.settings.mealsPerWeek=WEEKLY_MEAL_OPTIONS.includes(Number(profile.meals_per_week))?Number(profile.meals_per_week):DEFAULTS.mealsPerWeek;
@@ -357,6 +364,7 @@ async function persistProfileToCloud(){
       dietaryPreferences:state.profile.dietaryPreferences||[],
       allergies:state.profile.allergies||[],
       goal:state.profile.goal||'performance',
+      appearance:state.profile.appearance||'light',
       onboardingComplete:state.onboardingComplete
     });
   }catch(err){
@@ -1202,10 +1210,23 @@ function renderOnboarding(){
 
   if(step===0) return shell(`<div class="onboard-hero"><div class="onboard-logo">FR</div><div class="eyebrow">Welcome to Fuelr</div><h1>Your food system.<br><span class="accent">Built for you.</span></h1><p>Fuelr turns your budget, school, recipes and weekly routine into one simple meal-prep system.</p><button class="btn primary onboard-main" data-ob-next="1">Build my Fuelr →</button></div>`,false);
 
-  if(step===1) return shell(`<div class="onboard-copy"><div class="eyebrow">01 · Campus</div><h1>Where do you <span class="accent">go to school?</span></h1><p>Pick your school and Fuelr adapts its visual identity around your campus colors.</p></div>
-    <div class="school-grid">${SCHOOL_THEMES.filter(x=>x.id!=='fuelr').map(x=>`<button class="school-choice ${state.profile.schoolId===x.id?'selected':''}" data-school-id="${x.id}" style="--choice-primary:${x.primary};--choice-secondary:${x.secondary};--choice-on:${x.onPrimary}"><span class="school-choice-badge">${x.abbr}</span><strong>${x.name}</strong><small>${state.profile.schoolId===x.id?'Selected':'Choose school'}</small></button>`).join('')}</div>
-    <button class="no-school-btn ${state.profile.schoolId==='fuelr'?'selected':''}" data-school-id="fuelr">No school / use Fuelr theme</button>
-    <button class="btn primary onboard-main" data-ob-next="1" ${!state.profile.schoolId?'disabled':''}>Continue →</button>`);
+  if(step===1){
+    const popularIds=['ucf','uf','fsu','alabama','georgia','texas','ohio-state','michigan'];
+    const popular=popularIds.map(id=>SCHOOL_THEMES.find(s=>s.id===id)).filter(Boolean);
+    return shell(`<div class="onboard-copy"><div class="eyebrow">01 · Campus theme</div><h1>Do you go to <span class="accent">college?</span></h1><p>Optional. Pick your school and Fuelr uses its color palette across the app. You can always use the standard Fuelr theme instead.</p></div>
+      <div class="college-choice-row">
+        <button class="${state.profile.schoolId && state.profile.schoolId!=='fuelr'?'selected':''}" data-college-choice="yes"><b>Yes</b><span>Use my college colors</span></button>
+        <button class="${state.profile.schoolId==='fuelr'?'selected':''}" data-school-id="fuelr"><b>No / Skip</b><span>Use the Fuelr theme</span></button>
+      </div>
+      <div class="school-select-card">
+        <label for="schoolSelect">College / university</label>
+        <select id="schoolSelect">${schoolSelectOptions()}</select>
+        <small>50 schools are available now, starting with the SEC, Big Ten, and major Florida/popular programs.</small>
+      </div>
+      <div class="popular-school-row">${popular.map(s=>`<button class="${state.profile.schoolId===s.id?'selected':''}" data-school-id="${s.id}" style="--choice-primary:${s.primary};--choice-secondary:${s.secondary};--choice-on:${s.onPrimary}"><span>${esc(s.abbr)}</span><small>${esc(s.name.replace('University of ','').replace('The Ohio State University','Ohio State'))}</small></button>`).join('')}</div>
+      <div class="brand-licensing-note">Fuelr uses school names, abbreviations, and color themes only. Official university/athletics logos are not embedded in the app without licensing approval.</div>
+      <button class="btn primary onboard-main" data-ob-next="1" ${!state.profile.schoolId?'disabled':''}>Continue →</button>`);
+  }
 
   if(step===2){
     const target=weeklyMealTarget();
@@ -1522,8 +1543,15 @@ function renderSettings(){
 
     <section class="profile-school-card settings-school-card">
       <div class="school-badge">${esc(school.abbr)}</div>
-      <div><span>CAMPUS THEME</span><h2>${esc(school.name)}</h2><p>Your Fuelr interface uses this school's colors throughout the app.</p></div>
-      <button class="mini-action" data-change-school="1">Change school</button>
+      <div><span>CAMPUS THEME</span><h2>${esc(school.name)}</h2><p>Choose a college theme or keep Fuelr's default palette.</p></div>
+      <div class="settings-school-select"><select id="settingsSchoolSelect"><option value="fuelr" ${state.profile.schoolId==='fuelr'?'selected':''}>Fuelr default</option>${schoolSelectOptions(state.profile.schoolId).replace('<option value="">Select a college...</option>','')}</select></div>
+    </section>
+    <section class="appearance-card">
+      <div><span>APPEARANCE</span><h3>Light or dark</h3><p>Layout stays exactly the same; only the visual treatment changes.</p></div>
+      <div class="appearance-selector">
+        <button class="${state.profile.appearance!=='dark'?'selected':''}" data-appearance="light"><span class="appearance-preview light-preview"></span><b>Light</b></button>
+        <button class="${state.profile.appearance==='dark'?'selected':''}" data-appearance="dark"><span class="appearance-preview dark-preview"></span><b>Dark</b></button>
+      </div>
     </section>
 
     <section class="settings-grid detailed-settings-grid">
@@ -1621,6 +1649,14 @@ function bindDynamic(){
   app.querySelectorAll('[data-change-school]').forEach(el=>el.addEventListener('click',beginSchoolChange));
 
   app.querySelectorAll('[data-school-id]').forEach(el=>el.addEventListener('click',()=>chooseSchool(el.dataset.schoolId)));
+  document.getElementById('schoolSelect')?.addEventListener('change',e=>{ if(e.target.value) chooseSchool(e.target.value); });
+  document.getElementById('settingsSchoolSelect')?.addEventListener('change',e=>{ chooseSchool(e.target.value||'fuelr'); });
+  app.querySelectorAll('[data-appearance]').forEach(el=>el.addEventListener('click',()=>{
+    state.profile.appearance=el.dataset.appearance==='dark'?'dark':'light';
+    saveProfile(); applySchoolTheme();
+    if(state.onboardingComplete) persistProfileToCloud();
+    render();
+  }));
   app.querySelectorAll('[data-prep-style]').forEach(el=>el.addEventListener('click',()=>{state.profile.prepStyle=el.dataset.prepStyle;saveProfile();if(state.onboardingComplete)persistProfileToCloud();render();}));
   app.querySelectorAll('[data-weekly-meals]').forEach(el=>el.addEventListener('click',()=>setWeeklyMealsTarget(Number(el.dataset.weeklyMeals))));
   app.querySelectorAll('[data-goal]').forEach(el=>el.addEventListener('click',()=>{state.profile.goal=el.dataset.goal;saveProfile();render();}));
