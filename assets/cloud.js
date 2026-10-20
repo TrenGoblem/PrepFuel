@@ -88,6 +88,7 @@
         dietary_preferences: Array.isArray(profile.dietaryPreferences) ? profile.dietaryPreferences : [],
         allergies: Array.isArray(profile.allergies) ? profile.allergies : [],
         goal: profile.goal || "performance",
+        appearance: profile.appearance === "dark" ? "dark" : "light",
         onboarding_complete: Boolean(profile.onboardingComplete)
       };
 
