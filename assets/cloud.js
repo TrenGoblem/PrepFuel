@@ -124,6 +124,16 @@
       return rows;
     },
 
+    async importRecipeUrl(url) {
+      if (!client || !this.user) throw new Error("Sign in before importing a recipe link.");
+      const { data, error } = await client.functions.invoke("import-recipe", {
+        body: { url }
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+
     async uploadRecipeImage(file) {
       if (!client || !this.user) throw new Error("Sign in before uploading a recipe image.");
       if (!file) return null;
@@ -179,6 +189,7 @@
           client_source_id: clientSourceId,
           name: recipe.name,
           source_name: recipe.sourceName || "My recipe",
+          source_url: recipe.sourceUrl || null,
           meal_type: recipe.mealType === "breakfast" ? "breakfast" : "main",
           source_servings: Number(recipe.original?.servings || 1),
           optimized_servings: Number(recipe.servings || 14),
