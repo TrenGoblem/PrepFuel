@@ -339,3 +339,42 @@ alter table public.weekly_plan_recipes
 alter table public.weekly_plan_recipes
   add constraint weekly_plan_recipes_slot_check
   check (slot in (1,2,3));
+
+
+-- Weekly breakfast lunch dinner calendar
+alter table public.recipes
+  add column if not exists meal_type text not null default 'main'
+  check (meal_type in ('breakfast','main'));
+
+create table if not exists public.weekly_schedule_slots (
+  id uuid primary key default gen_random_uuid(),
+  plan_id uuid not null references public.weekly_plans(id) on delete cascade,
+  day_index integer not null check (day_index between 0 and 6),
+  slot_type text not null check (slot_type in ('breakfast','lunch','dinner')),
+  recipe_id uuid references public.recipes(id) on delete set null,
+  recipe_key text,
+  created_at timestamptz not null default now(),
+  unique(plan_id, day_index, slot_type),
+  check (recipe_id is not null or recipe_key is not null)
+);
+
+alter table public.weekly_schedule_slots enable row level security;
+
+drop policy if exists "users manage own weekly schedule" on public.weekly_schedule_slots;
+create policy "users manage own weekly schedule"
+on public.weekly_schedule_slots
+for all
+using (exists (
+  select 1 from public.weekly_plans p
+  where p.id = plan_id and p.user_id = (select auth.uid())
+))
+with check (exists (
+  select 1 from public.weekly_plans p
+  where p.id = plan_id and p.user_id = (select auth.uid())
+));
+
+create index if not exists idx_weekly_schedule_slots_plan
+on public.weekly_schedule_slots(plan_id);
+
+create index if not exists idx_weekly_schedule_slots_recipe
+on public.weekly_schedule_slots(recipe_id);
