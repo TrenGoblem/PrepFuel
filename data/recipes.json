@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "updatedAt": "2026-10-20",
   "optimizationPolicy": {
     "weeklyMealOptions": [
@@ -12,7 +12,13 @@
     "targetMealCost": 5.580357142857143,
     "separateProduceBudget": false,
     "priceStatus": "estimated until store-verified",
-    "method": "Price the source recipe per serving, calculate target meal cost divided by source meal cost, and use that ratio as the starting quantity multiplier. Scale protein, carb bases, vegetables, cheese and other substantial ingredients close to the multiplier. Keep serving-defining items practical and adjust potent seasonings, oils and sauces by taste rather than blindly over-scaling. If the source is above the cap, scale down intelligently while protecting protein, food quality and useful volume."
+    "method": "Price the source recipe per serving, calculate target meal cost divided by source meal cost, and use that ratio as the starting quantity multiplier. Scale protein, carb bases, vegetables, cheese and other substantial ingredients close to the multiplier. Keep serving-defining items practical and adjust potent seasonings, oils and sauces by taste rather than blindly over-scaling. If the source is above the cap, scale down intelligently while protecting protein, food quality and useful volume.",
+    "sourceServingNormalization": true,
+    "sourceServingRule": "Every ingredient in the source recipe is first normalized from the creator's stated serving count to the selected PrepFuel batch size. Quantity_selected = Quantity_source × (selected meals ÷ source servings). This applies to protein, carbs, vegetables, cheese, sauces, oils, salt, spices, seasoning packets, and every other listed ingredient.",
+    "budgetScalingRule": "After serving normalization, calculate the source cost per meal and the current PrepFuel meal-cap ratio. Budget multiplier = PrepFuel meal cap ÷ source cost per meal. Use that multiplier to increase or decrease the complete recipe while preserving the creator's ingredient ratios and flavor balance. Nothing is left at the source amount just because it is a seasoning.",
+    "sevenFourteenRule": "A source recipe can be written for any yield (for example 10 or 12 servings). PrepFuel derives both exact 7-meal and 14-meal batches from that source, then applies the same meal-cap optimization logic. The app stores the optimized 14-meal base and derives the 7-meal version at exactly one-half of that optimized batch.",
+    "formulaExample": "If a 10-meal source uses 2 tbsp seasoning, the unoptimized 7-meal amount is 2 × 7/10 = 1.4 tbsp and the unoptimized 14-meal amount is 2 × 14/10 = 2.8 tbsp. If the source meal costs $4.00 and the PrepFuel cap is $5.58, the cost multiplier is 5.58/4.00 = 1.395. The final optimized recipe scales the whole food system toward that multiplier while preserving sensible flavor ratios.",
+    "note": "Salt and strong seasonings are never ignored: they are scaled with the batch. Final seasoning amounts may be rounded to practical kitchen measurements, but the 7/14 math is always based on the source yield first."
   },
   "recipes": [
     {
