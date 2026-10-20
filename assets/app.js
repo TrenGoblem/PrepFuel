@@ -907,7 +907,7 @@ function renderHome(){
   const promptCopy = total===target
     ? `${planShape()} gives you all ${target} prepared meals for the week.`
     : total
-      ? `Add ${remaining} more meals in a 7-, 14-, or 21-meal batch that fits your target.`
+      ? `Add ${remaining} more compatible meals to finish your weekly calendar.`
       : `Your target is ${target} prepared meals: ${planExamples(target)}.`;
 
   return `<section class="dashboard-hero">
@@ -1235,7 +1235,7 @@ function renderRecipeDetail(r){
   const photo=r.photo?esc(r.photo):'assets/meal-placeholder.svg';
   const selectedCount=planFor(r.id);
   const target=weeklyMealTarget();
-  const count=selectedCount || (target===7?7:14);
+  const count=selectedCount || (recipeMealType(r)==='breakfast' ? 7 : (target===7?7:14));
   const factor=recipeBatchFactor(r,count);
   const ingredients=(r.ingredients||[]).map(i=>scaledIngredient(i,factor));
   const steps=r.instructions||[];
