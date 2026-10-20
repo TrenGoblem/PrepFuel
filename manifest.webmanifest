@@ -1,7 +1,7 @@
 {
-  "name": "PrepFuel Athlete Meal System",
-  "short_name": "PrepFuel",
-  "description": "Athlete meal prep, grocery lists, recipes and school-year budget tracking.",
+  "name": "Fuelr Personal Meal System",
+  "short_name": "Fuelr",
+  "description": "Personalized meal planning, recipe scaling, groceries, prep tracking and budget optimization.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
