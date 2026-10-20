@@ -14,10 +14,10 @@
     "priceStatus": "estimated until store-verified",
     "method": "Price the source recipe per serving, calculate target meal cost divided by source meal cost, and use that ratio as the starting quantity multiplier. Scale protein, carb bases, vegetables, cheese and other substantial ingredients close to the multiplier. Keep serving-defining items practical and adjust potent seasonings, oils and sauces by taste rather than blindly over-scaling. If the source is above the cap, scale down intelligently while protecting protein, food quality and useful volume.",
     "sourceServingNormalization": true,
-    "sourceServingRule": "Every ingredient in the source recipe is first normalized from the creator's stated serving count to the selected PrepFuel batch size. Quantity_selected = Quantity_source × (selected meals ÷ source servings). This applies to protein, carbs, vegetables, cheese, sauces, oils, salt, spices, seasoning packets, and every other listed ingredient.",
-    "budgetScalingRule": "After serving normalization, calculate the source cost per meal and the current PrepFuel meal-cap ratio. Budget multiplier = PrepFuel meal cap ÷ source cost per meal. Use that multiplier to increase or decrease the complete recipe while preserving the creator's ingredient ratios and flavor balance. Nothing is left at the source amount just because it is a seasoning.",
-    "sevenFourteenRule": "A source recipe can be written for any yield (for example 10 or 12 servings). PrepFuel derives both exact 7-meal and 14-meal batches from that source, then applies the same meal-cap optimization logic. The app stores the optimized 14-meal base and derives the 7-meal version at exactly one-half of that optimized batch.",
-    "formulaExample": "If a 10-meal source uses 2 tbsp seasoning, the unoptimized 7-meal amount is 2 × 7/10 = 1.4 tbsp and the unoptimized 14-meal amount is 2 × 14/10 = 2.8 tbsp. If the source meal costs $4.00 and the PrepFuel cap is $5.58, the cost multiplier is 5.58/4.00 = 1.395. The final optimized recipe scales the whole food system toward that multiplier while preserving sensible flavor ratios.",
+    "sourceServingRule": "Every ingredient in the source recipe is first normalized from the creator's stated serving count to the selected Fuelr batch size. Quantity_selected = Quantity_source × (selected meals ÷ source servings). This applies to protein, carbs, vegetables, cheese, sauces, oils, salt, spices, seasoning packets, and every other listed ingredient.",
+    "budgetScalingRule": "After serving normalization, calculate the source cost per meal and the current Fuelr meal-cap ratio. Budget multiplier = Fuelr meal cap ÷ source cost per meal. Use that multiplier to increase or decrease the complete recipe while preserving the creator's ingredient ratios and flavor balance. Nothing is left at the source amount just because it is a seasoning.",
+    "sevenFourteenRule": "A source recipe can be written for any yield (for example 10 or 12 servings). Fuelr derives both exact 7-meal and 14-meal batches from that source, then applies the same meal-cap optimization logic. The app stores the optimized 14-meal base and derives the 7-meal version at exactly one-half of that optimized batch.",
+    "formulaExample": "If a 10-meal source uses 2 tbsp seasoning, the unoptimized 7-meal amount is 2 × 7/10 = 1.4 tbsp and the unoptimized 14-meal amount is 2 × 14/10 = 2.8 tbsp. If the source meal costs $4.00 and the Fuelr cap is $5.58, the cost multiplier is 5.58/4.00 = 1.395. The final optimized recipe scales the whole food system toward that multiplier while preserving sensible flavor ratios.",
     "note": "Salt and strong seasonings are never ignored: they are scaled with the batch. Final seasoning amounts may be rounded to practical kitchen measurements, but the 7/14 math is always based on the source yield first."
   },
   "recipes": [
@@ -37,8 +37,8 @@
         "carbs": 77,
         "fat": 25
       },
-      "macrosStatus": "PrepFuel estimate after scaling the creator-posted 731 cal / 64g protein / 68g carbs / 22.5g fat source burrito",
-      "optimizationNote": "The estimated source build was about $4.93 per meal, so the budget multiplier is roughly 1.13×. PrepFuel keeps one tortilla per meal but pushes the filling about 15% higher to use the full $5.58 cap: more lean steak, hash browns, cheese and the same flavor profile. This keeps the burrito high-quality and turns the spare budget into more actual food instead of a separate produce allowance.",
+      "macrosStatus": "Fuelr estimate after scaling the creator-posted 731 cal / 64g protein / 68g carbs / 22.5g fat source burrito",
+      "optimizationNote": "The estimated source build was about $4.93 per meal, so the budget multiplier is roughly 1.13×. Fuelr keeps one tortilla per meal but pushes the filling about 15% higher to use the full $5.58 cap: more lean steak, hash browns, cheese and the same flavor profile. This keeps the burrito high-quality and turns the spare budget into more actual food instead of a separate produce allowance.",
       "original": {
         "servings": 14,
         "portion": "1 burrito",
@@ -206,8 +206,8 @@
         "carbs": 80,
         "fat": 35
       },
-      "macrosStatus": "PrepFuel estimate after increasing the existing optimized build toward the $5.58 meal cap; creator source was 481 cal / 43g protein / 39g carbs / 17g fat per smaller sub",
-      "optimizationNote": "The previous PrepFuel build was about $4.86 per meal, so the budget ratio is about 1.15×. Because the bread already defines the two-sub meal, PrepFuel spends the extra budget mostly on useful filling: chicken rises to about 4.74 kg for the full batch, with proportionally more cheese and ranch. The result stays the same buffalo-sub idea but gives you more protein and food volume for the full meal cap.",
+      "macrosStatus": "Fuelr estimate after increasing the existing optimized build toward the $5.58 meal cap; creator source was 481 cal / 43g protein / 39g carbs / 17g fat per smaller sub",
+      "optimizationNote": "The previous Fuelr build was about $4.86 per meal, so the budget ratio is about 1.15×. Because the bread already defines the two-sub meal, Fuelr spends the extra budget mostly on useful filling: chicken rises to about 4.74 kg for the full batch, with proportionally more cheese and ranch. The result stays the same buffalo-sub idea but gives you more protein and food volume for the full meal cap.",
       "original": {
         "servings": 12,
         "portion": "1 sub",
@@ -337,7 +337,7 @@
         "Cook the chicken in batches using only a light coat of avocado oil spray. Brown well and cook through.",
         "Hollow out the baguettes to remove excess bread from the center, then cut each baguette into 3 sub segments.",
         "Build enough sub segments for your selected meal count, loading them heavily with buffalo chicken and ultra-thin provolone or Swiss. Toast until the bread is crisp and the cheese melts.",
-        "Finish with the measured fat-free ranch. One PrepFuel meal is 2 sub segments.",
+        "Finish with the measured fat-free ranch. One Fuelr meal is 2 sub segments.",
         "For a 7-meal prep, make 14 sub segments. For a 14-meal prep, make 28 sub segments; any spare bread segments can be frozen.",
         "Refrigerate the first 3–4 days of cooked portions. Freeze later-week portions and thaw in the refrigerator before reheating."
       ],
