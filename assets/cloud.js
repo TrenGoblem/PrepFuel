@@ -80,7 +80,7 @@
         school_id: profile.schoolId || "fuelr",
         school_year_budget: Number(profile.schoolYearBudget),
         academic_weeks: Number(profile.academicWeeks),
-        meals_per_week: 14,
+        meals_per_week: [7,14,21].includes(Number(profile.mealsPerWeek)) ? Number(profile.mealsPerWeek) : 14,
         preferred_store: profile.preferredStore || "Aldi",
         alt_store: profile.altStore || "Walmart",
         prep_style: profile.prepStyle || "split",
