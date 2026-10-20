@@ -1007,19 +1007,24 @@ function renderOnboarding(){
     <button class="no-school-btn ${state.profile.schoolId==='fuelr'?'selected':''}" data-school-id="fuelr">No school / use Fuelr theme</button>
     <button class="btn primary onboard-main" data-ob-next="1" ${!state.profile.schoolId?'disabled':''}>Continue →</button>`);
 
-  if(step===2) return shell(`<div class="onboard-copy"><div class="eyebrow">02 · Budget</div><h1>Give every dollar a <span class="accent">job.</span></h1><p>Fuelr calculates your per-meal target automatically.</p></div>
-    <div class="onboard-card"><div class="field"><label>School-year food budget</label><div class="money-input"><span>$</span><input id="obBudget" type="number" value="${state.settings.schoolYearBudget}"></div></div><div class="field"><label>Academic weeks</label><input id="obWeeks" type="number" value="${state.settings.academicWeeks}"></div><div class="onboard-result"><span>Current target</span><strong>${money(mealTarget())}</strong><small>per meal · 14 meals each week</small></div></div>
-    <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
-
-  if(step===3){
+  if(step===2){
     const target=weeklyMealTarget();
-    return shell(`<div class="onboard-copy"><div class="eyebrow">03 · Weekly routine</div><h1>How many meals do you <span class="accent">prep?</span></h1><p>Choose how many prepared meals Fuelr should cover each week. You can change this anytime.</p></div>
+    return shell(`<div class="onboard-copy"><div class="eyebrow">02 · Weekly meals</div><h1>How much of your week should Fuelr <span class="accent">cover?</span></h1><p>Choose the number of prepared meals you want each week. Breakfast shakes or meals you handle another way do not need to count.</p></div>
       <div class="weekly-target-grid">
-        ${WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${target===n?'selected':''}" data-weekly-meals="${n}"><b>${n}</b><span>${n/7} prepared ${n===7?'meal':'meals'} / day</span><small>${n===7?'Great if breakfast and another meal are handled elsewhere':n===14?'Two meals a day — your current style':'All three daily meals covered'}</small></button>`).join('')}
+        ${WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${target===n?'selected':''}" data-weekly-meals="${n}"><b>${n}</b><span>${n/7} prepared ${n===7?'meal':'meals'} / day</span><small>${n===7?'One meal a day':n===14?'Two meals a day':'Three meals a day'}</small></button>`).join('')}
       </div>
-      <div class="onboard-card"><div class="split"><div class="field"><label>Preferred store</label><input id="obStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="obAlt" value="${esc(state.settings.altStore)}"></div></div></div>
+      <div class="onboard-note"><strong>${target} meals/week</strong><span>${planExamples(target)} · you can mix recipes however you want within the target.</span></div>
       <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
   }
+
+  if(step===3) return shell(`<div class="onboard-copy"><div class="eyebrow">03 · Budget + stores</div><h1>Give every dollar a <span class="accent">job.</span></h1><p>Fuelr divides your budget across the ${weeklyMealTarget()} prepared meals you selected each week.</p></div>
+    <div class="onboard-card">
+      <div class="field"><label>School-year food budget</label><div class="money-input"><span>$</span><input id="obBudget" type="number" value="${state.settings.schoolYearBudget}"></div></div>
+      <div class="field"><label>Academic weeks</label><input id="obWeeks" type="number" value="${state.settings.academicWeeks}"></div>
+      <div class="split"><div class="field"><label>Preferred store</label><input id="obStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="obAlt" value="${esc(state.settings.altStore)}"></div></div>
+      <div class="onboard-result"><span>CURRENT TARGET</span><strong id="obMealTargetPreview">${money(mealTarget())}</strong><small>per meal · ${weeklyMealTarget()} prepared meals each week</small></div>
+    </div>
+    <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
 
   if(step===4){
     const goals=[
@@ -1204,7 +1209,7 @@ function renderBudget(){
       </article>
       <div class="budget-mini-grid">
         <article><span>7 meals</span><strong>${money(target*7)}</strong><small>one 7-meal batch</small></article>
-        <article><span>14 meals</span><strong>${money(target*14)}</strong><small>two weeks of 7? no — two daily meals/week</small></article>
+        <article><span>14 meals</span><strong>${money(target*14)}</strong><small>two prepared meals/day</small></article>
         <article><span>21 meals</span><strong>${money(target*21)}</strong><small>three daily meals/week</small></article>
         <article><span>Your week</span><strong>${money(weekly)}</strong><small>${weeklyMeals} prepared meals</small></article>
       </div>
@@ -1294,15 +1299,20 @@ function bindDynamic(){
   app.querySelectorAll('[data-prep-style]').forEach(el=>el.addEventListener('click',()=>{state.profile.prepStyle=el.dataset.prepStyle;saveProfile();if(state.onboardingComplete)persistProfileToCloud();render();}));
   app.querySelectorAll('[data-weekly-meals]').forEach(el=>el.addEventListener('click',()=>setWeeklyMealsTarget(Number(el.dataset.weeklyMeals))));
   app.querySelectorAll('[data-goal]').forEach(el=>el.addEventListener('click',()=>{state.profile.goal=el.dataset.goal;saveProfile();render();}));
+  const refreshOnboardBudget=()=>{
+    const budget=Number(document.getElementById('obBudget')?.value)||state.settings.schoolYearBudget;
+    const weeks=Number(document.getElementById('obWeeks')?.value)||state.settings.academicWeeks;
+    const preview=document.getElementById('obMealTargetPreview');
+    if(preview) preview.textContent=money(budget/(weeks*weeklyMealTarget()));
+  };
+  document.getElementById('obBudget')?.addEventListener('input',refreshOnboardBudget);
+  document.getElementById('obWeeks')?.addEventListener('input',refreshOnboardBudget);
   app.querySelectorAll('[data-ob-back]').forEach(el=>el.addEventListener('click',()=>{state.onboardingStep=Math.max(0,state.onboardingStep-1);render();}));
   app.querySelectorAll('[data-ob-next]').forEach(el=>el.addEventListener('click',()=>{
     if(state.onboardingStep===1 && !state.profile.schoolId){ showToast('Choose a school or Fuelr theme'); return; }
-    if(state.onboardingStep===2){
+    if(state.onboardingStep===3){
       state.settings.schoolYearBudget=Number(document.getElementById('obBudget')?.value)||DEFAULTS.schoolYearBudget;
       state.settings.academicWeeks=Number(document.getElementById('obWeeks')?.value)||DEFAULTS.academicWeeks;
-      saveSettings();
-    }
-    if(state.onboardingStep===3){
       state.settings.preferredStore=document.getElementById('obStore')?.value||'Aldi';
       state.settings.altStore=document.getElementById('obAlt')?.value||'Walmart';
       saveSettings(); saveProfile();
