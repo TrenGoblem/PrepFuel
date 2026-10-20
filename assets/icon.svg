@@ -1,31 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#17243a"/>
-      <stop offset=".48" stop-color="#090e17"/>
-      <stop offset="1" stop-color="#020409"/>
+      <stop offset="0" stop-color="#222a36"/>
+      <stop offset=".52" stop-color="#11161e"/>
+      <stop offset="1" stop-color="#05070b"/>
     </linearGradient>
     <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#ffffff"/>
-      <stop offset=".34" stop-color="#dce8f8"/>
-      <stop offset=".62" stop-color="#7fb4ff"/>
-      <stop offset="1" stop-color="#eef5ff"/>
+      <stop offset=".45" stop-color="#dfe7f2"/>
+      <stop offset="1" stop-color="#8fa8ff"/>
     </linearGradient>
-    <radialGradient id="glow" cx=".55" cy=".3" r=".72">
-      <stop offset="0" stop-color="#70adff" stop-opacity=".58"/>
-      <stop offset=".5" stop-color="#2f86ff" stop-opacity=".12"/>
-      <stop offset="1" stop-color="#2f86ff" stop-opacity="0"/>
+    <radialGradient id="glow" cx=".5" cy=".27" r=".72">
+      <stop offset="0" stop-color="#8ea6ff" stop-opacity=".45"/>
+      <stop offset=".55" stop-color="#657ff0" stop-opacity=".09"/>
+      <stop offset="1" stop-color="#657ff0" stop-opacity="0"/>
     </radialGradient>
-    <filter id="g"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   </defs>
-  <rect width="512" height="512" rx="118" fill="#020409"/>
-  <rect x="18" y="18" width="476" height="476" rx="102" fill="url(#bg)" stroke="#26354d" stroke-width="2"/>
-  <circle cx="286" cy="152" r="210" fill="url(#glow)"/>
-  <g fill="url(#metal)" filter="url(#g)">
-    <path d="M94 365 157 139h127c52 0 83 24 83 64 0 51-40 87-101 87h-65l-20 75H94Zm122-137h57c19 0 31-8 31-22 0-12-9-18-27-18h-50l-11 40Z"/>
-    <path d="M263 139h157l-15 55h-88l-8 33h82l-14 52h-82l-23 86h-69l58-226Z"/>
+  <rect width="512" height="512" rx="118" fill="#05070b"/>
+  <rect x="18" y="18" width="476" height="476" rx="102" fill="url(#bg)" stroke="#2d3542" stroke-width="2"/>
+  <circle cx="270" cy="150" r="205" fill="url(#glow)"/>
+  <g fill="url(#metal)">
+    <path d="M118 365V143h145v58H187v35h67v56h-67v73h-69Z"/>
+    <path d="M270 365V143h90c58 0 91 28 91 76 0 35-20 60-53 70l60 76h-82l-48-67h-2v67h-56Zm56-120h27c20 0 31-9 31-25 0-16-11-24-31-24h-27v49Z"/>
   </g>
-  <path d="M104 390h304" stroke="url(#metal)" stroke-width="9" stroke-linecap="round" opacity=".92"/>
-  <path d="M105 407h210" stroke="#77b0ff" stroke-width="3" stroke-linecap="round" opacity=".6"/>
-  <path d="M347 407h61" stroke="#f5f8ff" stroke-width="3" stroke-linecap="round" opacity=".48"/>
+  <path d="M104 401h304" stroke="#eef3ff" stroke-width="8" stroke-linecap="round" opacity=".9"/>
+  <path d="M104 419h190" stroke="#8fa8ff" stroke-width="3" stroke-linecap="round" opacity=".62"/>
 </svg>
