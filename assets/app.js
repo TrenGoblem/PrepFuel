@@ -26,7 +26,11 @@ const storedUserRecipes = JSON.parse(localStorage.getItem('fuelr_user_recipes') 
 const legacySelected = localStorage.getItem('pf_selected_recipe') || '';
 const savedTab = localStorage.getItem('pf_tab') || 'home';
 const storedSchedule = JSON.parse(localStorage.getItem('fuelr_week_schedule') || '{}');
-const normalizeTab = tab => ['prep','grocery'].includes(tab) ? 'week' : ['budget','settings'].includes(tab) ? 'you' : (['home','recipes','week','calendar','you'].includes(tab) ? tab : 'home');
+const normalizeTab = tab => {
+  if(tab==='week') return 'prep';
+  if(tab==='you') return 'settings';
+  return ['home','recipes','prep','grocery','calendar','budget','settings'].includes(tab) ? tab : 'home';
+};
 
 const state = {
   tab: normalizeTab(savedTab),
@@ -142,9 +146,10 @@ function chooseSchool(id){
 function setWeekView(view){
   state.weekView=['plan','shop','prep'].includes(view)?view:'plan';
   localStorage.setItem('fuelr_week_view',state.weekView);
-  state.tab='week';
-  localStorage.setItem('pf_tab','week');
+  state.tab=view==='shop' ? 'grocery' : view==='prep' ? 'prep' : 'recipes';
+  localStorage.setItem('pf_tab',state.tab);
   state.detailId='';
+  state.addRecipeMode=false;
   render();
   scheduleCloudWeekSave();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -858,11 +863,12 @@ async function syncRecipes(silent=false){
 }
 
 function setTab(tab){
-  if(tab==='grocery'){ setWeekView('shop'); return; }
-  if(tab==='prep'){ setWeekView('prep'); return; }
-  if(tab==='budget' || tab==='settings') tab='you';
   tab=normalizeTab(tab);
   state.tab=tab;
+  if(tab==='grocery') state.weekView='shop';
+  else if(tab==='prep') state.weekView='prep';
+  else if(tab==='recipes') state.weekView='plan';
+  localStorage.setItem('fuelr_week_view',state.weekView);
   state.detailId='';
   state.addRecipeMode=false;
   localStorage.setItem('pf_tab',tab);
@@ -960,7 +966,7 @@ function renderHome(){
   <section class="quick-row">
     <button class="quick-tile" data-week-view="shop"><span class="quick-kicker">GROCERY</span><strong>One combined run.</strong><small>Lists scale automatically to your selected meal batches.</small><span class="quick-arrow">→</span></button>
     <button class="quick-tile" data-go="calendar"><span class="quick-kicker">CALENDAR</span><strong>${scheduledMeals()}/${target} placed.</strong><small>Arrange breakfast, lunch and dinner from Monday through Sunday.</small><span class="quick-arrow">→</span></button>
-    <button class="quick-tile" data-go="you"><span class="quick-kicker">YOUR SYSTEM</span><strong>${target} meals/week.</strong><small>Change between 7, 14, and 21 anytime.</small><span class="quick-arrow">→</span></button>
+    <button class="quick-tile" data-go="settings"><span class="quick-kicker">YOUR SYSTEM</span><strong>${target} meals/week.</strong><small>Change between 7, 14, and 21 anytime.</small><span class="quick-arrow">→</span></button>
   </section>`;
 }
 
@@ -1500,25 +1506,57 @@ function renderBudget(){
 
 function renderSettings(){
   const target=weeklyMealTarget();
+  const school=currentSchool();
+  const goals=[
+    ['performance','Performance'],
+    ['high_protein','High protein'],
+    ['balanced','Balanced'],
+    ['bulking','Gain size'],
+    ['cutting','Lean out']
+  ];
   return `<section class="page-intro">
-      <div class="eyebrow">System settings</div>
-      <h1>One budget drives <span class="accent">everything.</span></h1>
-      <p>Fuelr calculates the meal cap automatically from your school-year budget, academic weeks, and prepared meals per week.</p>
+      <div class="eyebrow">Fuelr settings</div>
+      <h1>Your app. <span class="accent">Your system.</span></h1>
+      <p>Everything here belongs to your account: school theme, meal count, budget, stores and food preferences.</p>
     </section>
-    <section class="settings-grid">
+
+    <section class="profile-school-card settings-school-card">
+      <div class="school-badge">${esc(school.abbr)}</div>
+      <div><span>CAMPUS THEME</span><h2>${esc(school.name)}</h2><p>Your Fuelr interface uses this school's colors throughout the app.</p></div>
+      <button class="mini-action" data-change-school="1">Change school</button>
+    </section>
+
+    <section class="settings-grid detailed-settings-grid">
       <div class="settings-card">
-        <div class="settings-card-head"><span class="summary-icon blue">01</span><div><h3>Budget</h3><p>Sets the automatic meal cap</p></div></div>
-        <div class="field"><label>Prepared meals each week</label><div class="weekly-meal-selector">${WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${target===n?'selected':''}" data-weekly-meals="${n}"><b>${n}</b><span>${n/7}/day</span></button>`).join('')}</div></div>
-        <div class="split"><div class="field"><label>School-year budget</label><input id="sBudget" type="number" step="1" value="${state.settings.schoolYearBudget}"></div><div class="field"><label>Academic weeks</label><input id="sWeeks" type="number" step="1" value="${state.settings.academicWeeks}"></div></div>
-        <div class="derived-cap"><span>Calculated meal cap</span><strong>${money(mealTarget())}</strong><small>per meal · ${target} meals/week</small></div>
+        <div class="settings-card-head"><span class="summary-icon blue">01</span><div><h3>Weekly meal system</h3><p>How much of your week Fuelr covers</p></div></div>
+        <div class="field"><label>Prepared meals each week</label><div class="weekly-meal-selector">${WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${target===n?'selected':''}" data-weekly-meals="${n}"><b>${n}</b><span>${n/7}/day</span></button>`).join('')}</div><small>7 = one/day · 14 = two/day · 21 = breakfast + lunch + dinner coverage.</small></div>
+        <div class="derived-cap"><span>Current meal cap</span><strong>${money(mealTarget())}</strong><small>${money(state.settings.schoolYearBudget)} ÷ ${state.settings.academicWeeks} weeks ÷ ${target} prepared meals</small></div>
       </div>
+
       <div class="settings-card">
-        <div class="settings-card-head"><span class="summary-icon dark">02</span><div><h3>Stores</h3><p>Where the grocery list starts</p></div></div>
+        <div class="settings-card-head"><span class="summary-icon dark">02</span><div><h3>Budget + stores</h3><p>Controls recipe optimization and grocery planning</p></div></div>
+        <div class="split"><div class="field"><label>School-year budget</label><input id="sBudget" type="number" step="1" value="${state.settings.schoolYearBudget}"></div><div class="field"><label>Academic weeks</label><input id="sWeeks" type="number" step="1" value="${state.settings.academicWeeks}"></div></div>
         <div class="split"><div class="field"><label>Preferred store</label><input id="sStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="sAlt" value="${esc(state.settings.altStore)}"></div></div>
       </div>
+
+      <div class="settings-card settings-food-card">
+        <div class="settings-card-head"><span class="summary-icon pale">03</span><div><h3>Food profile</h3><p>Used for recommendations and recipe filtering</p></div></div>
+        <div class="field"><label>Main goal</label><div class="goal-grid">${goals.map(([id,label])=>`<button class="${state.profile.goal===id?'selected':''}" data-goal="${id}">${label}</button>`).join('')}</div></div>
+        <div class="field"><label>Diet preferences</label><input id="sDiet" value="${esc((state.profile.dietaryPreferences||[]).join(', '))}" placeholder="High protein, vegetarian, no pork..."><small>Separate multiple preferences with commas.</small></div>
+        <div class="field"><label>Allergies / foods to avoid</label><input id="sAllergies" value="${esc((state.profile.allergies||[]).join(', '))}" placeholder="Peanuts, shellfish..."><small>These stay attached to your private Fuelr profile.</small></div>
+      </div>
+
+      <div class="settings-card settings-account-card">
+        <div class="settings-card-head"><span class="summary-icon blue">04</span><div><h3>Account + cloud</h3><p>Your personal Fuelr data across devices</p></div></div>
+        <div class="account-setting-row"><span>Status</span><strong>${cloudSignedIn()?'Cloud synced':'On-device only'}</strong></div>
+        <div class="account-setting-row"><span>Account</span><strong>${esc(state.cloud.user?.email||'Not signed in')}</strong></div>
+        <p class="settings-note">${cloudSignedIn()?'Recipes, calendar, grocery progress, prep progress and profile settings are tied to this account.':'Sign in to keep your setup available across devices.'}</p>
+        ${cloudSignedIn()?'<button class="btn secondary full" data-sign-out="1">Sign out</button>':''}
+      </div>
     </section>
+
     <button id="saveSettings" class="btn primary full save-settings">Save Fuelr settings</button>
-    <section class="section"><div class="notice blue"><strong>Streamlined scaling:</strong> Fuelr normalizes every ingredient from the creator's source yield to 7, 14, or 21 meals, then adjusts the full recipe toward your personal meal cap.</div></section>`;
+    <section class="section"><div class="notice blue"><strong>Personalized by account:</strong> two people can install Fuelr and have completely different school colors, budgets, meal counts, recipes, calendars and grocery/prep progress.</div></section>`;
 }
 
 function render(){
@@ -1548,9 +1586,11 @@ function render(){
   nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.tab===state.tab && !state.detailId && !state.addRecipeMode));
   if(state.detailId){ const r=state.recipes.find(x=>x.id===state.detailId); app.innerHTML=r?renderRecipeDetail(r):renderRecipes(); }
   else if(state.tab==='recipes') app.innerHTML=renderRecipes();
-  else if(state.tab==='week') app.innerHTML=renderWeek();
+  else if(state.tab==='prep') app.innerHTML=renderPrep();
+  else if(state.tab==='grocery') app.innerHTML=renderGrocery();
   else if(state.tab==='calendar') app.innerHTML=renderCalendar();
-  else if(state.tab==='you') app.innerHTML=renderYou();
+  else if(state.tab==='budget') app.innerHTML=renderBudget();
+  else if(state.tab==='settings') app.innerHTML=renderSettings();
   else app.innerHTML=renderHome();
   bindDynamic();
 }
@@ -1622,12 +1662,17 @@ function bindDynamic(){
 
   const save=document.getElementById('saveSettings');
   if(save) save.addEventListener('click',()=>{
-    state.settings.schoolYearBudget=Number(document.getElementById('sBudget').value)||DEFAULTS.schoolYearBudget;
-    state.settings.academicWeeks=Number(document.getElementById('sWeeks').value)||DEFAULTS.academicWeeks;
+    state.settings.schoolYearBudget=Number(document.getElementById('sBudget')?.value)||DEFAULTS.schoolYearBudget;
+    state.settings.academicWeeks=Number(document.getElementById('sWeeks')?.value)||DEFAULTS.academicWeeks;
     state.settings.mealsPerWeek=WEEKLY_MEAL_OPTIONS.includes(Number(state.settings.mealsPerWeek))?Number(state.settings.mealsPerWeek):DEFAULTS.mealsPerWeek;
-    state.settings.preferredStore=document.getElementById('sStore').value||'Aldi';
-    state.settings.altStore=document.getElementById('sAlt').value||'Walmart';
-    saveSettings();persistProfileToCloud();scheduleCloudWeekSave();showToast('Your Fuelr was updated');render();
+    state.settings.preferredStore=document.getElementById('sStore')?.value||'Aldi';
+    state.settings.altStore=document.getElementById('sAlt')?.value||'Walmart';
+    const toList=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean).slice(0,20);
+    const diet=document.getElementById('sDiet');
+    const allergies=document.getElementById('sAllergies');
+    if(diet) state.profile.dietaryPreferences=toList(diet.value);
+    if(allergies) state.profile.allergies=toList(allergies.value);
+    saveSettings();saveProfile();persistProfileToCloud();scheduleCloudWeekSave();showToast('Your Fuelr was updated');render();
   });
 }
 
