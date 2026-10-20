@@ -848,20 +848,24 @@ function recipeCard(r){
   const count = planFor(r.id);
   const selected = WEEKLY_MEAL_OPTIONS.includes(count);
   const target=weeklyMealTarget();
+  const type=recipeMealType(r);
   const protein=macroFor(r,'protein');
   const calories=macroFor(r,'calories');
   const carbs=macroFor(r,'carbs');
-  const buttons=WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${count===n?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="${n}" ${n>target?'disabled aria-disabled="true"':''}><b>${n}</b><span>meals</span></button>`).join('');
+  const buttons=WEEKLY_MEAL_OPTIONS.map(n=>{
+    const disabled=n>target || !recipeBatchAllowed(r,n);
+    return `<button class="${count===n?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="${n}" ${disabled?'disabled aria-disabled="true"':''}><b>${n}</b><span>meals</span></button>`;
+  }).join('');
   return `<article class="meal-float-card ${selected?'selected':''}" data-recipe="${esc(r.id)}">
     <div class="meal-photo">
       <img src="${photo}" alt="${esc(r.name)}" onerror="this.src='assets/meal-placeholder.svg'">
       <div class="meal-photo-top">
-        <span class="meal-tag">${selected?count+' MEALS THIS WEEK':'FUELR PREP'}</span>
+        <span class="meal-tag">${selected?count+' MEALS THIS WEEK':type==='breakfast'?'BREAKFAST':'LUNCH / DINNER'}</span>
         <span class="meal-cost">${money(mealTarget())}/meal target</span>
       </div>
     </div>
     <div class="meal-card-copy">
-      <div class="meal-card-label">FUELR OPTIMIZED</div>
+      <div class="meal-card-label">FUELR OPTIMIZED · ${type==='breakfast'?'BREAKFAST':'LUNCH / DINNER'}</div>
       <h3>${esc(r.name)}</h3>
       <div class="meal-stats">
         ${protein ? `<span><b>${esc(protein)}g</b> protein</span>`:''}
@@ -928,6 +932,7 @@ function renderHome(){
 
   <section class="quick-row">
     <button class="quick-tile" data-week-view="shop"><span class="quick-kicker">GROCERY</span><strong>One combined run.</strong><small>Lists scale automatically to every 7-, 14-, or 21-meal batch.</small><span class="quick-arrow">→</span></button>
+    <button class="quick-tile" data-go="calendar"><span class="quick-kicker">CALENDAR</span><strong>${scheduledMeals()}/${target} placed.</strong><small>Arrange breakfast, lunch and dinner from Monday through Sunday.</small><span class="quick-arrow">→</span></button>
     <button class="quick-tile" data-go="you"><span class="quick-kicker">YOUR SYSTEM</span><strong>${target} meals/week.</strong><small>Change between 7, 14, and 21 anytime.</small><span class="quick-arrow">→</span></button>
   </section>`;
 }
@@ -966,12 +971,18 @@ function renderAddRecipe(){
     <section class="page-intro add-recipe-intro">
       <div class="eyebrow">Personal recipe</div>
       <h1>Add it once. <span class="accent">Fuelr scales it.</span></h1>
-      <p>Enter the source recipe exactly as written. Fuelr converts it from its original serving count into optimized 7-, 14-, and 21-meal batches.</p>
+      <p>Enter the source recipe exactly as written, then tell Fuelr where it belongs in your weekly calendar.</p>
     </section>
     <section class="add-recipe-card">
       <div class="split">
         <div class="field"><label>Recipe name</label><input id="urName" placeholder="Chicken burrito bowls"></div>
         <div class="field"><label>Source servings</label><input id="urServings" type="number" min="1" step="1" placeholder="10"></div>
+      </div>
+      <div class="field"><label>Where does this meal belong?</label>
+        <div class="recipe-type-picker">
+          <label><input type="radio" name="urMealType" value="breakfast"><span><b>Breakfast</b><small>Always placed in the breakfast column</small></span></label>
+          <label class="selected-default"><input type="radio" name="urMealType" value="main" checked><span><b>Lunch / Dinner</b><small>Can move between lunch and dinner</small></span></label>
+        </div>
       </div>
       <div class="field"><label>Estimated source batch cost</label><input id="urBatchCost" type="number" min="0" step=".01" placeholder="40.00"><small>Total ingredient cost for the original source batch.</small></div>
       <div class="field"><label>Recipe photo</label><input id="urPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small>Optional · JPG, PNG or WebP · up to 5 MB.</small></div>
@@ -983,7 +994,7 @@ function renderAddRecipe(){
         <div class="field"><label>Fat g</label><input id="urFat" type="number" min="0" placeholder="20"></div>
       </div>
       <div class="field"><label>Directions</label><textarea id="urDirections" rows="5" placeholder="One step per line"></textarea></div>
-      <div class="recipe-form-note"><strong>How Fuelr handles this:</strong> every listed ingredient is first normalized from the source serving count to 7, 14, or 21 meals. Then the full recipe is optimized toward your ${money(mealTarget())} meal cap while preserving the original ratios.</div>
+      <div class="recipe-form-note"><strong>How Fuelr handles this:</strong> every listed ingredient is normalized from the source serving count to the selected batch, then optimized toward your personal meal cap. Breakfast recipes lock to breakfast; lunch/dinner recipes can be moved between those two calendar slots.</div>
       <button class="btn primary full" id="saveUserRecipe">Save to my meals</button>
     </section>`;
 }
@@ -1005,6 +1016,7 @@ async function saveNewUserRecipe(){
   const name=document.getElementById('urName')?.value.trim();
   const sourceServings=Number(document.getElementById('urServings')?.value);
   const batchCost=Number(document.getElementById('urBatchCost')?.value);
+  const mealType=document.querySelector('input[name="urMealType"]:checked')?.value==='breakfast'?'breakfast':'main';
   const sourceIngredients=parseUserIngredients(document.getElementById('urIngredients')?.value);
   if(!name || !sourceServings || !sourceIngredients.length){
     showToast('Add a name, source servings and ingredients');
@@ -1036,6 +1048,7 @@ async function saveNewUserRecipe(){
     id,
     name,
     sourceName:'My recipe',
+    mealType,
     photo:photoUrl,
     photoPath,
     servings:14,
@@ -1209,7 +1222,11 @@ function renderRecipeDetail(r){
   const ingredients=(r.ingredients||[]).map(i=>scaledIngredient(i,factor));
   const steps=r.instructions||[];
   const batchUsed=mealTarget()*count;
-  const buttons=WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${selectedCount===n?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="${n}" ${n>target?'disabled aria-disabled="true"':''}><b>${n}</b><span>meals</span></button>`).join('');
+  const type=recipeMealType(r);
+  const buttons=WEEKLY_MEAL_OPTIONS.map(n=>{
+    const disabled=n>target || !recipeBatchAllowed(r,n);
+    return `<button class="${selectedCount===n?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="${n}" ${disabled?'disabled aria-disabled="true"':''}><b>${n}</b><span>meals</span></button>`;
+  }).join('');
   return `<button class="link-btn back-link" data-go="recipes">← Back to meals</button>
     <section class="detail-shell">
       <div class="detail-photo-card">
@@ -1217,7 +1234,7 @@ function renderRecipeDetail(r){
         <span class="meal-tag detail-tag">${count}-MEAL ${selectedCount?'PREP':'PREVIEW'}</span>
       </div>
       <div class="detail-copy">
-        <div class="eyebrow">Fuelr optimized</div>
+        <div class="eyebrow">Fuelr optimized · ${type==='breakfast'?'Breakfast':'Lunch / Dinner'}</div>
         <h1>${esc(r.name)}</h1>
         <p>${r.optimizationNote?esc(r.optimizationNote):'Optimized toward your current meal cap while protecting quality, protein, carbs and useful food volume.'}</p>
         <div class="meal-count-actions detail-count-actions" aria-label="Choose meal count">${buttons}</div>
@@ -1347,6 +1364,85 @@ function renderPrep(){
     </section>`:''}`;
 }
 
+
+function renderCalendarPicker(){
+  if(!state.calendarPick) return '';
+  const [dayRaw,slot]=state.calendarPick.split(':');
+  const day=Number(dayRaw);
+  const date=weekDate(day);
+  const compatible=selectedEntries().filter(x=>slotCompatible(x.recipe,slot));
+  const currentId=state.schedule[state.calendarPick];
+  return `<section class="calendar-picker">
+    <div class="calendar-picker-head">
+      <div><span>${DAY_NAMES[day]} · ${SLOT_LABELS[slot]}</span><h3>Choose a meal</h3></div>
+      <button data-calendar-close="1">×</button>
+    </div>
+    <p>${date.toLocaleDateString([], {month:'short',day:'numeric'})} · ${slot==='breakfast'?'Breakfast recipes stay here.':'Lunch / dinner recipes can move between either slot.'}</p>
+    <div class="calendar-picker-list">
+      ${compatible.length?compatible.map(({recipe,count})=>{
+        const assigned=calendarAssignedCount(recipe.id);
+        return `<button class="${currentId===recipe.id?'active':''}" data-calendar-assign="${esc(recipe.id)}" data-calendar-day="${day}" data-calendar-slot="${slot}">
+          <img src="${esc(recipe.photo||'assets/meal-placeholder.svg')}" alt="">
+          <span><strong>${esc(recipe.name)}</strong><small>${assigned}/${count} placed · ${recipeMealType(recipe)==='breakfast'?'Breakfast':'Lunch / Dinner'}</small></span>
+          <b>${currentId===recipe.id?'✓':'→'}</b>
+        </button>`;
+      }).join(''):`<div class="calendar-no-match"><strong>No compatible meal selected.</strong><span>${slot==='breakfast'?'Add a breakfast recipe to this week.':'Add a lunch / dinner recipe to this week.'}</span><button class="btn primary" data-go="recipes">Choose meals</button></div>`}
+    </div>
+    ${currentId?`<button class="calendar-clear-slot" data-calendar-clear="1" data-calendar-day="${day}" data-calendar-slot="${slot}">Clear this slot</button>`:''}
+  </section>`;
+}
+
+function renderCalendar(){
+  const target=weeklyMealTarget();
+  const total=plannedMeals();
+  const assigned=scheduledMeals();
+  const selected=selectedEntries();
+  const unassigned=selected.reduce((sum,x)=>sum+Math.max(0,x.count-calendarAssignedCount(x.recipe.id)),0);
+  const rows=DAY_NAMES.map((day,dayIndex)=>{
+    const date=weekDate(dayIndex);
+    const cells=['breakfast','lunch','dinner'].map(slot=>{
+      const key=calendarSlotKey(dayIndex,slot);
+      const recipeId=state.schedule[key];
+      const recipe=state.recipes.find(r=>r.id===recipeId);
+      const active=state.calendarPick===key;
+      if(recipe){
+        return `<button class="calendar-cell filled ${active?'active':''}" data-calendar-slot-key="${key}">
+          <span class="calendar-cell-type">${slot==='breakfast'?'AM':slot==='lunch'?'MID':'PM'}</span>
+          <strong>${esc(recipe.name)}</strong>
+          <small>${recipeMealType(recipe)==='breakfast'?'Breakfast':'Lunch / Dinner'}</small>
+        </button>`;
+      }
+      return `<button class="calendar-cell empty ${active?'active':''}" data-calendar-slot-key="${key}"><span>+</span><small>Add meal</small></button>`;
+    }).join('');
+    return `<div class="calendar-row">
+      <div class="calendar-day"><strong>${day}</strong><span>${date.toLocaleDateString([], {month:'short',day:'numeric'})}</span></div>
+      ${cells}
+    </div>`;
+  }).join('');
+
+  return `<section class="page-intro calendar-intro">
+      <div class="eyebrow">Weekly calendar</div>
+      <h1>Put every meal <span class="accent">where you want it.</span></h1>
+      <p>Breakfast recipes stay in breakfast. Lunch and dinner recipes can swap freely between those two slots.</p>
+    </section>
+    <section class="calendar-summary">
+      <article><span>Week</span><strong>${assigned}/${target}</strong><small>calendar slots filled</small></article>
+      <article><span>Plan</span><strong>${total}/${target}</strong><small>meals selected</small></article>
+      <article class="${unassigned?'attention':''}"><span>Unplaced</span><strong>${unassigned}</strong><small>${unassigned?'tap auto-fill or place them':'everything is placed'}</small></article>
+      <button class="calendar-autofill" data-calendar-auto="1">Auto-fill week</button>
+    </section>
+    <section class="week-calendar-card">
+      <div class="calendar-header"><div></div><strong>Breakfast</strong><strong>Lunch</strong><strong>Dinner</strong></div>
+      ${rows}
+    </section>
+    ${renderCalendarPicker()}
+    <section class="calendar-help">
+      <div><b>Breakfast</b><span>Recipes tagged Breakfast always stay in the first column.</span></div>
+      <div><b>Lunch / Dinner</b><span>Tap any lunch or dinner cell to move those recipes around your week.</span></div>
+      <div><b>New week</b><span>When Monday starts a new week, Fuelr clears the local active week and loads a fresh current-week plan while older cloud weeks remain in history.</span></div>
+    </section>`;
+}
+
 function renderBudget(){
   const target=mealTarget();
   const weekly=weeklyBudget();
@@ -1425,6 +1521,7 @@ function render(){
   if(state.detailId){ const r=state.recipes.find(x=>x.id===state.detailId); app.innerHTML=r?renderRecipeDetail(r):renderRecipes(); }
   else if(state.tab==='recipes') app.innerHTML=renderRecipes();
   else if(state.tab==='week') app.innerHTML=renderWeek();
+  else if(state.tab==='calendar') app.innerHTML=renderCalendar();
   else if(state.tab==='you') app.innerHTML=renderYou();
   else app.innerHTML=renderHome();
   bindDynamic();
@@ -1443,9 +1540,15 @@ function bindDynamic(){
   app.querySelectorAll('[data-prep-stage-id]').forEach(el=>el.addEventListener('click',()=>togglePrepStage(el.dataset.prepStageId,el.dataset.prepStage)));
   app.querySelectorAll('[data-prep-all-id]').forEach(el=>el.addEventListener('click',()=>markPrepBatch(el.dataset.prepAllId,Number(el.dataset.prepAllCount))));
   app.querySelectorAll('[data-next-week]').forEach(el=>el.addEventListener('click',()=>startNextWeek()));
+  app.querySelectorAll('[data-calendar-slot-key]').forEach(el=>el.addEventListener('click',()=>{state.calendarPick=el.dataset.calendarSlotKey;render();}));
+  app.querySelectorAll('[data-calendar-close]').forEach(el=>el.addEventListener('click',()=>{state.calendarPick='';render();}));
+  app.querySelectorAll('[data-calendar-auto]').forEach(el=>el.addEventListener('click',autoFillCalendar));
+  app.querySelectorAll('[data-calendar-assign]').forEach(el=>el.addEventListener('click',()=>assignCalendarSlot(Number(el.dataset.calendarDay),el.dataset.calendarSlot,el.dataset.calendarAssign)));
+  app.querySelectorAll('[data-calendar-clear]').forEach(el=>el.addEventListener('click',()=>clearCalendarSlot(Number(el.dataset.calendarDay),el.dataset.calendarSlot)));
   app.querySelectorAll('[data-week-view]').forEach(el=>el.addEventListener('click',()=>setWeekView(el.dataset.weekView)));
   app.querySelectorAll('[data-add-recipe]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=true;state.detailId='';render();window.scrollTo({top:0,behavior:'smooth'});}));
   app.querySelectorAll('[data-close-add]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=false;render();}));
+  document.querySelectorAll('input[name="urMealType"]').forEach(el=>el.addEventListener('change',()=>document.querySelectorAll('.recipe-type-picker label').forEach(label=>label.classList.toggle('selected-default',Boolean(label.querySelector('input:checked'))))));
   document.getElementById('saveUserRecipe')?.addEventListener('click',saveNewUserRecipe);
   app.querySelectorAll('[data-change-school]').forEach(el=>el.addEventListener('click',beginSchoolChange));
 
@@ -1503,6 +1606,7 @@ function bindDynamic(){
 nav.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
 document.querySelectorAll('.brand-button').forEach(b=>b.addEventListener('click',()=>setTab('home')));
 syncBtn.addEventListener('click',()=>syncRecipes(false));
+ensureLocalWeekRollover();
 applySchoolTheme();
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 (async()=>{
