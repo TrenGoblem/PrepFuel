@@ -995,6 +995,38 @@
           "Sauces"
         ]
       ]
+    ],
+    [
+      "simple-chicken-rice",
+      "Simple Chicken Rice Bowl",
+      "rice",
+      "Chicken and rice",
+      [
+        700,
+        55,
+        85,
+        14
+      ],
+      [
+        [
+          "Chicken breast",
+          6,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Broccoli",
+          7,
+          "lb",
+          "Produce"
+        ]
+      ]
     ]
   ],
   "note": "Fuelr starter cookbook breakfast collection."
