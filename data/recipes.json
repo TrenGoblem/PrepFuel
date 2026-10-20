@@ -1,10 +1,11 @@
 {
-  "version": 4,
+  "version": 5,
   "updatedAt": "2026-10-20",
   "optimizationPolicy": {
     "weeklyMealOptions": [
       7,
-      14
+      14,
+      21
     ],
     "weeklyMeals": 14,
     "schoolYearBudget": 2500,
@@ -16,9 +17,11 @@
     "sourceServingNormalization": true,
     "sourceServingRule": "Every ingredient in the source recipe is first normalized from the creator's stated serving count to the selected Fuelr batch size. Quantity_selected = Quantity_source × (selected meals ÷ source servings). This applies to protein, carbs, vegetables, cheese, sauces, oils, salt, spices, seasoning packets, and every other listed ingredient.",
     "budgetScalingRule": "After serving normalization, calculate the source cost per meal and the current Fuelr meal-cap ratio. Budget multiplier = Fuelr meal cap ÷ source cost per meal. Use that multiplier to increase or decrease the complete recipe while preserving the creator's ingredient ratios and flavor balance. Nothing is left at the source amount just because it is a seasoning.",
-    "sevenFourteenRule": "A source recipe can be written for any yield (for example 10 or 12 servings). Fuelr derives both exact 7-meal and 14-meal batches from that source, then applies the same meal-cap optimization logic. The app stores the optimized 14-meal base and derives the 7-meal version at exactly one-half of that optimized batch.",
-    "formulaExample": "If a 10-meal source uses 2 tbsp seasoning, the unoptimized 7-meal amount is 2 × 7/10 = 1.4 tbsp and the unoptimized 14-meal amount is 2 × 14/10 = 2.8 tbsp. If the source meal costs $4.00 and the Fuelr cap is $5.58, the cost multiplier is 5.58/4.00 = 1.395. The final optimized recipe scales the whole food system toward that multiplier while preserving sensible flavor ratios.",
-    "note": "Salt and strong seasonings are never ignored: they are scaled with the batch. Final seasoning amounts may be rounded to practical kitchen measurements, but the 7/14 math is always based on the source yield first."
+    "formulaExample": "If a 10-meal source uses 2 tbsp seasoning, the unoptimized amounts are 1.4 tbsp for 7 meals, 2.8 tbsp for 14, and 4.2 tbsp for 21. Every listed ingredient follows the same source-yield conversion before budget optimization.",
+    "note": "Salt and strong seasonings are never ignored: they scale with the batch. Final amounts may be rounded to practical kitchen measurements, but the 7/14/21 math starts from the source yield.",
+    "weeklyMealRule": "Each user chooses a weekly prepared-meal target of 7, 14, or 21. Valid recipe batch sizes are 7, 14, and 21, but a batch cannot exceed the user's weekly target. Valid complete weeks are 7; 7+7 or 14; and 7+7+7, 14+7, or 21.",
+    "dynamicMealCapRule": "The per-meal cap is personal: school-year food budget ÷ academic weeks ÷ selected weekly prepared meals. Changing from 14 to 21 meals lowers the per-meal target unless the user increases the budget. Fuelr dynamically adjusts optimized recipe quantities toward the user's current cap.",
+    "batchSizingRule": "A source recipe can be written for any yield. Fuelr normalizes every listed ingredient from the creator's source serving count to the selected 7-, 14-, or 21-meal batch. The catalog stores an optimized 14-meal base; 7 is one-half and 21 is one-and-a-half times that base before applying the user's live meal-cap adjustment."
   },
   "recipes": [
     {
