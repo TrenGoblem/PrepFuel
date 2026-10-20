@@ -830,3 +830,43 @@ body[data-appearance="dark"] .noise{opacity:.12}
   .appearance-card{grid-template-columns:1fr}
   .appearance-selector{width:100%}
 }
+
+
+/* FUELR FAST RECIPE IMPORT */
+.recipe-import-panel{margin:0 0 12px;padding:16px;border-radius:22px;background:linear-gradient(135deg,color-mix(in srgb,var(--school-primary) 7%,white),#fff 58%);border:1px solid color-mix(in srgb,var(--school-primary) 18%,#e2e6ec);box-shadow:0 15px 34px rgba(44,52,64,.06)}
+.recipe-import-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:13px}
+.recipe-import-head>div>span{display:block;font-size:8px;letter-spacing:.13em;font-weight:950;color:var(--school-primary)}
+.recipe-import-head h3{margin:3px 0 3px;font-size:17px;color:#28313b}
+.recipe-import-head p{margin:0;max-width:560px;font-size:9.5px;line-height:1.45;color:#8e98a4}
+.import-badge{padding:5px 8px;border-radius:999px;background:var(--school-secondary);color:var(--school-accent);font-size:7.5px;font-weight:950;letter-spacing:.1em}
+.recipe-import-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.import-method{padding:12px;border-radius:16px;background:rgba(255,255,255,.74);border:1px solid #e4e8ed}
+.import-method>label{display:block;margin-bottom:7px;font-size:9px;font-weight:900;color:#3d4652}
+.import-method small{display:block;margin-top:6px;font-size:8px;line-height:1.4;color:#949da8}
+.import-url-row{display:grid;grid-template-columns:1fr auto;gap:7px}
+.import-url-row input{min-width:0}
+.import-url-row .btn{min-width:88px;padding-left:12px;padding-right:12px}
+.import-method textarea{width:100%;resize:vertical}
+.recipe-import-status{margin-top:10px;padding:10px 12px;border-radius:13px;font-size:9px;line-height:1.4;border:1px solid #dfe4ea;background:#f7f8fa;color:#68737e}
+.recipe-import-status.success{display:block;background:#effaf4;border-color:#cfe9da;color:#347657}
+.recipe-import-status.error{display:block;background:#fff2f3;border-color:#f0d5d9;color:#9b4e58}
+.recipe-import-status.loading{display:block;background:#f2f6ff;border-color:#dbe5fb;color:#526894}
+.recipe-import-status.info{display:block}
+.recipe-editor-label{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:-2px 0 13px;padding-bottom:9px;border-bottom:1px solid #edf0f3}
+.recipe-editor-label>span{font-size:8px;font-weight:950;letter-spacing:.13em;color:var(--school-primary)}
+.recipe-editor-label small{font-size:8px;color:#949da8;text-align:right}
+
+body[data-appearance="dark"] .recipe-import-panel{background:linear-gradient(135deg,color-mix(in srgb,var(--school-primary) 14%,#171d24),#171d24 58%);border-color:#2d3742}
+body[data-appearance="dark"] .recipe-import-head h3{color:#eef2f6}
+body[data-appearance="dark"] .recipe-import-head p,
+body[data-appearance="dark"] .import-method small,
+body[data-appearance="dark"] .recipe-editor-label small{color:#9aa6b2}
+body[data-appearance="dark"] .import-method{background:#202731;border-color:#313b47}
+body[data-appearance="dark"] .import-method>label{color:#e5ebf1}
+body[data-appearance="dark"] .recipe-editor-label{border-color:#29323c}
+
+@media(max-width:650px){
+  .recipe-import-grid{grid-template-columns:1fr}
+  .recipe-editor-label{align-items:flex-start;flex-direction:column;gap:3px}
+  .recipe-editor-label small{text-align:left}
+}
