@@ -378,3 +378,16 @@ on public.weekly_schedule_slots(plan_id);
 
 create index if not exists idx_weekly_schedule_slots_recipe
 on public.weekly_schedule_slots(recipe_id);
+
+
+-- Appearance, source links, and expanded campus catalog
+alter table public.profiles
+  add column if not exists appearance text not null default 'light'
+  check (appearance in ('light','dark'));
+
+alter table public.recipes
+  add column if not exists source_url text;
+
+-- The production project also seeds the expanded campus theme catalog from
+-- assets/schools.js. School colors are used as visual theme data; official
+-- university/athletics logos are intentionally not bundled without licensing.
