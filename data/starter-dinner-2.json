@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "category": "dinner",
+  "recipes": [
+    [
+      "steak-rice-peppers-broccoli",
+      "Steak Rice Peppers & Broccoli",
+      "rice",
+      "Lean steak, rice, peppers and broccoli",
+      [
+        800,
+        61,
+        88,
+        22
+      ],
+      [
+        [
+          "Lean sirloin steak",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Broccoli florets",
+          7,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          21,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Onions",
+          7,
+          "large",
+          "Produce"
+        ],
+        [
+          "Low-sodium soy sauce",
+          21,
+          "tbsp",
+          "Sauces"
+        ],
+        [
+          "Olive oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "honey-garlic-salmon-rice-green-beans",
+      "Honey Garlic Salmon Rice & Green Beans",
+      "plate",
+      "Salmon, rice and green beans",
+      [
+        810,
+        52,
+        86,
+        28
+      ],
+      [
+        [
+          "Salmon fillets",
+          7,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Green beans",
+          10.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Honey",
+          21,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Low-sodium soy sauce",
+          21,
+          "tbsp",
+          "Sauces"
+        ],
+        [
+          "Garlic",
+          28,
+          "cloves",
+          "Produce"
+        ],
+        [
+          "Sesame seeds",
+          14,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "teriyaki-beef-rice-stir-fry",
+      "Teriyaki Beef Rice Stir-Fry",
+      "rice",
+      "Lean beef, rice and stir-fry vegetables",
+      [
+        790,
+        57,
+        94,
+        20
+      ],
+      [
+        [
+          "Lean sirloin strips",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Broccoli florets",
+          5.25,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Carrots",
+          3.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Teriyaki sauce",
+          35,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Sesame oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "taco-beef-potato-bowls",
+      "Taco Beef Potato Bowls",
+      "plate",
+      "Taco beef, potatoes, peppers and corn",
+      [
+        780,
+        55,
+        81,
+        23
+      ],
+      [
+        [
+          "93% lean ground beef",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Gold potatoes",
+          10.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Corn",
+          7,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Black beans",
+          7,
+          "cups",
+          "Protein"
+        ],
+        [
+          "Salsa",
+          28,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Shredded cheese",
+          14,
+          "oz",
+          "Dairy"
+        ]
+      ]
+    ],
+    [
+      "chicken-sweet-potato-broccoli",
+      "Chicken Sweet Potato & Broccoli",
+      "plate",
+      "Chicken, sweet potato and broccoli",
+      [
+        700,
+        59,
+        75,
+        16
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Sweet potatoes",
+          12.25,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Broccoli florets",
+          10.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Olive oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Garlic",
+          28,
+          "cloves",
+          "Produce"
+        ],
+        [
+          "Smoked paprika",
+          14,
+          "tbsp",
+          "Seasoning"
+        ]
+      ]
+    ]
+  ]
+}
