@@ -85,6 +85,9 @@
         alt_store: profile.altStore || "Walmart",
         prep_style: profile.prepStyle || "split",
         portion_mode: profile.portionMode || "athlete",
+        dietary_preferences: Array.isArray(profile.dietaryPreferences) ? profile.dietaryPreferences : [],
+        allergies: Array.isArray(profile.allergies) ? profile.allergies : [],
+        goal: profile.goal || "performance",
         onboarding_complete: Boolean(profile.onboardingComplete)
       };
 
