@@ -361,3 +361,120 @@ body{background:radial-gradient(circle at 12% 4%,rgba(255,255,255,.9),transparen
   .prep-meal-grid{gap:5px}.prep-meal-check{border-radius:10px;font-size:10px}
   .week-complete-card{grid-template-columns:auto 1fr}.week-complete-card .btn{grid-column:1/-1;width:100%}
 }
+
+
+/* FUELR 2.0 PERSONAL SYSTEM */
+:root{
+  --school-primary:#657ff0;
+  --school-secondary:#1d232b;
+  --school-accent:#9db4ff;
+  --school-on-primary:#fff;
+}
+
+/* Theme system */
+.brand span,.accent,.eyebrow,.link-btn,.category-title,.meal-card-label,.prep-batch-label,.plan-status-label{color:var(--school-primary)!important}
+.logo-mark{border-color:color-mix(in srgb,var(--school-primary) 48%,#d8dde5);background:linear-gradient(145deg,color-mix(in srgb,var(--school-primary) 18%,#fff),#fff);box-shadow:0 8px 24px color-mix(in srgb,var(--school-primary) 14%,transparent)}
+.logo-mark svg{width:31px;height:31px}.logo-mark text{font:900 16px Inter,ui-sans-serif,sans-serif;letter-spacing:-1.2px;fill:var(--school-secondary)}
+.btn.primary,.prompt-button{background:var(--school-primary)!important;color:var(--school-on-primary)!important;box-shadow:0 9px 24px color-mix(in srgb,var(--school-primary) 24%,transparent)!important}
+.meal-count-actions button.active,.meal-float-card.selected .meal-count-actions button.active{background:var(--school-primary)!important;border-color:var(--school-primary)!important;color:var(--school-on-primary)!important}
+.meal-count-actions button.active span,.meal-float-card.selected .meal-count-actions button.active span{color:var(--school-on-primary)!important;opacity:.75}
+.plan-dots i.on,.progress>span{background:var(--school-primary)!important}
+.summary-icon.blue{background:color-mix(in srgb,var(--school-primary) 11%,white)!important;color:var(--school-primary)!important}
+.optimize-strip,.derived-cap{background:color-mix(in srgb,var(--school-primary) 7%,white)!important;border-color:color-mix(in srgb,var(--school-primary) 22%,white)!important}
+.optimize-strip span,.derived-cap span{color:var(--school-primary)!important}
+.prep-mini-ring,.budget-ring{background:conic-gradient(var(--school-primary) 0 var(--prep-angle,var(--budget-angle,300deg)),#e9ecf1 var(--prep-angle,var(--budget-angle,300deg)) 360deg)!important}
+.prep-overview-bar>div{background:linear-gradient(90deg,var(--school-primary),var(--school-accent))!important}
+.bottom-nav{grid-template-columns:repeat(4,1fr)!important;max-width:640px}
+.bottom-nav button.active:before{background:var(--school-secondary)!important;border-color:var(--school-secondary)!important}
+.bottom-nav button.active .nav-icon{color:var(--school-accent)!important}
+.topbar.onboarding-mode{display:none}
+body[data-school="ucf"] .bottom-nav button.active .nav-icon{color:#ffc904!important}
+
+/* Onboarding */
+.onboarding-shell{min-height:calc(100dvh - 34px);display:flex;flex-direction:column;max-width:620px;margin:0 auto;padding:24px 4px 46px}
+.onboarding-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:4px 2px 34px}
+.onboarding-progress i{height:4px;border-radius:999px;background:#e2e6ec;transition:.25s ease}
+.onboarding-progress i.on{background:var(--school-primary)}
+.onboard-hero{margin:auto 0;text-align:center;padding:32px 10px}
+.onboard-logo{width:88px;height:88px;border-radius:27px;margin:0 auto 25px;display:grid;place-items:center;background:var(--school-secondary);color:var(--school-accent);font-size:28px;font-weight:950;letter-spacing:-.08em;box-shadow:0 22px 50px rgba(30,36,45,.17)}
+.onboard-hero h1,.onboard-copy h1,.onboard-finish h1{font-size:44px;line-height:.96;letter-spacing:-.06em;margin:9px 0 14px;color:#1d232b}
+.onboard-hero p,.onboard-copy p,.onboard-finish p{max-width:470px;margin:0 auto;color:#818b98;line-height:1.55;font-size:13px}
+.onboard-main{margin-top:24px;min-height:52px;font-size:13px;border-radius:16px}
+.onboard-main[disabled]{opacity:.42;pointer-events:none}
+.onboard-copy{margin-bottom:18px}.onboard-copy p{text-align:left;margin:0}
+.school-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.school-choice{position:relative;overflow:hidden;text-align:left;min-height:126px;padding:15px;border-radius:20px;border:1px solid #e2e6ec;background:#fff;box-shadow:0 10px 25px rgba(44,52,64,.055);cursor:pointer}
+.school-choice:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--choice-primary)}
+.school-choice.selected{border-color:var(--choice-primary);box-shadow:0 14px 30px color-mix(in srgb,var(--choice-primary) 14%,transparent)}
+.school-choice-badge{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:var(--choice-primary);color:var(--choice-on);font-size:11px;font-weight:950;margin-bottom:12px;box-shadow:inset 0 -6px 16px color-mix(in srgb,var(--choice-secondary) 14%,transparent)}
+.school-choice strong{display:block;font-size:13px;line-height:1.15;color:#222933}
+.school-choice small{display:block;margin-top:5px;color:#929ba6;font-size:9px}
+.no-school-btn{width:100%;margin-top:10px;padding:13px 15px;border-radius:15px;border:1px solid #e1e5eb;background:#fff;color:#697480;font-size:11px;font-weight:800}
+.no-school-btn.selected{border-color:var(--school-primary);color:var(--school-primary);background:color-mix(in srgb,var(--school-primary) 6%,white)}
+.onboard-back{margin:18px auto 0;border:0;background:transparent;color:#8a94a0;font-size:11px;font-weight:800}
+.onboard-card{padding:18px;border-radius:22px;background:#fff;border:1px solid #e3e7ed;box-shadow:0 13px 32px rgba(46,54,66,.065)}
+.money-input{display:flex;align-items:center;border:1px solid #e2e6eb;border-radius:14px;background:#f7f8fa;overflow:hidden}
+.money-input span{padding-left:13px;font-weight:900;color:#727d89}.money-input input{border:0!important;background:transparent!important;box-shadow:none!important;padding-left:6px!important}
+.onboard-result{margin-top:13px;padding:16px;border-radius:17px;background:color-mix(in srgb,var(--school-primary) 7%,white);border:1px solid color-mix(in srgb,var(--school-primary) 20%,white)}
+.onboard-result span,.finish-stat span{display:block;font-size:8px;letter-spacing:.14em;color:var(--school-primary);font-weight:900}
+.onboard-result strong,.finish-stat strong{display:block;font-size:31px;letter-spacing:-.05em;margin:4px 0;color:#222a34}.onboard-result small,.finish-stat small{color:#8d97a3}
+.prep-style-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.prep-style-grid button{min-height:132px;padding:18px;border:1px solid #e1e5eb;border-radius:22px;background:#fff;text-align:left;cursor:pointer}
+.prep-style-grid button.selected{border:2px solid var(--school-primary);background:color-mix(in srgb,var(--school-primary) 5%,white)}
+.prep-style-grid b{display:block;font-size:28px;letter-spacing:-.06em;color:#20262f}.prep-style-grid span{display:block;font-size:12px;font-weight:900;margin-top:9px;color:#3d4652}.prep-style-grid small{display:block;margin-top:4px;color:#929ba6}
+.onboard-finish{text-align:center;margin:auto 0;padding:16px 5px}
+.finish-school{width:98px;height:98px;border-radius:30px;margin:0 auto 24px;display:grid;place-items:center;background:var(--finish-primary);color:var(--finish-on);box-shadow:inset 0 -20px 28px color-mix(in srgb,var(--finish-secondary) 15%,transparent),0 20px 42px color-mix(in srgb,var(--finish-primary) 22%,transparent)}
+.finish-school span{font-size:18px;font-weight:950;letter-spacing:-.04em}
+.finish-stat{margin:22px auto 0;padding:18px;max-width:320px;border-radius:20px;background:#fff;border:1px solid #e3e7ed;box-shadow:0 14px 32px rgba(45,53,65,.065)}
+
+/* Meal library + personal recipes */
+.title-action-row{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:end}
+.title-action-row h1{margin-bottom:8px}
+.add-recipe-btn{align-self:center;display:flex;align-items:center;gap:7px;white-space:nowrap;padding:11px 13px;border-radius:14px;border:1px solid #dde2e9;background:#fff;color:#333c47;font-size:10px;font-weight:900;box-shadow:0 8px 20px rgba(44,52,64,.055)}
+.add-recipe-btn span{display:grid;place-items:center;width:22px;height:22px;border-radius:8px;background:var(--school-secondary);color:var(--school-accent);font-size:16px}
+.add-recipe-card{padding:18px;border-radius:25px;background:#fff;border:1px solid #e3e7ed;box-shadow:0 16px 38px rgba(45,53,65,.07)}
+.field textarea{width:100%;resize:vertical;padding:12px 13px;border-radius:13px;border:1px solid #e2e6eb;background:#f7f8fa;color:#232931;outline:none;font:inherit;line-height:1.45}
+.field textarea:focus{border-color:var(--school-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--school-primary) 10%,transparent)}
+.field small{display:block;margin-top:5px;color:#929ba6;font-size:9.5px;line-height:1.4}
+.macro-inputs{grid-template-columns:repeat(4,1fr)}
+.recipe-form-note{margin:13px 0;padding:13px 14px;border-radius:15px;background:color-mix(in srgb,var(--school-primary) 6%,white);border:1px solid color-mix(in srgb,var(--school-primary) 18%,white);color:#66717d;font-size:10.5px;line-height:1.5}
+.recipe-form-note strong{color:#313a45}
+
+/* Week: one destination for Plan → Shop → Prep */
+.week-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center;margin:12px 0 18px;padding:8px;border-radius:20px;background:#fff;border:1px solid #e4e8ed;box-shadow:0 11px 28px rgba(44,52,64,.06)}
+.week-flow>i{font-style:normal;color:#c1c7d0;font-size:12px}
+.week-flow button{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:1px 7px;align-items:center;text-align:left;padding:10px;border:0;border-radius:14px;background:transparent;color:#6e7885;cursor:pointer}
+.week-flow button>span{grid-row:1/3;width:25px;height:25px;border-radius:8px;display:grid;place-items:center;background:#eef1f5;color:#88939f;font-size:9px;font-weight:900}
+.week-flow button b{font-size:11px;color:#4b5561}.week-flow button small{font-size:8px;color:#9ba3ad}
+.week-flow button.active{background:color-mix(in srgb,var(--school-primary) 8%,white)}.week-flow button.active>span{background:var(--school-primary);color:var(--school-on-primary)}.week-flow button.active b{color:#202833}
+.week-plan-card{padding:18px;border-radius:24px;background:#fff;border:1px solid #e3e7ed;box-shadow:0 14px 34px rgba(44,52,64,.07)}
+.week-plan-head{display:flex;align-items:end;justify-content:space-between;gap:10px;padding-bottom:13px;border-bottom:1px solid #edf0f3}.week-plan-head span{display:block;font-size:8px;letter-spacing:.14em;color:var(--school-primary);font-weight:900}.week-plan-head h2{margin:4px 0 0;font-size:20px}.week-plan-head>strong{font-size:23px;letter-spacing:-.04em}
+.week-plan-recipe{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;padding:13px 0;border-bottom:1px solid #eef0f3}.week-letter{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:color-mix(in srgb,var(--school-primary) 9%,white);color:var(--school-primary);font-size:10px;font-weight:950}.week-plan-recipe strong{display:block;font-size:13px}.week-plan-recipe small{display:block;margin-top:3px;color:#919aa5;font-size:9.5px}.week-plan-recipe>span{font-size:18px;font-weight:950;color:#38424e}
+.week-empty{text-align:center;padding:24px 10px}.week-empty h3{margin:0 0 5px}.week-empty p{margin:0;color:#8d97a3;font-size:11px}.week-plan-card>.btn{margin-top:14px}
+
+/* You */
+.profile-school-card{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:17px;border-radius:24px;background:#fff;border:1px solid #e3e7ed;box-shadow:0 14px 34px rgba(45,53,65,.07)}
+.school-badge{width:62px;height:62px;border-radius:19px;display:grid;place-items:center;background:var(--school-primary);color:var(--school-on-primary);font-size:13px;font-weight:950;box-shadow:inset 0 -13px 20px color-mix(in srgb,var(--school-secondary) 13%,transparent)}
+.profile-school-card span,.cloud-ready-card span{display:block;font-size:8px;letter-spacing:.14em;color:var(--school-primary);font-weight:900}.profile-school-card h2{margin:4px 0 3px;font-size:16px}.profile-school-card p{margin:0;color:#9099a5;font-size:9.5px;line-height:1.45}
+.mini-action{border:1px solid #dfe3e9;background:#f7f8fa;color:#68737f;border-radius:11px;padding:8px 10px;font-size:9px;font-weight:900}
+.you-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}.you-metrics article{padding:14px;border-radius:18px;background:#fff;border:1px solid #e5e8ed}.you-metrics span{display:block;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#8e98a4;font-weight:900}.you-metrics strong{display:block;margin-top:6px;font-size:19px}.you-metrics small{display:block;margin-top:2px;color:#9aa2ac;font-size:9px}
+.you-settings{margin-top:12px}.cloud-ready-card{display:grid;grid-template-columns:auto 1fr;gap:12px;margin-top:12px;padding:16px;border-radius:20px;background:#f7f8fa;border:1px solid #e2e6eb}.cloud-dot{width:12px;height:12px;margin-top:4px;border-radius:50%;background:#f0b84b;box-shadow:0 0 0 5px rgba(240,184,75,.12)}.cloud-ready-card strong{display:block;margin-top:4px;font-size:13px}.cloud-ready-card p{margin:3px 0 0;color:#8e97a2;font-size:9.5px;line-height:1.45}
+
+/* polish */
+.icon-btn{color:var(--school-primary)!important}
+.list-item input[type=checkbox]{accent-color:var(--school-primary)!important}
+.meal-float-card.selected{border-color:color-mix(in srgb,var(--school-primary) 32%,#dfe4eb)!important;box-shadow:0 24px 55px color-mix(in srgb,var(--school-primary) 13%,transparent)!important}
+.detail-tag,.meal-tag{color:#414a55}
+.school-choice,.prep-style-grid button,.add-recipe-btn,.mini-action,.week-flow button{-webkit-tap-highlight-color:transparent}
+
+@media(max-width:560px){
+  .onboarding-shell{padding-left:0;padding-right:0}
+  .onboard-hero h1,.onboard-copy h1,.onboard-finish h1{font-size:38px}
+  .school-grid{grid-template-columns:1fr 1fr;gap:8px}.school-choice{min-height:118px;padding:13px}
+  .title-action-row{grid-template-columns:1fr}.add-recipe-btn{justify-self:start}
+  .macro-inputs{grid-template-columns:1fr 1fr}
+  .week-flow{gap:3px;padding:6px}.week-flow button{padding:8px 6px;gap:1px 4px}.week-flow button>span{width:22px;height:22px}.week-flow>i{font-size:9px}
+  .profile-school-card{grid-template-columns:auto 1fr}.profile-school-card .mini-action{grid-column:1/-1;width:100%}
+  .you-metrics{grid-template-columns:1fr 1fr 1fr;gap:7px}.you-metrics article{padding:11px 9px}.you-metrics strong{font-size:16px}
+  .bottom-nav{width:min(calc(100% - 22px),520px)!important}
+}
