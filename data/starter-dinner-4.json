@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "category": "dinner",
+  "recipes": [
+    [
+      "turkey-burger-potato-bowls-broccoli",
+      "Turkey Burger Potato Bowls & Broccoli",
+      "plate",
+      "Turkey burger crumbles, potatoes and broccoli",
+      [
+        740,
+        57,
+        74,
+        22
+      ],
+      [
+        [
+          "93% lean ground turkey",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Gold potatoes",
+          12.25,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Broccoli florets",
+          10.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Reduced-fat cheddar",
+          21,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Pickles",
+          28,
+          "oz",
+          "Produce"
+        ],
+        [
+          "Light burger sauce",
+          21,
+          "tbsp",
+          "Sauces"
+        ],
+        [
+          "Onions",
+          7,
+          "large",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "chicken-curry-rice-peas-carrots",
+      "Chicken Curry Rice Peas & Carrots",
+      "stew",
+      "Chicken curry, rice, peas and carrots",
+      [
+        760,
+        58,
+        92,
+        18
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Frozen peas",
+          7,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Carrots",
+          3.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Light coconut milk",
+          56,
+          "oz",
+          "Pantry"
+        ],
+        [
+          "Curry paste or powder",
+          14,
+          "tbsp",
+          "Seasoning"
+        ],
+        [
+          "Spinach",
+          28,
+          "cups",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "salmon-potatoes-asparagus",
+      "Salmon Potatoes & Asparagus",
+      "plate",
+      "Roasted salmon, potatoes and asparagus",
+      [
+        800,
+        51,
+        72,
+        31
+      ],
+      [
+        [
+          "Salmon fillets",
+          7,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Gold potatoes",
+          12.25,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Asparagus",
+          10.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Olive oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Lemons",
+          7,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Garlic",
+          28,
+          "cloves",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "beef-burrito-bowls-veg",
+      "Beef Burrito Bowls with Beans Peppers & Corn",
+      "rice",
+      "Lean beef, rice, beans, peppers and corn",
+      [
+        810,
+        58,
+        99,
+        21
+      ],
+      [
+        [
+          "93% lean ground beef",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Black beans",
+          7,
+          "cups",
+          "Protein"
+        ],
+        [
+          "Corn",
+          7,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          21,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Salsa",
+          28,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Shredded cheese",
+          14,
+          "oz",
+          "Dairy"
+        ]
+      ]
+    ],
+    [
+      "greek-chicken-rice-tzatziki",
+      "Greek Chicken Rice Tzatziki Bowls",
+      "rice",
+      "Greek chicken, rice, cucumber tomato salad and tzatziki",
+      [
+        740,
+        60,
+        86,
+        17
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Cucumbers",
+          14,
+          "large",
+          "Produce"
+        ],
+        [
+          "Tomatoes",
+          14,
+          "large",
+          "Produce"
+        ],
+        [
+          "Tzatziki",
+          42,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Feta cheese",
+          21,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Spinach",
+          28,
+          "cups",
+          "Produce"
+        ]
+      ]
+    ]
+  ]
+}
