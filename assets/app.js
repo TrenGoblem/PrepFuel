@@ -135,7 +135,8 @@ function mapCloudRecipe(row){
     clientSourceId:row.client_source_id || null,
     name:row.name,
     sourceName:row.source_name || 'My recipe',
-    photo:row.photo_url || 'assets/meal-placeholder.svg',
+    photo:row.signed_photo_url || row.photo_url || 'assets/meal-placeholder.svg',
+    photoPath:row.photo_url || null,
     servings:Number(row.optimized_servings||14),
     portion:'Fuelr cloud recipe',
     costPerMeal:row.optimized_cost_per_meal != null ? Number(row.optimized_cost_per_meal) : mealTarget(),
@@ -744,6 +745,7 @@ function renderAddRecipe(){
         <div class="field"><label>Source servings</label><input id="urServings" type="number" min="1" step="1" placeholder="10"></div>
       </div>
       <div class="field"><label>Estimated source batch cost</label><input id="urBatchCost" type="number" min="0" step=".01" placeholder="40.00"><small>Total ingredient cost for the original source batch.</small></div>
+      <div class="field"><label>Recipe photo</label><input id="urPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small>Optional · JPG, PNG or WebP · up to 5 MB.</small></div>
       <div class="field"><label>Ingredients</label><textarea id="urIngredients" rows="8" placeholder="2 tbsp | buffalo seasoning&#10;1500 g | chicken thighs&#10;4 whole | baguettes&#10;16 slices | provolone"></textarea><small>One ingredient per line: quantity + unit | ingredient name. Include salt, spices, oils and sauces too.</small></div>
       <div class="split macro-inputs">
         <div class="field"><label>Calories / source serving</label><input id="urCalories" type="number" min="0" placeholder="650"></div>
@@ -788,11 +790,25 @@ async function saveNewUserRecipe(){
   const macros=Object.fromEntries(Object.entries(sourceMacros).map(([k,v])=>[k,v==null?null:Math.round(v*budgetMultiplier*10)/10]));
   const directions=String(document.getElementById('urDirections')?.value||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
   const id='user-'+Date.now();
+  let photoPath=null;
+  let photoUrl='assets/meal-placeholder.svg';
+  const photoFile=document.getElementById('urPhoto')?.files?.[0] || null;
+  if(photoFile && cloudSignedIn()){
+    try{
+      const uploaded=await window.FuelrCloud.uploadRecipeImage(photoFile);
+      photoPath=uploaded?.path || null;
+      photoUrl=uploaded?.signedUrl || photoUrl;
+    }catch(err){
+      showToast(err?.message || 'Could not upload recipe photo');
+      return;
+    }
+  }
   const recipe={
     id,
     name,
     sourceName:'My recipe',
-    photo:'assets/meal-placeholder.svg',
+    photo:photoUrl,
+    photoPath,
     servings:14,
     portion:'Fuelr optimized serving',
     costPerMeal:Math.round(mealTarget()*100)/100,
