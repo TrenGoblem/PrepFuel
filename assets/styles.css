@@ -870,3 +870,23 @@ body[data-appearance="dark"] .recipe-editor-label{border-color:#29323c}
   .recipe-editor-label{align-items:flex-start;flex-direction:column;gap:3px}
   .recipe-editor-label small{text-align:left}
 }
+
+
+/* FUELR COOKBOOK LIBRARY */
+.cookbook-toolbar{display:grid;gap:10px;margin:0 0 12px}
+.cookbook-search{display:flex;align-items:center;gap:9px;padding:0 13px;min-height:46px;border-radius:16px;background:#fff;border:1px solid #e2e6ec;box-shadow:0 10px 24px rgba(44,52,64,.04)}
+.cookbook-search>span{font-size:20px;color:var(--school-primary);line-height:1}
+.cookbook-search input{flex:1;min-width:0;border:0!important;outline:0!important;background:transparent!important;padding:0!important;box-shadow:none!important;font-size:11px;color:#313944}
+.cookbook-filters{display:flex;gap:7px;overflow-x:auto;padding:1px 1px 5px;scrollbar-width:none}
+.cookbook-filters::-webkit-scrollbar{display:none}
+.cookbook-filters button{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;min-height:36px;padding:0 11px;border:1px solid #e1e5eb;border-radius:999px;background:#fff;color:#5d6874;cursor:pointer;font-size:9px;font-weight:900}
+.cookbook-filters button b{display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#f0f2f5;color:#8a949f;font-size:8px}
+.cookbook-filters button.active{background:color-mix(in srgb,var(--school-primary) 8%,white);border-color:var(--school-primary);color:#252c35}
+.cookbook-filters button.active b{background:var(--school-primary);color:var(--school-on-primary)}
+.cookbook-grid{align-items:stretch}
+.cookbook-grid .meal-float-card{height:100%}
+body[data-appearance="dark"] .cookbook-search,
+body[data-appearance="dark"] .cookbook-filters button{background:#171d24;border-color:#2c3540;color:#dce3ea}
+body[data-appearance="dark"] .cookbook-search input{color:#edf2f7!important}
+body[data-appearance="dark"] .cookbook-filters button b{background:#252d37;color:#aab5bf}
+body[data-appearance="dark"] .cookbook-filters button.active{background:color-mix(in srgb,var(--school-primary) 16%,#171d24)}
