@@ -45,6 +45,9 @@ const state = {
     schoolId: storedProfile.schoolId || '',
     prepStyle: storedProfile.prepStyle || 'split',
     portionMode: storedProfile.portionMode || 'athlete',
+    dietaryPreferences: Array.isArray(storedProfile.dietaryPreferences) ? storedProfile.dietaryPreferences : [],
+    allergies: Array.isArray(storedProfile.allergies) ? storedProfile.allergies : [],
+    goal: storedProfile.goal || 'performance',
     ...storedProfile
   },
   onboardingComplete: localStorage.getItem('fuelr_onboarding_done') === '1',
@@ -183,6 +186,9 @@ async function loadCloudUserData(){
         altStore:state.settings.altStore,
         prepStyle:state.profile.prepStyle,
         portionMode:state.profile.portionMode,
+        dietaryPreferences:state.profile.dietaryPreferences||[],
+        allergies:state.profile.allergies||[],
+        goal:state.profile.goal||'performance',
         onboardingComplete:true
       });
     }
@@ -191,6 +197,9 @@ async function loadCloudUserData(){
       state.profile.schoolId=profile.school_id || 'fuelr';
       state.profile.prepStyle=profile.prep_style || 'split';
       state.profile.portionMode=profile.portion_mode || 'athlete';
+      state.profile.dietaryPreferences=Array.isArray(profile.dietary_preferences)?profile.dietary_preferences:[];
+      state.profile.allergies=Array.isArray(profile.allergies)?profile.allergies:[];
+      state.profile.goal=profile.goal || 'performance';
       state.settings.schoolYearBudget=Number(profile.school_year_budget)||DEFAULTS.schoolYearBudget;
       state.settings.academicWeeks=Number(profile.academic_weeks)||DEFAULTS.academicWeeks;
       state.settings.mealsPerWeek=14;
@@ -283,6 +292,9 @@ async function persistProfileToCloud(){
       altStore:state.settings.altStore,
       prepStyle:state.profile.prepStyle,
       portionMode:state.profile.portionMode,
+      dietaryPreferences:state.profile.dietaryPreferences||[],
+      allergies:state.profile.allergies||[],
+      goal:state.profile.goal||'performance',
       onboardingComplete:state.onboardingComplete
     });
   }catch(err){
@@ -869,6 +881,10 @@ function renderYou(){
       <article><span>Weekly</span><strong>${money(weeklyBudget())}</strong><small>14 meals</small></article>
       <article><span>Prep style</span><strong>${state.profile.prepStyle==='split'?'7 + 7':'14'}</strong><small>default</small></article>
     </section>
+    <section class="food-profile-card">
+      <div><span>FOOD PROFILE</span><strong>${esc((state.profile.goal||'performance').replaceAll('_',' '))}</strong><small>${(state.profile.dietaryPreferences||[]).length?esc(state.profile.dietaryPreferences.join(' · ')):'No diet restrictions set'}</small></div>
+      <div><span>AVOID</span><strong>${(state.profile.allergies||[]).length}</strong><small>${(state.profile.allergies||[]).length?esc(state.profile.allergies.join(' · ')):'No allergies listed'}</small></div>
+    </section>
     <section class="settings-card you-settings">
       <div class="settings-card-head"><span class="summary-icon blue">01</span><div><h3>Food system</h3><p>Change the numbers that drive Fuelr</p></div></div>
       <div class="split"><div class="field"><label>School-year budget</label><input id="sBudget" type="number" step="1" value="${state.settings.schoolYearBudget}"></div><div class="field"><label>Academic weeks</label><input id="sWeeks" type="number" step="1" value="${state.settings.academicWeeks}"></div></div>
@@ -883,23 +899,45 @@ function renderOnboarding(){
   const s=currentSchool();
   const step=state.onboardingStep;
   const shell=(body,back=true)=>`<div class="onboarding-shell">
-    <div class="onboarding-progress"><i class="${step>=0?'on':''}"></i><i class="${step>=1?'on':''}"></i><i class="${step>=2?'on':''}"></i><i class="${step>=3?'on':''}"></i><i class="${step>=4?'on':''}"></i></div>
+    <div class="onboarding-progress">${Array.from({length:6},(_,i)=>`<i class="${step>=i?'on':''}"></i>`).join('')}</div>
     ${body}
     ${back && step>0?`<button class="onboard-back" data-ob-back="1">← Back</button>`:''}
   </div>`;
+
   if(step===0) return shell(`<div class="onboard-hero"><div class="onboard-logo">FR</div><div class="eyebrow">Welcome to Fuelr</div><h1>Your food system.<br><span class="accent">Built for you.</span></h1><p>Fuelr turns your budget, school, recipes and weekly routine into one simple meal-prep system.</p><button class="btn primary onboard-main" data-ob-next="1">Build my Fuelr →</button></div>`,false);
+
   if(step===1) return shell(`<div class="onboard-copy"><div class="eyebrow">01 · Campus</div><h1>Where do you <span class="accent">go to school?</span></h1><p>Pick your school and Fuelr adapts its visual identity around your campus colors.</p></div>
     <div class="school-grid">${SCHOOL_THEMES.filter(x=>x.id!=='fuelr').map(x=>`<button class="school-choice ${state.profile.schoolId===x.id?'selected':''}" data-school-id="${x.id}" style="--choice-primary:${x.primary};--choice-secondary:${x.secondary};--choice-on:${x.onPrimary}"><span class="school-choice-badge">${x.abbr}</span><strong>${x.name}</strong><small>${state.profile.schoolId===x.id?'Selected':'Choose school'}</small></button>`).join('')}</div>
     <button class="no-school-btn ${state.profile.schoolId==='fuelr'?'selected':''}" data-school-id="fuelr">No school / use Fuelr theme</button>
     <button class="btn primary onboard-main" data-ob-next="1" ${!state.profile.schoolId?'disabled':''}>Continue →</button>`);
+
   if(step===2) return shell(`<div class="onboard-copy"><div class="eyebrow">02 · Budget</div><h1>Give every dollar a <span class="accent">job.</span></h1><p>Fuelr calculates your per-meal target automatically.</p></div>
     <div class="onboard-card"><div class="field"><label>School-year food budget</label><div class="money-input"><span>$</span><input id="obBudget" type="number" value="${state.settings.schoolYearBudget}"></div></div><div class="field"><label>Academic weeks</label><input id="obWeeks" type="number" value="${state.settings.academicWeeks}"></div><div class="onboard-result"><span>Current target</span><strong>${money(mealTarget())}</strong><small>per meal · 14 meals each week</small></div></div>
     <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
+
   if(step===3) return shell(`<div class="onboard-copy"><div class="eyebrow">03 · Routine</div><h1>How do you <span class="accent">prep?</span></h1><p>Set a default. You can still choose either option every week.</p></div>
     <div class="prep-style-grid"><button class="${state.profile.prepStyle==='split'?'selected':''}" data-prep-style="split"><b>7 + 7</b><span>Two different recipes</span><small>Different lunch and dinner</small></button><button class="${state.profile.prepStyle==='single'?'selected':''}" data-prep-style="single"><b>14</b><span>One recipe</span><small>Maximum simplicity</small></button></div>
     <div class="onboard-card"><div class="split"><div class="field"><label>Preferred store</label><input id="obStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="obAlt" value="${esc(state.settings.altStore)}"></div></div></div>
     <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
-  return shell(`<div class="onboard-finish"><div class="finish-school" style="--finish-primary:${s.primary};--finish-secondary:${s.secondary};--finish-on:${s.onPrimary}"><span>${s.abbr}</span></div><div class="eyebrow">04 · Ready</div><h1>Your Fuelr is <span class="accent">ready.</span></h1><p>${esc(s.name)} theme. ${money(mealTarget())} meal target. ${state.profile.prepStyle==='split'?'7 + 7':'14'} default prep.</p><div class="finish-stat"><span>YOUR MEAL CAP</span><strong>${money(mealTarget())}</strong><small>Fuelr will optimize every recipe around this target.</small></div><button class="btn primary onboard-main" data-finish-onboarding="1">Enter Fuelr →</button></div>`);
+
+  if(step===4){
+    const goals=[
+      ['performance','Performance'],
+      ['high_protein','High protein'],
+      ['balanced','Balanced'],
+      ['bulking','Gain size'],
+      ['cutting','Lean out']
+    ];
+    return shell(`<div class="onboard-copy"><div class="eyebrow">04 · Food profile</div><h1>Make it fit <span class="accent">how you eat.</span></h1><p>These settings guide future recipe recommendations and optimization. You can change them anytime.</p></div>
+      <div class="onboard-card">
+        <div class="field"><label>Main goal</label><div class="goal-grid">${goals.map(([id,label])=>`<button class="${state.profile.goal===id?'selected':''}" data-goal="${id}">${label}</button>`).join('')}</div></div>
+        <div class="field"><label>Diet preferences</label><input id="obDiet" placeholder="High protein, no pork, vegetarian..." value="${esc((state.profile.dietaryPreferences||[]).join(', '))}"><small>Separate multiple preferences with commas.</small></div>
+        <div class="field"><label>Allergies / foods to avoid</label><input id="obAllergies" placeholder="Peanuts, shellfish..." value="${esc((state.profile.allergies||[]).join(', '))}"><small>Fuelr will keep these attached to your account for future recipe filtering.</small></div>
+      </div>
+      <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
+  }
+
+  return shell(`<div class="onboard-finish"><div class="finish-school" style="--finish-primary:${s.primary};--finish-secondary:${s.secondary};--finish-on:${s.onPrimary}"><span>${s.abbr}</span></div><div class="eyebrow">05 · Ready</div><h1>Your Fuelr is <span class="accent">ready.</span></h1><p>${esc(s.name)} theme. ${money(mealTarget())} meal target. ${state.profile.prepStyle==='split'?'7 + 7':'14'} default prep.</p><div class="finish-stat"><span>YOUR MEAL CAP</span><strong>${money(mealTarget())}</strong><small>Fuelr will optimize every recipe around this target.</small></div><button class="btn primary onboard-main" data-finish-onboarding="1">Enter Fuelr →</button></div>`);
 }
 
 function renderRecipeDetail(r){
@@ -1147,6 +1185,7 @@ function bindDynamic(){
 
   app.querySelectorAll('[data-school-id]').forEach(el=>el.addEventListener('click',()=>chooseSchool(el.dataset.schoolId)));
   app.querySelectorAll('[data-prep-style]').forEach(el=>el.addEventListener('click',()=>{state.profile.prepStyle=el.dataset.prepStyle;saveProfile();if(state.onboardingComplete)persistProfileToCloud();render();}));
+  app.querySelectorAll('[data-goal]').forEach(el=>el.addEventListener('click',()=>{state.profile.goal=el.dataset.goal;saveProfile();render();}));
   app.querySelectorAll('[data-ob-back]').forEach(el=>el.addEventListener('click',()=>{state.onboardingStep=Math.max(0,state.onboardingStep-1);render();}));
   app.querySelectorAll('[data-ob-next]').forEach(el=>el.addEventListener('click',()=>{
     if(state.onboardingStep===1 && !state.profile.schoolId){ showToast('Choose a school or Fuelr theme'); return; }
@@ -1160,7 +1199,13 @@ function bindDynamic(){
       state.settings.altStore=document.getElementById('obAlt')?.value||'Walmart';
       saveSettings(); saveProfile();
     }
-    state.onboardingStep=Math.min(4,state.onboardingStep+1); render(); window.scrollTo({top:0,behavior:'smooth'});
+    if(state.onboardingStep===4){
+      const toList=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean).slice(0,20);
+      state.profile.dietaryPreferences=toList(document.getElementById('obDiet')?.value);
+      state.profile.allergies=toList(document.getElementById('obAllergies')?.value);
+      saveProfile();
+    }
+    state.onboardingStep=Math.min(5,state.onboardingStep+1); render(); window.scrollTo({top:0,behavior:'smooth'});
   }));
   app.querySelectorAll('[data-finish-onboarding]').forEach(el=>el.addEventListener('click',()=>{
     state.onboardingComplete=true;
