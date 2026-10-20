@@ -325,3 +325,17 @@ using (
   bucket_id = 'recipe-images'
   and (storage.foldername(name))[1] = (select auth.jwt()->>'sub')
 );
+
+
+-- Weekly prepared meal targets: 7, 14, or 21
+alter table public.weekly_plan_recipes
+  drop constraint if exists weekly_plan_recipes_meal_count_check;
+alter table public.weekly_plan_recipes
+  add constraint weekly_plan_recipes_meal_count_check
+  check (meal_count in (7,14,21));
+
+alter table public.weekly_plan_recipes
+  drop constraint if exists weekly_plan_recipes_slot_check;
+alter table public.weekly_plan_recipes
+  add constraint weekly_plan_recipes_slot_check
+  check (slot in (1,2,3));
