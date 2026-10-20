@@ -110,7 +110,44 @@
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      return recipes || [];
+
+      const rows = recipes || [];
+      await Promise.all(rows.map(async row => {
+        const path = row.photo_url;
+        if (!path || /^(https?:|assets\/|images\/|data:)/i.test(path)) return;
+        const { data } = await client.storage
+          .from("recipe-images")
+          .createSignedUrl(path, 60 * 60);
+        if (data?.signedUrl) row.signed_photo_url = data.signedUrl;
+      }));
+      return rows;
+    },
+
+    async uploadRecipeImage(file) {
+      if (!client || !this.user) throw new Error("Sign in before uploading a recipe image.");
+      if (!file) return null;
+      if (!["image/jpeg","image/png","image/webp"].includes(file.type)) {
+        throw new Error("Use a JPG, PNG or WebP image.");
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("Recipe images must be 5 MB or smaller.");
+      }
+
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `${this.user.id}/${Date.now()}-${Math.random().toString(36).slice(2,10)}.${ext}`;
+
+      const { error } = await client.storage
+        .from("recipe-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+
+      if (error) throw error;
+
+      const { data: signed, error: signError } = await client.storage
+        .from("recipe-images")
+        .createSignedUrl(path, 60 * 60);
+
+      if (signError) throw signError;
+      return { path, signedUrl: signed?.signedUrl || null };
     },
 
     async createRecipe(recipe) {
@@ -149,7 +186,7 @@
           protein_g: recipe.macros?.protein ?? null,
           carbs_g: recipe.macros?.carbs ?? null,
           fat_g: recipe.macros?.fat ?? null,
-          photo_url: recipe.photo || null,
+          photo_url: recipe.photoPath || recipe.photo || null,
           optimization_note: recipe.optimizationNote || null,
           instructions: recipe.instructions || [],
           visibility: "private"
