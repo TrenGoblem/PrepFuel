@@ -79,3 +79,64 @@ button,input,select{font:inherit}.noise{position:fixed;inset:0;pointer-events:no
   .hero-stat-card strong{font-size:28px}
   .swipe-card{min-height:148px}
 }
+
+
+/* PREPFUEL FUTURE NAV + MEALS V3 */
+.logo-mark{width:46px;height:46px;padding:0;border-radius:15px;border:1px solid rgba(141,174,222,.34);background:linear-gradient(145deg,#101b2c,#050912 72%);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 24px rgba(47,134,255,.10),0 10px 26px rgba(0,0,0,.32),0 0 20px rgba(47,134,255,.08);overflow:hidden}
+.logo-mark svg{width:34px;height:34px;display:block;filter:drop-shadow(0 0 7px rgba(108,169,255,.18))}
+.logo-mark .mark-p,.logo-mark .mark-f{fill:url(#none);fill:#f4f8ff}
+.logo-mark .mark-f{fill:#8fbfff}
+.brand{font-weight:950;letter-spacing:.11em}
+.brand span{color:#9bc8ff}
+.subtitle{letter-spacing:.25em;color:#7f8b9c}
+
+.app-shell{padding-bottom:108px}
+.bottom-nav{left:50%;bottom:calc(10px + env(safe-area-inset-bottom));width:min(calc(100% - 22px),720px);padding:7px;border:1px solid rgba(113,134,162,.22);border-radius:24px;background:linear-gradient(180deg,rgba(22,29,41,.84),rgba(7,10,16,.93));box-shadow:0 22px 60px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.07);backdrop-filter:blur(28px) saturate(150%)}
+.bottom-nav button{position:relative;min-height:58px;border-radius:18px;color:#6f7d90;gap:4px;padding:7px 2px;transition:color .2s ease,transform .2s ease,background .2s ease}
+.bottom-nav button:before{content:"";position:absolute;inset:2px;border-radius:16px;background:linear-gradient(155deg,rgba(255,255,255,.09),rgba(71,132,218,.08));border:1px solid transparent;opacity:0;transition:opacity .2s ease,border-color .2s ease}
+.bottom-nav button.active{color:#f3f8ff;transform:translateY(-1px)}
+.bottom-nav button.active:before{opacity:1;border-color:rgba(106,160,235,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.nav-icon{position:relative;z-index:1;width:23px;height:23px;display:grid;place-items:center}
+.nav-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bottom-nav button.active .nav-icon{color:#9bc8ff;filter:drop-shadow(0 0 8px rgba(83,153,255,.34))}
+.bottom-nav small{position:relative;z-index:1;font-size:9.5px;font-weight:800;letter-spacing:.02em}
+
+.meals-hero{padding-bottom:8px}
+.meals-hero h1{max-width:600px}
+.meals-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;color:#7f8da1;font-size:11px;font-weight:750}
+.sync-strip{display:flex;align-items:center;gap:7px;padding:10px 12px;border-radius:14px;border:1px solid rgba(91,111,139,.18);background:rgba(255,255,255,.025);color:#8998ac;font-size:10.5px}
+.sync-spacer{flex:1}
+
+.recipe-grid-v2{display:grid;grid-template-columns:1fr;gap:16px}
+.recipe-card-v2{cursor:pointer;border-radius:25px;overflow:hidden;border:1px solid rgba(104,126,156,.24);background:linear-gradient(155deg,rgba(255,255,255,.07),rgba(255,255,255,.018) 40%,rgba(8,12,19,.98));box-shadow:0 18px 42px rgba(0,0,0,.28);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.recipe-visual{position:relative;aspect-ratio:16/11;min-height:220px;overflow:hidden;background:#0b111a}
+.recipe-image-v2{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.002);transition:transform .45s ease}
+.recipe-shade{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(2,5,9,.12) 0%,rgba(2,5,9,.02) 34%,rgba(3,6,11,.42) 58%,rgba(3,6,11,.96) 100%)}
+.recipe-topline{position:absolute;left:14px;right:14px;top:14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.recipe-badge,.recipe-price{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(8,12,19,.55);backdrop-filter:blur(14px);font-size:9.5px;font-weight:900;letter-spacing:.12em;color:#dce8f8}
+.recipe-price{font-size:12px;letter-spacing:-.01em;color:#f6f9ff}
+.recipe-overlay{position:absolute;left:16px;right:16px;bottom:15px}
+.recipe-kicker{font-size:9.5px;letter-spacing:.18em;color:#86b8ff;font-weight:900;margin-bottom:6px}
+.recipe-overlay h3{margin:0 0 10px;font-size:25px;line-height:1.02;letter-spacing:-.045em;color:#f8fbff;text-shadow:0 2px 12px rgba(0,0,0,.36)}
+.recipe-macro-row{display:flex;gap:8px;flex-wrap:wrap}
+.recipe-macro-row span{padding:7px 9px;border-radius:11px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(12px);font-size:10px;color:#aebbd0}
+.recipe-macro-row strong{color:#f5f8ff;font-weight:900}
+.recipe-card-footer{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;color:#8796aa;font-size:11px;font-weight:700}
+.recipe-arrow{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(113,140,177,.22);background:rgba(255,255,255,.025);color:#9bc8ff;font-size:15px}
+.meals-empty{padding:42px 22px;background:linear-gradient(155deg,rgba(255,255,255,.06),rgba(255,255,255,.015),rgba(7,11,18,.88))}
+.empty-orb{width:64px;height:64px;margin:0 auto 16px;border-radius:21px;display:grid;place-items:center;border:1px solid rgba(111,157,221,.3);background:radial-gradient(circle at 35% 20%,rgba(255,255,255,.13),transparent 35%),linear-gradient(145deg,#142946,#070c14);color:#eaf3ff;font-size:18px;font-weight:950;letter-spacing:-1px;box-shadow:0 0 28px rgba(47,134,255,.1)}
+
+@media(hover:hover){
+  .recipe-card-v2:hover{transform:translateY(-3px);border-color:rgba(116,166,238,.42);box-shadow:0 24px 58px rgba(0,0,0,.34)}
+  .recipe-card-v2:hover .recipe-image-v2{transform:scale(1.035)}
+}
+@media(min-width:620px){
+  .recipe-grid-v2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .recipe-visual{min-height:250px}
+}
+@media(max-width:410px){
+  .bottom-nav{width:calc(100% - 14px)}
+  .bottom-nav button{min-height:56px}
+  .recipe-visual{min-height:205px}
+  .recipe-overlay h3{font-size:23px}
+}
