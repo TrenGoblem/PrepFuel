@@ -606,12 +606,22 @@ function assignCalendarSlot(day,slot,recipeId){
   const existingHere=state.schedule[key];
   if(existingHere===recipeId){ state.calendarPick=''; render(); return; }
 
+  let moveKey='';
   if(calendarAssignedCount(recipeId)>=planned){
-    const moveKey=Object.keys(state.schedule).find(k=>state.schedule[k]===recipeId && k!==key);
+    moveKey=Object.keys(state.schedule).find(k=>state.schedule[k]===recipeId && k!==key) || '';
     if(moveKey) delete state.schedule[moveKey];
   }
 
   state.schedule[key]=recipeId;
+
+  // If this replaced another compatible meal, swap it into the slot the chosen meal moved from.
+  if(existingHere && existingHere!==recipeId && moveKey){
+    const displaced=state.recipes.find(r=>r.id===existingHere);
+    const moveSlot=moveKey.split(':')[1];
+    if(displaced && planFor(existingHere) && slotCompatible(displaced,moveSlot)){
+      state.schedule[moveKey]=existingHere;
+    }
+  }
   state.calendarPick='';
   saveSchedule();
   render();
