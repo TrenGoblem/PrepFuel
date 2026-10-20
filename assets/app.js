@@ -59,27 +59,23 @@ function setSelected(id){ state.selectedRecipeId=id; localStorage.setItem('pf_se
 function recipeCard(r){
   const photo = r.photo ? esc(r.photo) : 'assets/meal-placeholder.svg';
   const isSelected = r.id===state.selectedRecipeId;
-  return `<article class="recipe-card-v2" data-recipe="${esc(r.id)}">
-    <div class="recipe-visual">
-      <img class="recipe-image-v2" src="${photo}" alt="${esc(r.name)}" onerror="this.src='assets/meal-placeholder.svg'">
-      <div class="recipe-shade"></div>
-      <div class="recipe-topline">
-        <span class="recipe-badge">${isSelected?'THIS WEEK':'14-MEAL PREP'}</span>
-        <span class="recipe-price">${money(r.costPerMeal ?? state.settings.recipeCostPerMeal)}</span>
-      </div>
-      <div class="recipe-overlay">
-        <div class="recipe-kicker">ATHLETE FUEL</div>
-        <h3>${esc(r.name)}</h3>
-        <div class="recipe-macro-row">
-          ${r.macros?.protein ? `<span><strong>${esc(r.macros.protein)}g</strong> protein</span>`:''}
-          ${r.macros?.calories ? `<span><strong>${esc(r.macros.calories)}</strong> cal</span>`:''}
-          ${r.macros?.carbs ? `<span><strong>${esc(r.macros.carbs)}g</strong> carbs</span>`:''}
-        </div>
+  return `<article class="meal-float-card ${isSelected?'selected':''}" data-recipe="${esc(r.id)}">
+    <div class="meal-photo">
+      <img src="${photo}" alt="${esc(r.name)}" onerror="this.src='assets/meal-placeholder.svg'">
+      <div class="meal-photo-top">
+        <span class="meal-tag">${isSelected?'THIS WEEK':'ATHLETE PREP'}</span>
+        <span class="meal-cost">${money(r.costPerMeal ?? state.settings.recipeCostPerMeal)}</span>
       </div>
     </div>
-    <div class="recipe-card-footer">
-      <span>${isSelected?'Locked for this week':'Tap to open recipe'}</span>
-      <span class="recipe-arrow">↗</span>
+    <div class="meal-card-copy">
+      <div class="meal-card-label">14-MEAL BUILD</div>
+      <h3>${esc(r.name)}</h3>
+      <div class="meal-stats">
+        ${r.macros?.protein ? `<span><b>${esc(r.macros.protein)}g</b> protein</span>`:''}
+        ${r.macros?.calories ? `<span><b>${esc(r.macros.calories)}</b> cal</span>`:''}
+        ${r.macros?.carbs ? `<span><b>${esc(r.macros.carbs)}g</b> carbs</span>`:''}
+      </div>
+      <div class="meal-card-action"><span>${isSelected?'Locked for this week':'Open meal'}</span><span class="round-arrow">↗</span></div>
     </div>
   </article>`;
 }
@@ -87,103 +83,87 @@ function recipeCard(r){
 function renderHome(){
   const r=selectedRecipe();
   const pct = Math.min(100,(plannedYear()/state.settings.schoolYearBudget)*100);
-  return `<section class="hero hero-showcase">
-    <div class="hero-panel">
-      <div class="hero-copy-block">
-        <div class="eyebrow">Built for athletes</div>
-        <h1>Train hard. <span class="accent">Eat sharp.</span></h1>
-        <p>A clean weekly fuel system with bold visuals, simple moves, and zero guesswork. Pick the meal, shop fast, cook once, and coast all week.</p>
-        <div class="hero-actions">
-          ${r ? `<button class="btn primary" data-go="grocery">This week’s grocery run</button>` : `<button class="btn primary" data-go="recipes">Build my week</button>`}
-          <button class="btn ghost" data-go="recipes">Swipe meals</button>
-        </div>
+  const budgetPct = Math.round(pct);
+  const recipePreview = state.recipes.length
+    ? state.recipes.slice(0,4).map(recipeCard).join('')
+    : `<article class="meal-float-card preview-card tilt-left">
+        <div class="meal-photo preview-photo"><div class="preview-shape"></div><span class="meal-tag">RECIPE SLOT 01</span></div>
+        <div class="meal-card-copy"><div class="meal-card-label">YOUR NEXT MEAL</div><h3>Send your first recipe.</h3><p>Photo, ingredients and directions turn into a full 14-meal plan.</p></div>
+      </article>
+      <article class="meal-float-card preview-card center-card">
+        <div class="meal-photo preview-photo blue-preview"><div class="preview-shape circle"></div><span class="meal-tag">14 MEALS</span></div>
+        <div class="meal-card-copy"><div class="meal-card-label">AUTO-SCALED</div><h3>One prep. Full week.</h3><p>PrepFuel handles portions, cost and grocery quantities.</p></div>
+      </article>
+      <article class="meal-float-card preview-card tilt-right">
+        <div class="meal-photo preview-photo dark-preview"><div class="preview-shape line"></div><span class="meal-tag">ATHLETE MODE</span></div>
+        <div class="meal-card-copy"><div class="meal-card-label">BUILT TO FUEL</div><h3>Big portions. Clean numbers.</h3><p>Protein and carbs without losing the budget.</p></div>
+      </article>`;
+
+  return `<section class="dashboard-hero">
+    <div class="dashboard-intro">
+      <div class="eyebrow">PrepFuel · weekly system</div>
+      <h1>Let’s fuel the <span class="accent">week.</span></h1>
+      <p>One meal. Fourteen athlete-sized servings. A grocery run and budget that stay simple.</p>
+      <div class="hero-actions">
+        <button class="btn primary" data-go="recipes">${r?'Change this week’s meal':'Choose this week’s meal'}</button>
+        <button class="btn ghost" data-go="grocery">Open grocery list</button>
       </div>
-      <div class="hero-stage">
-        <div class="hero-orb"></div>
-        <div class="hero-stat-card primary">
-          <small>weekly target</small>
-          <strong>${money(weeklyTotal())}</strong>
-          <span>${state.settings.mealsPerWeek} meals + produce</span>
-        </div>
-        <div class="hero-stat-card secondary">
-          <small>default meal</small>
-          <strong>${money(state.settings.recipeCostPerMeal)}</strong>
-          <span>protein-first serving</span>
-        </div>
-        <div class="hero-pill">${state.settings.mealsPerWeek} meals / week</div>
-      </div>
+    </div>
+    <div class="dashboard-prompt">
+      <div class="prompt-head"><span class="prompt-dot"></span><span>WEEKLY FUEL</span><span class="prompt-status">READY</span></div>
+      <h3>${r?esc(r.name):'What are you eating this week?'}</h3>
+      <p>${r?'Your meal is locked in. The shopping list and budget are ready.':'Choose one recipe and PrepFuel builds the entire week around it.'}</p>
+      <button class="prompt-button" data-go="${r?'grocery':'recipes'}">${r?'View the plan':'Pick a meal'} <span>→</span></button>
     </div>
   </section>
 
-  <section class="swipe-section">
-    <div class="section-head compact"><div><h2>Why it hits</h2><p>Made to feel fast and satisfying</p></div><span class="micro-copy">Swipe →</span></div>
-    <div class="swipe-rail">
-      <article class="swipe-card spotlight">
-        <div class="swipe-top">Locked in</div>
-        <h3>One Sunday prep. Full week covered.</h3>
-        <p>Choose one meal and auto-build the full ${state.settings.mealsPerWeek}-meal game plan.</p>
+  <section class="dash-summary">
+    <div class="section-head clean-head"><div><h2>Summary</h2><p>Your week at a glance</p></div><span class="soft-pill">${state.settings.mealsPerWeek} meals</span></div>
+    <div class="summary-grid">
+      <article class="summary-card ring-card">
+        <div class="budget-ring" style="--budget-angle:${pct*3.6}deg"><div><strong>${budgetPct}%</strong><span>planned</span></div></div>
+        <div><span class="summary-label">School-year budget</span><strong class="summary-value">${money(plannedYear())}</strong><small>of ${money(state.settings.schoolYearBudget)}</small></div>
       </article>
-      <article class="swipe-card">
-        <div class="swipe-top">Budget first</div>
-        <h3>${money(state.settings.schoolYearBudget)} school-year cap</h3>
-        <p>PrepFuel splits your recipe spend and produce allowance so the numbers stay clean.</p>
-      </article>
-      <article class="swipe-card">
-        <div class="swipe-top">Athlete mode</div>
-        <h3>Protein, carbs, and real volume.</h3>
-        <p>Meals are adjusted for serious appetite, training, and actual recovery—not tiny portions.</p>
-      </article>
+      <article class="summary-card"><span class="summary-icon blue">01</span><span class="summary-label">Meal target</span><strong class="summary-value">${money(state.settings.recipeCostPerMeal)}</strong><small>per prepared meal</small></article>
+      <article class="summary-card"><span class="summary-icon pale">02</span><span class="summary-label">Weekly total</span><strong class="summary-value">${money(weeklyTotal())}</strong><small>meals + produce</small></article>
+      <article class="summary-card"><span class="summary-icon dark">03</span><span class="summary-label">Fruit + veg</span><strong class="summary-value">${money(weeklyProduce())}</strong><small>extra produce / week</small></article>
     </div>
   </section>
 
-  <div class="grid two feature-metrics">
-    <div class="metric glass blue"><div class="label">Meal target</div><div class="value">${money(state.settings.recipeCostPerMeal)}</div><div class="sub">per prepared meal</div></div>
-    <div class="metric glass"><div class="label">Produce add-on</div><div class="value">${money(weeklyProduce())}</div><div class="sub">fruit + veggies / week</div></div>
-    <div class="metric glass"><div class="label">Weekly total</div><div class="value">${money(weeklyTotal())}</div><div class="sub">14 meals + produce</div></div>
-    <div class="metric glass red"><div class="label">School year</div><div class="value">${money(state.settings.schoolYearBudget)}</div><div class="sub">${state.settings.academicWeeks} school weeks</div></div>
-  </div>
-
-  <section class="section">
-    <div class="section-head"><div><h2>This week</h2><p>One recipe × ${state.settings.mealsPerWeek} meals</p></div>${r?`<button class="link-btn" data-go="grocery">Open grocery →</button>`:''}</div>
-    ${r ? recipeCard(r) : `<div class="empty stylish"><div class="icon">⚡</div><h3>No meal selected yet</h3><p>Once your first recipe is added, pick it in Meals and PrepFuel will turn it into your full weekly prep system.</p><div class="spacer"></div><button class="btn primary" data-go="recipes">Open Meals</button></div>`}
+  <section class="floating-meals-section">
+    <div class="section-head clean-head"><div><h2>${r?'This week’s meal':'Choose your meal'}</h2><p>Swipe through the lineup</p></div><button class="link-btn" data-go="recipes">See all →</button></div>
+    <div class="floating-meal-stage">
+      <div class="meal-swipe-rail home-rail">${r?recipeCard(r):recipePreview}</div>
+    </div>
   </section>
 
-  <section class="section">
-    <div class="section-head"><div><h2>Budget pace</h2><p>${state.settings.academicWeeks} weeks</p></div></div>
-    <div class="card budget-feature"><div class="card-body">
-      <div class="cost-box"><div><div class="kicker">Planned school-year spend</div><strong>${money(plannedYear())}</strong></div><div class="chip green">${buffer()>=0?money(buffer())+' BUFFER':'OVER'}</div></div>
-      <div class="progress fat" style="margin-top:14px"><span style="width:${pct}%"></span></div>
-      <div class="mini-split">
-        <div><span>Meals</span><strong>${money(weeklyRecipe())}/wk</strong></div>
-        <div><span>Fruit + veg</span><strong>${money(weeklyProduce())}/wk</strong></div>
-      </div>
-    </div></div>
+  <section class="quick-row">
+    <button class="quick-tile" data-go="grocery"><span class="quick-kicker">GROCERY</span><strong>Shop once.</strong><small>Exact quantities for all 14 meals.</small><span class="quick-arrow">→</span></button>
+    <button class="quick-tile" data-go="budget"><span class="quick-kicker">BUDGET</span><strong>Stay on pace.</strong><small>${money(buffer())} projected buffer.</small><span class="quick-arrow">→</span></button>
   </section>`;
 }
 
 function renderRecipes(){
-  return `<section class="hero meals-hero">
-      <div class="eyebrow">Your fuel lineup</div>
-      <h1>Pick the meal. <span class="accent">Own the week.</span></h1>
-      <p>Big, high-protein recipes built for one serious Sunday prep and fourteen athlete-sized meals.</p>
-      <div class="meals-meta">
-        <span>${state.recipes.length} recipes</span>
-        <span>•</span>
-        <span>${state.settings.mealsPerWeek} meals each</span>
-        <span>•</span>
-        <span>${money(state.settings.recipeCostPerMeal)} target</span>
-      </div>
+  const cards = state.recipes.length
+    ? state.recipes.map(recipeCard).join('')
+    : `<article class="meal-float-card preview-card tilt-left"><div class="meal-photo preview-photo"><div class="preview-shape"></div><span class="meal-tag">SLOT 01</span></div><div class="meal-card-copy"><div class="meal-card-label">FIRST RECIPE</div><h3>Your first meal floats here.</h3><p>Send a recipe and photo in ChatGPT.</p></div></article>
+       <article class="meal-float-card preview-card center-card"><div class="meal-photo preview-photo blue-preview"><div class="preview-shape circle"></div><span class="meal-tag">SLOT 02</span></div><div class="meal-card-copy"><div class="meal-card-label">WEEKLY PREP</div><h3>Swipe to choose.</h3><p>One selected meal covers all 14 servings.</p></div></article>
+       <article class="meal-float-card preview-card tilt-right"><div class="meal-photo preview-photo dark-preview"><div class="preview-shape line"></div><span class="meal-tag">SLOT 03</span></div><div class="meal-card-copy"><div class="meal-card-label">ATHLETE BUILD</div><h3>Macros + cost together.</h3><p>No hunting through screenshots or notes.</p></div></article>`;
+  return `<section class="page-intro">
+      <div class="eyebrow">Meal lineup</div>
+      <h1>What sounds <span class="accent">good?</span></h1>
+      <p>Swipe the floating cards, open a recipe, then lock one meal for the full week.</p>
+      <div class="meals-meta"><span>${state.recipes.length} recipes</span><span>•</span><span>${state.settings.mealsPerWeek} meals / week</span><span>•</span><span>${money(state.settings.recipeCostPerMeal)} target</span></div>
     </section>
-    <div class="sync-strip"><span class="status-dot"></span><span>Online recipe catalog</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready to sync'}</span></div>
-    <section class="section meal-gallery">
-      ${state.recipes.length
-        ? `<div class="recipe-grid-v2">${state.recipes.map(recipeCard).join('')}</div>`
-        : `<div class="empty meals-empty">
-            <div class="empty-orb">PF</div>
-            <div class="eyebrow">Library online</div>
-            <h3>Recipe #1 goes here.</h3>
-            <p>Send the photo, name, ingredients, amounts, and instructions in ChatGPT. Your finished athlete version will appear here automatically.</p>
-          </div>`}
+    <section class="floating-meal-stage large-stage">
+      <div class="meal-swipe-rail">${cards}</div>
+      <div class="swipe-hint"><span>←</span> swipe meals <span>→</span></div>
+    </section>
+    <div class="sync-strip light-sync"><span class="status-dot"></span><span>Recipe library online</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready'}</span></div>
+    <section class="meal-info-row">
+      <div class="info-bubble"><b>01</b><span>Pick one meal</span></div>
+      <div class="info-bubble"><b>02</b><span>Scale to 14</span></div>
+      <div class="info-bubble"><b>03</b><span>Shop + prep</span></div>
     </section>`;
 }
 
@@ -191,21 +171,29 @@ function renderRecipeDetail(r){
   const photo = r.photo ? esc(r.photo) : 'assets/meal-placeholder.svg';
   const ingredients = r.ingredients || [];
   const steps = r.instructions || [];
-  return `<button class="link-btn" data-go="recipes">← Meals</button>
-    <section class="section">
-      <div class="detail-hero"><img src="${photo}" alt="${esc(r.name)}" onerror="this.src='assets/meal-placeholder.svg'"><div class="detail-title"><div class="eyebrow">14-meal athlete prep</div><h1>${esc(r.name)}</h1><div class="chips"><span class="chip blue">${money(r.costPerMeal ?? state.settings.recipeCostPerMeal)}/MEAL</span>${r.sourceName?`<span class="chip">SOURCE: ${esc(r.sourceName)}</span>`:''}</div></div></div>
-      <div class="macro-grid">
-        <div class="macro"><strong>${esc(r.macros?.calories ?? '—')}</strong><small>Calories</small></div>
-        <div class="macro"><strong>${esc(r.macros?.protein ?? '—')}g</strong><small>Protein</small></div>
-        <div class="macro"><strong>${esc(r.macros?.carbs ?? '—')}g</strong><small>Carbs</small></div>
-        <div class="macro"><strong>${esc(r.macros?.fat ?? '—')}g</strong><small>Fat</small></div>
+  return `<button class="link-btn back-link" data-go="recipes">← Back to meals</button>
+    <section class="detail-shell">
+      <div class="detail-photo-card">
+        <img src="${photo}" alt="${esc(r.name)}" onerror="this.src='assets/meal-placeholder.svg'">
+        <span class="meal-tag detail-tag">14-MEAL PREP</span>
       </div>
-      <div style="margin-top:12px"><button class="btn ${r.id===state.selectedRecipeId?'secondary':'primary'} full" data-select="${esc(r.id)}">${r.id===state.selectedRecipeId?'✓ Selected for this week':'Use this for all 14 meals'}</button></div>
+      <div class="detail-copy">
+        <div class="eyebrow">Athlete fuel</div>
+        <h1>${esc(r.name)}</h1>
+        <p>${r.optimizationNote?esc(r.optimizationNote):'Scaled for one full week of athlete-sized meals.'}</p>
+        <div class="detail-price">${money(r.costPerMeal ?? state.settings.recipeCostPerMeal)} <small>/ meal</small></div>
+        <div class="macro-grid clean-macros">
+          <div class="macro"><strong>${esc(r.macros?.calories ?? '—')}</strong><small>Calories</small></div>
+          <div class="macro"><strong>${esc(r.macros?.protein ?? '—')}${r.macros?.protein?'g':''}</strong><small>Protein</small></div>
+          <div class="macro"><strong>${esc(r.macros?.carbs ?? '—')}${r.macros?.carbs?'g':''}</strong><small>Carbs</small></div>
+          <div class="macro"><strong>${esc(r.macros?.fat ?? '—')}${r.macros?.fat?'g':''}</strong><small>Fat</small></div>
+        </div>
+        <button class="btn primary full" data-select="${esc(r.id)}">${r.id===state.selectedRecipeId?'✓ Selected for this week':'Use this for all 14 meals'}</button>
+      </div>
     </section>
-    ${r.optimizationNote?`<section class="section"><div class="notice blue"><strong>Athlete adjustment:</strong> ${esc(r.optimizationNote)}</div></section>`:''}
-    <section class="section"><div class="section-head"><div><h2>Ingredients</h2><p>Scaled for ${esc(r.servings ?? 14)} servings</p></div></div><div class="card"><div class="card-body"><div class="list">${ingredients.map(i=>`<div class="list-item"><div>•</div><div><div class="item-main">${esc(i.item)}</div><div class="item-sub">${esc(i.quantity)} ${esc(i.unit||'')}${i.note?` · ${esc(i.note)}`:''}</div></div><div class="item-cost">${i.usedCost!=null?money(i.usedCost):''}</div></div>`).join('')||'<div class="kicker">Ingredient details coming with this recipe.</div>'}</div></div></div></section>
-    <section class="section"><div class="section-head"><div><h2>Cook it</h2><p>Sunday prep</p></div></div><div class="card"><div class="card-body">${steps.map((s,i)=>`<div class="step"><div class="step-num">${i+1}</div><p>${esc(s)}</p></div>`).join('')||'<div class="kicker">Cooking steps coming with this recipe.</div>'}</div></div></section>
-    <section class="section"><div class="notice red"><strong>Storage:</strong> Refrigerate only the first 3–4 days of cooked meals. Freeze the later-week portions promptly and thaw safely in the refrigerator before reheating.</div></section>`;
+    <section class="section"><div class="section-head clean-head"><div><h2>Ingredients</h2><p>Scaled for ${esc(r.servings ?? 14)} servings</p></div></div><div class="card"><div class="card-body"><div class="list">${ingredients.map(i=>`<div class="list-item"><div class="list-dot"></div><div><div class="item-main">${esc(i.item)}</div><div class="item-sub">${esc(i.quantity)} ${esc(i.unit||'')}${i.note?` · ${esc(i.note)}`:''}</div></div><div class="item-cost">${i.usedCost!=null?money(i.usedCost):''}</div></div>`).join('')||'<div class="kicker">Ingredient details will appear here with the recipe.</div>'}</div></div></div></section>
+    <section class="section"><div class="section-head clean-head"><div><h2>Prep flow</h2><p>Simple Sunday sequence</p></div></div><div class="card"><div class="card-body">${steps.map((s,i)=>`<div class="step"><div class="step-num">${String(i+1).padStart(2,'0')}</div><p>${esc(s)}</p></div>`).join('')||'<div class="kicker">Cooking steps will appear here with the recipe.</div>'}</div></div></section>
+    <section class="section"><div class="notice blue"><strong>Storage plan:</strong> refrigerate the first 3–4 days and freeze the later-week portions promptly. Thaw in the refrigerator before reheating.</div></section>`;
 }
 
 function groceryRows(r){
@@ -220,36 +208,69 @@ function groceryRows(r){
 
 function renderGrocery(){
   const r=selectedRecipe();
-  return `<section class="hero"><div class="eyebrow">Store run</div><h1>Grab it. Check it. <span class="accent">Get out.</span></h1><p>Your exact 14-meal ingredient list plus a separate fruit and vegetable allowance.</p></section>
-    ${r?`<div class="card"><div class="card-body"><div class="cost-box"><div><div class="kicker">${esc(r.name)}</div><strong>${money((r.checkoutTotal ?? weeklyRecipe()))}</strong></div><span class="chip blue">CHECKOUT EST.</span></div><p class="settings-note">Checkout cost can be higher than consumed recipe cost because you buy full packages. Prices are labeled estimated or verified per ingredient.</p></div></div>
-    <section class="section">${groceryRows(r)}</section>`:`<div class="empty"><div class="icon">✓</div><h3>No weekly meal selected</h3><p>Choose a recipe in Meals first. Your shopping list will appear here automatically.</p><div class="spacer"></div><button class="btn primary" data-go="recipes">Choose meal</button></div>`}
-    <section class="section"><div class="category-title">Extra produce</div><div class="card"><div class="card-body"><div class="cost-box"><div><div class="kicker">Fruit + vegetables</div><strong>${money(weeklyProduce())}</strong></div><span class="chip green">WEEKLY</span></div><p class="settings-note">Exact scaled allowance from the original $0.46/meal produce budget: ${money(state.settings.producePerMeal)} per meal × ${state.settings.mealsPerWeek}. Use it flexibly for carrots, broccoli, bananas, apples, berries, or whatever gives the best value that week.</p></div></div></section>`;
+  return `<section class="page-intro">
+      <div class="eyebrow">Grocery run</div>
+      <h1>Grab it. Check it. <span class="accent">Done.</span></h1>
+      <p>Exact quantities for the weekly meal plus your flexible fruit-and-vegetable allowance.</p>
+    </section>
+    <section class="grocery-summary">
+      <article><span>Meal prep</span><strong>${r?esc(r.name):'Choose a meal'}</strong><small>${r?money(r.checkoutTotal ?? weeklyRecipe())+' checkout est.':'No weekly recipe selected'}</small></article>
+      <article><span>Produce</span><strong>${money(weeklyProduce())}</strong><small>fruit + vegetables</small></article>
+      <article><span>Store order</span><strong>${esc(state.settings.preferredStore)}</strong><small>${esc(state.settings.altStore)} backup</small></article>
+    </section>
+    ${r?`<section class="section"><div class="section-head clean-head"><div><h2>Shopping list</h2><p>Tap items as they hit the cart</p></div><span class="soft-pill">${state.settings.mealsPerWeek} meals</span></div>${groceryRows(r)}</section>`:`<div class="empty clean-empty"><div class="empty-orb light">✓</div><div class="eyebrow">Nothing to shop yet</div><h3>Pick this week’s meal first.</h3><p>Your full ingredient list will build itself here.</p><button class="btn primary" data-go="recipes">Choose a meal</button></div>`}
+    <section class="section"><div class="card produce-card"><div class="card-body"><div class="cost-box"><div><div class="kicker">Flexible produce pocket</div><strong>${money(weeklyProduce())}</strong></div><span class="chip green">WEEKLY</span></div><p class="settings-note">Use it however the week needs: broccoli, carrots, bananas, apples, berries, frozen vegetables, or sale produce.</p></div></div></section>`;
 }
 
 function renderBudget(){
   const pct=Math.min(100,(plannedYear()/state.settings.schoolYearBudget)*100);
-  return `<section class="hero"><div class="eyebrow">School-year budget</div><h1><span class="accent">$2.5K</span> with a job.</h1><p>Every dollar is assigned between your 14 main meals and the weekly produce add-on.</p></section>
-    <div class="card"><div class="card-body"><div class="cost-box"><div><div class="kicker">Planned vs budget</div><strong>${money(plannedYear())}</strong></div><span class="chip ${buffer()>=0?'green':'red'}">${buffer()>=0?money(buffer())+' LEFT':money(-buffer())+' OVER'}</span></div><div class="progress" style="margin-top:15px"><span style="width:${pct}%"></span></div></div></div>
-    <section class="section"><div class="card"><div class="card-body">
+  return `<section class="page-intro">
+      <div class="eyebrow">Budget dashboard</div>
+      <h1>Every dollar has a <span class="accent">job.</span></h1>
+      <p>Keep the school-year food budget simple enough to understand in one glance.</p>
+    </section>
+    <section class="budget-dashboard">
+      <article class="budget-main-card">
+        <div class="budget-ring big-ring" style="--budget-angle:${pct*3.6}deg"><div><strong>${Math.round(pct)}%</strong><span>planned</span></div></div>
+        <div><span class="summary-label">School-year plan</span><strong class="budget-hero-number">${money(plannedYear())}</strong><small>of ${money(state.settings.schoolYearBudget)} · ${money(buffer())} buffer</small></div>
+      </article>
+      <div class="budget-mini-grid">
+        <article><span>Weekly</span><strong>${money(weeklyTotal())}</strong><small>all food</small></article>
+        <article><span>Meals</span><strong>${money(weeklyRecipe())}</strong><small>${state.settings.mealsPerWeek} servings</small></article>
+        <article><span>Produce</span><strong>${money(weeklyProduce())}</strong><small>extra / week</small></article>
+        <article><span>Semester</span><strong>${money(plannedYear()/2)}</strong><small>planned spend</small></article>
+      </div>
+    </section>
+    <section class="section"><div class="card budget-breakdown"><div class="card-body">
       <div class="budget-row"><div class="name">Prepared meals</div><div class="amount">${money(weeklyRecipe())}/wk</div><small>${state.settings.mealsPerWeek} × ${money(state.settings.recipeCostPerMeal)}</small></div>
       <div class="budget-row"><div class="name">Fruit + vegetables</div><div class="amount">${money(weeklyProduce())}/wk</div><small>${state.settings.mealsPerWeek} × ${money(state.settings.producePerMeal)}</small></div>
-      <div class="budget-row"><div class="name">Total weekly target</div><div class="amount">${money(weeklyTotal())}</div><small>${state.settings.academicWeeks} school weeks</small></div>
-      <div class="budget-row"><div class="name">Per semester planned</div><div class="amount">${money(plannedYear()/2)}</div><small>Semester budget cap: ${money(semesterBudget())}</small></div>
-      <div class="budget-row"><div class="name">School-year planned</div><div class="amount">${money(plannedYear())}</div><small>School-year cap: ${money(state.settings.schoolYearBudget)}</small></div>
+      <div class="budget-row"><div class="name">School-year cushion</div><div class="amount">${money(buffer())}</div><small>after ${state.settings.academicWeeks} planned weeks</small></div>
     </div></div></section>`;
 }
 
 function renderSettings(){
-  return `<section class="hero"><div class="eyebrow">System settings</div><h1>Dial in your <span class="accent">numbers.</span></h1><p>These defaults control the weekly budget math across PrepFuel.</p></section>
-  <div class="card"><div class="card-body">
-    <div class="split"><div class="field"><label>School-year budget</label><input id="sBudget" type="number" step="1" value="${state.settings.schoolYearBudget}"></div><div class="field"><label>Academic weeks</label><input id="sWeeks" type="number" step="1" value="${state.settings.academicWeeks}"></div></div>
-    <div class="split"><div class="field"><label>Meals per week</label><input id="sMeals" type="number" step="1" value="${state.settings.mealsPerWeek}"></div><div class="field"><label>Recipe $ / meal</label><input id="sMealCost" type="number" step="0.01" value="${state.settings.recipeCostPerMeal}"></div></div>
-    <div class="field"><label>Produce $ / meal</label><input id="sProduce" type="number" step="0.001" value="${state.settings.producePerMeal}"></div>
-    <div class="split"><div class="field"><label>Preferred store</label><input id="sStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="sAlt" value="${esc(state.settings.altStore)}"></div></div>
-    <button id="saveSettings" class="btn primary full">Save settings</button>
-    <p class="settings-note">Current exact plan: ${money(weeklyRecipe())} meals + ${money(weeklyProduce())} produce = ${money(weeklyTotal())}/week. This uses $5.00 meal cost and $0.575 produce per meal after scaling the earlier $4.00 + $0.46 plan by 25%.</p>
-  </div></div>
-  <section class="section"><div class="notice blue"><strong>Online updates:</strong> recipes are loaded from the hosted <code>data/recipes.json</code> catalog. When ChatGPT updates the GitHub repository, this same app gets the new recipe on sync/reopen.</div></section>`;
+  return `<section class="page-intro">
+      <div class="eyebrow">System settings</div>
+      <h1>Make PrepFuel <span class="accent">yours.</span></h1>
+      <p>These numbers drive every weekly plan, grocery list, and budget card.</p>
+    </section>
+    <section class="settings-grid">
+      <div class="settings-card">
+        <div class="settings-card-head"><span class="summary-icon blue">01</span><div><h3>Budget</h3><p>School-year targets</p></div></div>
+        <div class="split"><div class="field"><label>School-year budget</label><input id="sBudget" type="number" step="1" value="${state.settings.schoolYearBudget}"></div><div class="field"><label>Academic weeks</label><input id="sWeeks" type="number" step="1" value="${state.settings.academicWeeks}"></div></div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-card-head"><span class="summary-icon pale">02</span><div><h3>Meal system</h3><p>Weekly prep defaults</p></div></div>
+        <div class="split"><div class="field"><label>Meals per week</label><input id="sMeals" type="number" step="1" value="${state.settings.mealsPerWeek}"></div><div class="field"><label>Recipe $ / meal</label><input id="sMealCost" type="number" step="0.01" value="${state.settings.recipeCostPerMeal}"></div></div>
+        <div class="field"><label>Produce $ / meal</label><input id="sProduce" type="number" step="0.001" value="${state.settings.producePerMeal}"></div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-card-head"><span class="summary-icon dark">03</span><div><h3>Stores</h3><p>Where the list starts</p></div></div>
+        <div class="split"><div class="field"><label>Preferred store</label><input id="sStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="sAlt" value="${esc(state.settings.altStore)}"></div></div>
+      </div>
+    </section>
+    <button id="saveSettings" class="btn primary full save-settings">Save PrepFuel settings</button>
+    <section class="section"><div class="notice blue"><strong>Live app:</strong> recipes are synced from the online catalog. New recipes and design updates can appear in this same installed app after a refresh.</div></section>`;
 }
 
 function render(){
