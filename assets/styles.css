@@ -890,3 +890,227 @@ body[data-appearance="dark"] .cookbook-filters button{background:#171d24;border-
 body[data-appearance="dark"] .cookbook-search input{color:#edf2f7!important}
 body[data-appearance="dark"] .cookbook-filters button b{background:#252d37;color:#aab5bf}
 body[data-appearance="dark"] .cookbook-filters button.active{background:color-mix(in srgb,var(--school-primary) 16%,#171d24)}
+
+
+/* FUELR TWO-COLUMN SEE ALL COOKBOOK */
+.compact-meals-intro{margin-bottom:8px}
+.compact-meals-intro h1{font-size:clamp(24px,4vw,34px);margin-bottom:5px}
+.compact-meals-intro p{max-width:660px;font-size:9.5px;line-height:1.42}
+.compact-cookbook-toolbar{margin-bottom:8px}
+.compact-plan-status{margin-bottom:8px;min-height:48px;padding-top:8px;padding-bottom:8px}
+
+.cookbook-two-column{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:9px;
+  align-items:start;
+}
+.cookbook-column{
+  min-width:0;
+  padding:7px;
+  border-radius:20px;
+  background:rgba(255,255,255,.55);
+  border:1px solid #e4e8ed;
+}
+.cookbook-column-head{
+  position:sticky;
+  top:58px;
+  z-index:4;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  min-height:45px;
+  margin-bottom:7px;
+  padding:7px 9px;
+  border-radius:14px;
+  background:rgba(255,255,255,.94);
+  border:1px solid #e5e8ed;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+.cookbook-column-head>div{min-width:0}
+.cookbook-column-head span{
+  display:block;
+  margin-bottom:2px;
+  color:var(--school-primary);
+  font-size:7px;
+  font-weight:950;
+  letter-spacing:.14em;
+}
+.cookbook-column-head h2{
+  margin:0;
+  font-size:12px;
+  line-height:1.05;
+  color:#29323c;
+}
+.cookbook-column-head>b{
+  display:grid;
+  place-items:center;
+  min-width:25px;
+  height:25px;
+  padding:0 6px;
+  border-radius:999px;
+  background:#f0f2f5;
+  color:#77818c;
+  font-size:8px;
+}
+.breakfast-head{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--school-primary) 74%,#f2be42)}
+.main-head{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--school-secondary) 70%,var(--school-primary))}
+
+.cookbook-column-stack{
+  display:grid;
+  gap:6px;
+}
+.compact-recipe-card{
+  display:grid;
+  grid-template-columns:58px minmax(0,1fr);
+  gap:8px;
+  min-height:94px;
+  padding:7px;
+  border-radius:14px;
+  background:#fff;
+  border:1px solid #e5e8ed;
+  box-shadow:0 7px 16px rgba(41,49,60,.045);
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.compact-recipe-card:active{transform:scale(.985)}
+.compact-recipe-card.selected{
+  border-color:color-mix(in srgb,var(--school-primary) 58%,#dfe4ea);
+  box-shadow:0 7px 18px color-mix(in srgb,var(--school-primary) 12%,transparent);
+}
+.compact-recipe-photo{
+  width:58px;
+  height:78px;
+  align-self:center;
+  object-fit:cover;
+  border-radius:10px;
+  background:#eef1f4;
+}
+.compact-recipe-body{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  padding:1px 0;
+}
+.compact-recipe-kicker{
+  overflow:hidden;
+  color:var(--school-primary);
+  font-size:6.4px;
+  font-weight:950;
+  letter-spacing:.1em;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.compact-recipe-body h3{
+  display:-webkit-box;
+  overflow:hidden;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  margin:3px 0 4px;
+  min-height:24px;
+  color:#303843;
+  font-size:9.3px;
+  line-height:1.25;
+}
+.compact-recipe-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  min-height:13px;
+  color:#89939e;
+  font-size:7.2px;
+}
+.compact-recipe-meta span{white-space:nowrap}
+.compact-recipe-meta b{color:#56616d}
+.compact-recipe-footer{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:4px;
+  margin-top:auto;
+}
+.compact-plan-buttons{display:flex;gap:3px}
+.compact-plan-buttons button{
+  display:grid;
+  place-items:center;
+  min-width:24px;
+  height:21px;
+  padding:0 4px;
+  border:1px solid #dfe4ea;
+  border-radius:7px;
+  background:#f7f8fa;
+  color:#68737f;
+  font-size:7.5px;
+  font-weight:950;
+  cursor:pointer;
+}
+.compact-plan-buttons button.active{
+  border-color:var(--school-primary);
+  background:var(--school-primary);
+  color:var(--school-on-primary);
+}
+.compact-plan-buttons button:disabled{opacity:.3;cursor:not-allowed}
+.compact-view{
+  overflow:hidden;
+  color:#939ca6;
+  font-size:6.8px;
+  font-weight:850;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.cookbook-column-empty{
+  padding:20px 10px;
+  border-radius:13px;
+  background:#f7f8fa;
+  color:#8d97a2;
+  font-size:9px;
+  line-height:1.45;
+  text-align:center;
+}
+.cookbook-sync-strip{margin-top:10px}
+
+body[data-appearance="dark"] .cookbook-column{
+  background:rgba(23,29,36,.68);
+  border-color:#29323d;
+}
+body[data-appearance="dark"] .cookbook-column-head,
+body[data-appearance="dark"] .compact-recipe-card{
+  background:#171d24;
+  border-color:#2d3641;
+}
+body[data-appearance="dark"] .cookbook-column-head h2,
+body[data-appearance="dark"] .compact-recipe-body h3{color:#eef2f6}
+body[data-appearance="dark"] .cookbook-column-head>b,
+body[data-appearance="dark"] .compact-plan-buttons button,
+body[data-appearance="dark"] .cookbook-column-empty{
+  background:#222a34;
+  border-color:#333d49;
+  color:#aab4be;
+}
+body[data-appearance="dark"] .compact-recipe-meta,
+body[data-appearance="dark"] .compact-view{color:#929eaa}
+body[data-appearance="dark"] .compact-recipe-meta b{color:#c9d2da}
+
+@media(max-width:560px){
+  .compact-meals-intro{padding-bottom:6px}
+  .compact-meals-intro .title-action-row{gap:8px}
+  .compact-meals-intro h1{font-size:23px}
+  .compact-meals-intro p{font-size:8.4px}
+  .compact-meals-intro .add-recipe-btn{min-width:76px;padding-left:8px;padding-right:8px}
+  .compact-plan-status{min-height:43px}
+  .cookbook-two-column{gap:6px}
+  .cookbook-column{padding:5px;border-radius:16px}
+  .cookbook-column-head{top:54px;min-height:40px;margin-bottom:5px;padding:6px 7px;border-radius:11px}
+  .cookbook-column-head h2{font-size:10px}
+  .cookbook-column-head>b{min-width:22px;height:22px;font-size:7px}
+  .cookbook-column-stack{gap:5px}
+  .compact-recipe-card{grid-template-columns:46px minmax(0,1fr);gap:6px;min-height:86px;padding:5px;border-radius:11px}
+  .compact-recipe-photo{width:46px;height:70px;border-radius:8px}
+  .compact-recipe-body h3{margin:2px 0 3px;min-height:22px;font-size:8.3px;line-height:1.22}
+  .compact-recipe-kicker{font-size:5.8px}
+  .compact-recipe-meta{gap:4px;font-size:6.3px}
+  .compact-plan-buttons button{min-width:21px;height:19px;border-radius:6px;font-size:6.8px}
+  .compact-view{font-size:5.9px}
+}
