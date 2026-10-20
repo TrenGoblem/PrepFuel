@@ -58,16 +58,28 @@ function setSelected(id){ state.selectedRecipeId=id; localStorage.setItem('pf_se
 
 function recipeCard(r){
   const photo = r.photo ? esc(r.photo) : 'assets/meal-placeholder.svg';
-  return `<article class="card recipe-card" data-recipe="${esc(r.id)}">
-    <img class="recipe-image" src="${photo}" alt="${esc(r.name)}" onerror="this.src='assets/meal-placeholder.svg'">
-    <div class="info">
-      <h3>${esc(r.name)}</h3>
-      <div class="chips">
-        ${r.macros?.protein ? `<span class="chip blue">${esc(r.macros.protein)}g PRO</span>`:''}
-        ${r.macros?.calories ? `<span class="chip">${esc(r.macros.calories)} CAL</span>`:''}
-        ${r.id===state.selectedRecipeId ? `<span class="chip green">THIS WEEK</span>`:''}
+  const isSelected = r.id===state.selectedRecipeId;
+  return `<article class="recipe-card-v2" data-recipe="${esc(r.id)}">
+    <div class="recipe-visual">
+      <img class="recipe-image-v2" src="${photo}" alt="${esc(r.name)}" onerror="this.src='assets/meal-placeholder.svg'">
+      <div class="recipe-shade"></div>
+      <div class="recipe-topline">
+        <span class="recipe-badge">${isSelected?'THIS WEEK':'14-MEAL PREP'}</span>
+        <span class="recipe-price">${money(r.costPerMeal ?? state.settings.recipeCostPerMeal)}</span>
       </div>
-      <div class="cost">${money(r.costPerMeal ?? state.settings.recipeCostPerMeal)} <small>/ MEAL</small></div>
+      <div class="recipe-overlay">
+        <div class="recipe-kicker">ATHLETE FUEL</div>
+        <h3>${esc(r.name)}</h3>
+        <div class="recipe-macro-row">
+          ${r.macros?.protein ? `<span><strong>${esc(r.macros.protein)}g</strong> protein</span>`:''}
+          ${r.macros?.calories ? `<span><strong>${esc(r.macros.calories)}</strong> cal</span>`:''}
+          ${r.macros?.carbs ? `<span><strong>${esc(r.macros.carbs)}g</strong> carbs</span>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="recipe-card-footer">
+      <span>${isSelected?'Locked for this week':'Tap to open recipe'}</span>
+      <span class="recipe-arrow">↗</span>
     </div>
   </article>`;
 }
@@ -150,9 +162,29 @@ function renderHome(){
 }
 
 function renderRecipes(){
-  return `<section class="hero"><div class="eyebrow">Recipe library</div><h1>Your <span class="accent">fuel lineup.</span></h1><p>Every recipe you send gets athlete-scaled, priced, and saved here. Pick one recipe for all 14 meals that week.</p></section>
-    <div class="notice blue"><span class="status-dot"></span>Online recipe catalog${state.lastSync?` · last synced ${new Date(state.lastSync).toLocaleString()}`:''}</div>
-    <section class="section"><div class="grid">${state.recipes.length?state.recipes.map(recipeCard).join(''):`<div class="empty"><div class="icon">▦</div><h3>Ready for recipe #1</h3><p>Send the recipe name, picture, ingredients, quantities, and cooking instructions in ChatGPT. It will be added to this same app.</p></div>`}</div></section>`;
+  return `<section class="hero meals-hero">
+      <div class="eyebrow">Your fuel lineup</div>
+      <h1>Pick the meal. <span class="accent">Own the week.</span></h1>
+      <p>Big, high-protein recipes built for one serious Sunday prep and fourteen athlete-sized meals.</p>
+      <div class="meals-meta">
+        <span>${state.recipes.length} recipes</span>
+        <span>•</span>
+        <span>${state.settings.mealsPerWeek} meals each</span>
+        <span>•</span>
+        <span>${money(state.settings.recipeCostPerMeal)} target</span>
+      </div>
+    </section>
+    <div class="sync-strip"><span class="status-dot"></span><span>Online recipe catalog</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready to sync'}</span></div>
+    <section class="section meal-gallery">
+      ${state.recipes.length
+        ? `<div class="recipe-grid-v2">${state.recipes.map(recipeCard).join('')}</div>`
+        : `<div class="empty meals-empty">
+            <div class="empty-orb">PF</div>
+            <div class="eyebrow">Library online</div>
+            <h3>Recipe #1 goes here.</h3>
+            <p>Send the photo, name, ingredients, amounts, and instructions in ChatGPT. Your finished athlete version will appear here automatically.</p>
+          </div>`}
+    </section>`;
 }
 
 function renderRecipeDetail(r){
