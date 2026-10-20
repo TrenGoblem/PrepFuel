@@ -1,4 +1,4 @@
-const CACHE='fuelr-v32-embedded-cookbook';
+const CACHE='fuelr-v33-two-column-cookbook';
 const SHELL=['./','index.html','assets/styles.css','assets/app.js','assets/cloud-config.js','assets/cloud.js','assets/schools.js','assets/meal-placeholder.svg','assets/icon.svg','manifest.webmanifest',
 'data/recipes.json','data/starter-breakfast.json',
 'data/starter-lunch-1.json','data/starter-lunch-2.json','data/starter-lunch-3.json','data/starter-lunch-4.json',
