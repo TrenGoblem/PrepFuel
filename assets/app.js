@@ -1,3 +1,5 @@
+const WEEKLY_MEAL_OPTIONS = [7,14,21];
+
 const DEFAULTS = {
   schoolYearBudget: 2500,
   academicWeeks: 32,
@@ -37,7 +39,7 @@ const state = {
   settings: {
     schoolYearBudget: Number(storedSettings.schoolYearBudget) || DEFAULTS.schoolYearBudget,
     academicWeeks: Number(storedSettings.academicWeeks) || DEFAULTS.academicWeeks,
-    mealsPerWeek: 14,
+    mealsPerWeek: WEEKLY_MEAL_OPTIONS.includes(Number(storedSettings.mealsPerWeek)) ? Number(storedSettings.mealsPerWeek) : DEFAULTS.mealsPerWeek,
     preferredStore: storedSettings.preferredStore || DEFAULTS.preferredStore,
     altStore: storedSettings.altStore || DEFAULTS.altStore
   },
@@ -73,7 +75,25 @@ const plannedMeals = () => Object.values(state.selections).reduce((a,b)=>a+Numbe
 const planFor = id => Number(state.selections[id] || 0);
 const selectedEntries = () => Object.entries(state.selections)
   .map(([id,count]) => ({recipe:state.recipes.find(r=>r.id===id),count:Number(count)}))
-  .filter(x=>x.recipe && (x.count===7 || x.count===14));
+  .filter(x=>x.recipe && WEEKLY_MEAL_OPTIONS.includes(x.count));
+
+const weeklyMealTarget = () => state.settings.mealsPerWeek;
+const mealsPerDay = () => weeklyMealTarget()/7;
+const remainingMeals = () => Math.max(0, weeklyMealTarget()-plannedMeals());
+const recipeBudgetFactor = r => {
+  const base=Number(r?.costPerMeal);
+  return Number.isFinite(base) && base>0 ? mealTarget()/base : 1;
+};
+const recipeBatchFactor = (r,count) => (Number(count)/Number(r?.servings||14))*recipeBudgetFactor(r);
+const macroFor = (r,key) => {
+  const v=Number(r?.macros?.[key]);
+  if(!Number.isFinite(v)) return r?.macros?.[key] ?? null;
+  return Math.round(v*recipeBudgetFactor(r)*10)/10;
+};
+const planShape = () => selectedEntries().map(x=>x.count).sort((a,b)=>b-a).join(' + ');
+const planExamples = target => target===7 ? '7' : target===14 ? '7 + 7 or 14' : '7 + 7 + 7, 14 + 7, or 21';
+const weeklyMealDescription = target => target===7 ? '1 prepared meal per day' : target===14 ? '2 prepared meals per day' : '3 prepared meals per day';
+
 
 const currentSchool = () => SCHOOL_THEMES.find(s=>s.id===state.profile.schoolId) || SCHOOL_THEMES[0];
 function saveProfile(){ localStorage.setItem('fuelr_profile', JSON.stringify(state.profile)); }
@@ -183,6 +203,7 @@ async function loadCloudUserData(){
         schoolId:state.profile.schoolId || 'fuelr',
         schoolYearBudget:state.settings.schoolYearBudget,
         academicWeeks:state.settings.academicWeeks,
+        mealsPerWeek:state.settings.mealsPerWeek,
         preferredStore:state.settings.preferredStore,
         altStore:state.settings.altStore,
         prepStyle:state.profile.prepStyle,
@@ -203,7 +224,7 @@ async function loadCloudUserData(){
       state.profile.goal=profile.goal || 'performance';
       state.settings.schoolYearBudget=Number(profile.school_year_budget)||DEFAULTS.schoolYearBudget;
       state.settings.academicWeeks=Number(profile.academic_weeks)||DEFAULTS.academicWeeks;
-      state.settings.mealsPerWeek=14;
+      state.settings.mealsPerWeek=WEEKLY_MEAL_OPTIONS.includes(Number(profile.meals_per_week))?Number(profile.meals_per_week):DEFAULTS.mealsPerWeek;
       state.settings.preferredStore=profile.preferred_store||'Aldi';
       state.settings.altStore=profile.alt_store||'Walmart';
       state.onboardingComplete=Boolean(profile.onboarding_complete);
@@ -289,6 +310,7 @@ async function persistProfileToCloud(){
       schoolId:state.profile.schoolId || 'fuelr',
       schoolYearBudget:state.settings.schoolYearBudget,
       academicWeeks:state.settings.academicWeeks,
+      mealsPerWeek:state.settings.mealsPerWeek,
       preferredStore:state.settings.preferredStore,
       altStore:state.settings.altStore,
       prepStyle:state.profile.prepStyle,
@@ -306,8 +328,8 @@ async function persistProfileToCloud(){
 
 
 function cloudWeekStatus(){
-  if(plannedMeals()<14) return 'planning';
-  if(totalPrepDone()===14) return 'complete';
+  if(plannedMeals()<weeklyMealTarget()) return 'planning';
+  if(totalPrepDone()===weeklyMealTarget()) return 'complete';
   if(state.weekView==='prep') return 'prepping';
   if(state.weekView==='shop') return 'shopping';
   return 'planning';
@@ -319,7 +341,7 @@ function buildCloudWeekPayload(){
   const prep=[];
 
   entries.forEach(({recipe,count})=>{
-    const factor=count/Number(recipe.servings||14);
+    const factor=recipeBatchFactor(recipe,count);
     const rows=(recipe.shopping||recipe.ingredients||[]).map(i=>scaledShopping(i,factor));
     rows.forEach((item,idx)=>{
       const itemKey=`${recipe.id}:${count}:${idx}`;
@@ -556,29 +578,73 @@ function scaledShopping(i,factor){
   return {...i, buyQuantity:scaleQuantity(i.buyQuantity,factor), checkoutCost:i.checkoutCost!=null?Number(i.checkoutCost)*factor:i.checkoutCost};
 }
 function scaledCheckoutTotal(r,count){
-  const factor=count/Number(r.servings||14);
+  const factor=recipeBatchFactor(r,count);
   return (r.shopping||[]).map(i=>scaledShopping(i,factor)).reduce((sum,i)=>sum+Number(i.checkoutCost||0),0);
 }
+function setWeeklyMealsTarget(count){
+  count=Number(count);
+  if(!WEEKLY_MEAL_OPTIONS.includes(count) || count===state.settings.mealsPerWeek) return;
+  state.settings.mealsPerWeek=count;
+
+  let used=0;
+  const next={};
+  Object.entries(state.selections).forEach(([id,c])=>{
+    c=Number(c);
+    if(WEEKLY_MEAL_OPTIONS.includes(c) && c<=count && used+c<=count){
+      next[id]=c;
+      used+=c;
+    }
+  });
+  state.selections=next;
+  state.checked={};
+  state.prepChecks={};
+  saveSelections();
+  localStorage.setItem('pf_checked','{}');
+  savePrepChecks();
+  saveSettings();
+  if(state.onboardingComplete){
+    persistProfileToCloud();
+    scheduleCloudWeekSave();
+  }
+  showToast(`${count} prepared meals per week selected`);
+  render();
+}
+
 function setMealPlan(id,count){
   count=Number(count);
-  if(planFor(id)===count) return;
-  if(count===14){
-    state.selections={[id]:14};
-  }else{
-    const otherSeven=Object.entries(state.selections).find(([otherId,c])=>otherId!==id && Number(c)===7);
-    state.selections={};
-    if(otherSeven) state.selections[otherSeven[0]]=7;
-    state.selections[id]=7;
+  const target=weeklyMealTarget();
+  if(!WEEKLY_MEAL_OPTIONS.includes(count) || count>target){
+    showToast(`Your weekly target is ${target} meals`);
+    return;
   }
+  if(planFor(id)===count) return;
+
+  let remaining=target-count;
+  const next={};
+  Object.entries(state.selections).forEach(([otherId,c])=>{
+    c=Number(c);
+    if(otherId===id || !WEEKLY_MEAL_OPTIONS.includes(c)) return;
+    if(c<=remaining){
+      next[otherId]=c;
+      remaining-=c;
+    }
+  });
+  next[id]=count;
+  state.selections=next;
+
   state.checked={};
   localStorage.setItem('pf_checked','{}');
   resetPrepChecks();
   saveSelections();
+
   const total=plannedMeals();
-  showToast(total===14 ? '14 meals planned for the week' : '7 meals planned — choose another 7');
+  showToast(total===target
+    ? `${target} meals planned for the week`
+    : `${target-total} meals left to choose`);
   render();
   scheduleCloudWeekSave();
 }
+
 function clearMealPlan(id){
   delete state.selections[id];
   state.checked={};
@@ -626,28 +692,30 @@ function setTab(tab){
 function recipeCard(r){
   const photo = r.photo ? esc(r.photo) : 'assets/meal-placeholder.svg';
   const count = planFor(r.id);
-  const selected = count===7 || count===14;
+  const selected = WEEKLY_MEAL_OPTIONS.includes(count);
+  const target=weeklyMealTarget();
+  const protein=macroFor(r,'protein');
+  const calories=macroFor(r,'calories');
+  const carbs=macroFor(r,'carbs');
+  const buttons=WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${count===n?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="${n}" ${n>target?'disabled aria-disabled="true"':''}><b>${n}</b><span>meals</span></button>`).join('');
   return `<article class="meal-float-card ${selected?'selected':''}" data-recipe="${esc(r.id)}">
     <div class="meal-photo">
       <img src="${photo}" alt="${esc(r.name)}" onerror="this.src='assets/meal-placeholder.svg'">
       <div class="meal-photo-top">
-        <span class="meal-tag">${selected?count+' MEALS THIS WEEK':'ATHLETE PREP'}</span>
-        <span class="meal-cost">${money(r.costPerMeal ?? mealTarget())}/meal</span>
+        <span class="meal-tag">${selected?count+' MEALS THIS WEEK':'FUELR PREP'}</span>
+        <span class="meal-cost">${money(mealTarget())}/meal target</span>
       </div>
     </div>
     <div class="meal-card-copy">
       <div class="meal-card-label">FUELR OPTIMIZED</div>
       <h3>${esc(r.name)}</h3>
       <div class="meal-stats">
-        ${r.macros?.protein ? `<span><b>${esc(r.macros.protein)}g</b> protein</span>`:''}
-        ${r.macros?.calories ? `<span><b>${esc(r.macros.calories)}</b> cal</span>`:''}
-        ${r.macros?.carbs ? `<span><b>${esc(r.macros.carbs)}g</b> carbs</span>`:''}
+        ${protein ? `<span><b>${esc(protein)}g</b> protein</span>`:''}
+        ${calories ? `<span><b>${esc(calories)}</b> cal</span>`:''}
+        ${carbs ? `<span><b>${esc(carbs)}g</b> carbs</span>`:''}
       </div>
-      <div class="meal-count-actions" aria-label="Choose meal count">
-        <button class="${count===7?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="7"><b>7</b><span>meals</span></button>
-        <button class="${count===14?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="14"><b>14</b><span>meals</span></button>
-      </div>
-      <div class="meal-card-action"><span>${selected?count+' of 14 weekly meals':'Tap card for full recipe'}</span>${selected?`<button class="clear-plan" data-clear-plan="${esc(r.id)}">clear</button>`:`<span class="round-arrow">↗</span>`}</div>
+      <div class="meal-count-actions" aria-label="Choose meal count">${buttons}</div>
+      <div class="meal-card-action"><span>${selected?count+' of '+target+' weekly meals':'Tap card for full recipe'}</span>${selected?`<button class="clear-plan" data-clear-plan="${esc(r.id)}">clear</button>`:`<span class="round-arrow">↗</span>`}</div>
     </div>
   </article>`;
 }
@@ -655,73 +723,81 @@ function recipeCard(r){
 function renderHome(){
   const entries=selectedEntries();
   const total=plannedMeals();
-  const remaining=Math.max(0,14-total);
+  const target=weeklyMealTarget();
+  const remaining=Math.max(0,target-total);
   const pct=Math.min(100,(plannedYear()/state.settings.schoolYearBudget)*100);
   const selectedCards=entries.length ? entries.map(x=>recipeCard(x.recipe)).join('') : state.recipes.slice(0,4).map(recipeCard).join('');
-  const promptTitle = total===14 ? (entries.length===1?'Week locked in.':'Lunch + dinner locked in.') : total===7 ? 'Seven meals left to choose.' : 'What are you eating this week?';
-  const promptCopy = total===14 ? (entries.length===1?'One recipe covers all fourteen meals.':'Two seven-meal preps give you different lunch and dinner options.') : total===7 ? 'Choose another 7-meal recipe to complete the week, or switch this one to 14.' : 'Choose 14 meals from one recipe, or split the week into two different 7-meal preps.';
+  const promptTitle = total===target ? 'Week locked in.' : total ? `${remaining} meals left to choose.` : 'What are you eating this week?';
+  const promptCopy = total===target
+    ? `${planShape()} gives you all ${target} prepared meals for the week.`
+    : total
+      ? `Add ${remaining} more meals in a 7-, 14-, or 21-meal batch that fits your target.`
+      : `Your target is ${target} prepared meals: ${planExamples(target)}.`;
 
   return `<section class="dashboard-hero">
     <div class="dashboard-intro">
-      <div class="eyebrow">Fuelr · streamlined weekly system</div>
+      <div class="eyebrow">Fuelr · personalized weekly system</div>
       <h1>Build the week your <span class="accent">way.</span></h1>
-      <p>One 14-meal prep, or two different 7-meal preps. Every recipe is optimized toward the same ${money(mealTarget())} meal cap.</p>
+      <p>${target} prepared meals per week · ${weeklyMealDescription(target)}. Every recipe dynamically scales toward your ${money(mealTarget())} meal cap.</p>
       <div class="hero-actions">
         <button class="btn primary" data-go="recipes">${total?'Edit meal plan':'Choose meals'}</button>
         <button class="btn ghost" data-week-view="shop">Open grocery list</button>
       </div>
     </div>
     <div class="dashboard-prompt">
-      <div class="prompt-head"><span class="prompt-dot"></span><span>WEEKLY FUEL</span><span class="prompt-status">${total}/14</span></div>
+      <div class="prompt-head"><span class="prompt-dot"></span><span>WEEKLY FUEL</span><span class="prompt-status">${total}/${target}</span></div>
       <h3>${promptTitle}</h3>
       <p>${promptCopy}</p>
-      <button class="prompt-button" data-go="${total===14?'prep':'recipes'}">${total===14?'Open prep board':'Choose meals'} <span>→</span></button>
+      <button class="prompt-button" data-go="${total===target?'prep':'recipes'}">${total===target?'Open prep board':'Choose meals'} <span>→</span></button>
     </div>
   </section>
 
   <section class="dash-summary">
-    <div class="section-head clean-head"><div><h2>Budget system</h2><p>No separate produce bucket — vegetables live inside the recipes</p></div><span class="soft-pill">${total}/14 planned</span></div>
+    <div class="section-head clean-head"><div><h2>Budget system</h2><p>Your food budget is divided across the prepared meals you actually choose</p></div><span class="soft-pill">${total}/${target} planned</span></div>
     <div class="summary-grid">
       <article class="summary-card ring-card">
         <div class="budget-ring" style="--budget-angle:${pct*3.6}deg"><div><strong>${Math.round(pct)}%</strong><span>allocated</span></div></div>
-        <div><span class="summary-label">School-year food budget</span><strong class="summary-value">${money(state.settings.schoolYearBudget)}</strong><small>${state.settings.academicWeeks} weeks · 14 meals/week</small></div>
+        <div><span class="summary-label">School-year food budget</span><strong class="summary-value">${money(state.settings.schoolYearBudget)}</strong><small>${state.settings.academicWeeks} weeks · ${target} meals/week</small></div>
       </article>
       <article class="summary-card"><span class="summary-icon blue">01</span><span class="summary-label">Meal cap</span><strong class="summary-value">${money(mealTarget())}</strong><small>all-in target / meal</small></article>
-      <article class="summary-card"><span class="summary-icon pale">07</span><span class="summary-label">7-meal prep</span><strong class="summary-value">${money(mealTarget()*7)}</strong><small>half-week budget</small></article>
-      <article class="summary-card"><span class="summary-icon dark">14</span><span class="summary-label">14-meal prep</span><strong class="summary-value">${money(weeklyBudget())}</strong><small>full-week budget</small></article>
+      <article class="summary-card"><span class="summary-icon pale">07</span><span class="summary-label">7-meal batch</span><strong class="summary-value">${money(mealTarget()*7)}</strong><small>one prepared meal/day</small></article>
+      <article class="summary-card"><span class="summary-icon dark">${target}</span><span class="summary-label">Weekly prep</span><strong class="summary-value">${money(weeklyBudget())}</strong><small>${target} prepared meals</small></article>
     </div>
   </section>
 
   <section class="floating-meals-section">
-    <div class="section-head clean-head"><div><h2>${entries.length?'Your weekly lineup':'Choose your lineup'}</h2><p>${remaining?remaining+' meals still open':'All 14 meals planned'}</p></div><button class="link-btn" data-go="recipes">See all →</button></div>
+    <div class="section-head clean-head"><div><h2>${entries.length?'Your weekly lineup':'Choose your lineup'}</h2><p>${remaining?remaining+' meals still open':'All '+target+' meals planned'}</p></div><button class="link-btn" data-go="recipes">See all →</button></div>
     <div class="floating-meal-stage">
-      <div class="meal-swipe-rail home-rail">${selectedCards || '<div class="empty clean-empty"><h3>Send your first recipe.</h3><p>It will appear here ready for a 7- or 14-meal plan.</p></div>'}</div>
+      <div class="meal-swipe-rail home-rail">${selectedCards || '<div class="empty clean-empty"><h3>Add your first recipe.</h3><p>It will appear here ready for a 7-, 14-, or 21-meal batch.</p></div>'}</div>
     </div>
   </section>
 
   <section class="quick-row">
-    <button class="quick-tile" data-week-view="shop"><span class="quick-kicker">GROCERY</span><strong>One combined run.</strong><small>Lists scale automatically to each 7- or 14-meal choice.</small><span class="quick-arrow">→</span></button>
-    <button class="quick-tile" data-go="you"><span class="quick-kicker">BUDGET</span><strong>${money(weeklyBudget())}/week.</strong><small>The entire food budget is now inside the meals.</small><span class="quick-arrow">→</span></button>
+    <button class="quick-tile" data-week-view="shop"><span class="quick-kicker">GROCERY</span><strong>One combined run.</strong><small>Lists scale automatically to every 7-, 14-, or 21-meal batch.</small><span class="quick-arrow">→</span></button>
+    <button class="quick-tile" data-go="you"><span class="quick-kicker">YOUR SYSTEM</span><strong>${target} meals/week.</strong><small>Change between 7, 14, and 21 anytime.</small><span class="quick-arrow">→</span></button>
   </section>`;
 }
 
 function renderRecipes(){
   if(state.addRecipeMode) return renderAddRecipe();
   const total=plannedMeals();
-  const cards=state.recipes.length ? state.recipes.map(recipeCard).join('') : '<div class="empty clean-empty"><h3>Your recipes will live here.</h3><p>Add your first recipe and Fuelr will scale it for 7 or 14 meals.</p></div>';
+  const target=weeklyMealTarget();
+  const remaining=Math.max(0,target-total);
+  const cards=state.recipes.length ? state.recipes.map(recipeCard).join('') : '<div class="empty clean-empty"><h3>Your recipes will live here.</h3><p>Add your first recipe and Fuelr will scale it for 7, 14, or 21 meals.</p></div>';
+  const dots=Array.from({length:target/7},(_,i)=>`<i class="${total>=(i+1)*7?'on':''}"></i>`).join('');
   return `<section class="page-intro meals-intro">
       <div class="eyebrow">Meal library</div>
-      <div class="title-action-row"><div><h1>Pick 7 + 7, or <span class="accent">all 14.</span></h1><p>Every recipe has two clear buttons. Fuelr handles the scaling, quantities and weekly budget underneath.</p></div><button class="add-recipe-btn" data-add-recipe="1"><span>+</span>Add recipe</button></div>
-      <div class="meals-meta"><span>${state.recipes.length} recipes</span><span>•</span><span>${total}/14 planned</span><span>•</span><span>${money(mealTarget())} cap / meal</span></div>
+      <div class="title-action-row"><div><h1>Build <span class="accent">${target} meals.</span></h1><p>${planExamples(target)}. Fuelr handles ingredient scaling, quantities, groceries, and the weekly budget underneath.</p></div><button class="add-recipe-btn" data-add-recipe="1"><span>+</span>Add recipe</button></div>
+      <div class="meals-meta"><span>${state.recipes.length} recipes</span><span>•</span><span>${total}/${target} planned</span><span>•</span><span>${money(mealTarget())} cap / meal</span></div>
     </section>
     <section class="plan-status-bar">
-      <div><span class="plan-status-label">WEEKLY PLAN</span><strong>${total}/14 meals</strong></div>
-      <div class="plan-dots"><i class="${total>=7?'on':''}"></i><i class="${total>=14?'on':''}"></i></div>
-      <span>${total===0?'Choose 7 or 14':total===7?'Choose one more 7':'Week complete'}</span>
+      <div><span class="plan-status-label">WEEKLY PLAN</span><strong>${total}/${target} meals</strong></div>
+      <div class="plan-dots">${dots}</div>
+      <span>${total===target?'Week complete':total===0?'Choose a batch':remaining+' meals left'}</span>
     </section>
     <section class="floating-meal-stage large-stage">
       <div class="meal-swipe-rail">${cards}</div>
-      <div class="swipe-hint"><span>←</span> swipe meals · choose 7 or 14 <span>→</span></div>
+      <div class="swipe-hint"><span>←</span> swipe meals · choose 7, 14 or 21 <span>→</span></div>
     </section>
     <div class="sync-strip light-sync"><span class="status-dot"></span><span>Fuelr recipe library</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready'}</span></div>
     <section class="meal-info-row">
@@ -731,13 +807,12 @@ function renderRecipes(){
     </section>`;
 }
 
-
 function renderAddRecipe(){
   return `<button class="link-btn back-link" data-close-add="1">← Back to meals</button>
     <section class="page-intro add-recipe-intro">
       <div class="eyebrow">Personal recipe</div>
       <h1>Add it once. <span class="accent">Fuelr scales it.</span></h1>
-      <p>Enter the source recipe exactly as written. Fuelr converts it from its original serving count into optimized 7- and 14-meal batches.</p>
+      <p>Enter the source recipe exactly as written. Fuelr converts it from its original serving count into optimized 7-, 14-, and 21-meal batches.</p>
     </section>
     <section class="add-recipe-card">
       <div class="split">
@@ -754,7 +829,7 @@ function renderAddRecipe(){
         <div class="field"><label>Fat g</label><input id="urFat" type="number" min="0" placeholder="20"></div>
       </div>
       <div class="field"><label>Directions</label><textarea id="urDirections" rows="5" placeholder="One step per line"></textarea></div>
-      <div class="recipe-form-note"><strong>How Fuelr handles this:</strong> every listed ingredient is first normalized from the source serving count to 7 or 14 meals. Then the full recipe is optimized toward your ${money(mealTarget())} meal cap while preserving the original ratios.</div>
+      <div class="recipe-form-note"><strong>How Fuelr handles this:</strong> every listed ingredient is first normalized from the source serving count to 7, 14, or 21 meals. Then the full recipe is optimized toward your ${money(mealTarget())} meal cap while preserving the original ratios.</div>
       <button class="btn primary full" id="saveUserRecipe">Save to my meals</button>
     </section>`;
 }
@@ -818,7 +893,7 @@ async function saveNewUserRecipe(){
     macros,
     macrosStatus:'Fuelr estimate from your source serving',
     userOwned:true,
-    optimizationNote:`Your source makes ${sourceServings} servings. Fuelr first normalizes every ingredient to the selected 7- or 14-meal batch, then applies a ${budgetMultiplier.toFixed(2)}× budget multiplier toward your current meal cap.`,
+    optimizationNote:`Your source makes ${sourceServings} servings. Fuelr first normalizes every ingredient to the selected 7-, 14-, or 21-meal batch, then applies a ${budgetMultiplier.toFixed(2)}× budget multiplier toward your current meal cap.`,
     sourceBatchCost:batchCost>0?batchCost:null,
     original:{
       servings:sourceServings,
@@ -857,9 +932,10 @@ async function saveNewUserRecipe(){
 function renderWeekPlan(){
   const entries=selectedEntries();
   const total=plannedMeals();
+  const target=weeklyMealTarget();
   return `<section class="week-plan-card">
-    <div class="week-plan-head"><div><span>THIS WEEK</span><h2>${total}/14 meals planned</h2></div><strong>${money(weeklyBudget())}</strong></div>
-    ${entries.length?entries.map((x,i)=>`<div class="week-plan-recipe"><div class="week-letter">${String.fromCharCode(65+i)}</div><div><strong>${esc(x.recipe.name)}</strong><small>${x.count} meals · ${money((x.recipe.costPerMeal??mealTarget())*x.count)} used-cost target</small></div><span>${x.count}</span></div>`).join(''):`<div class="week-empty"><h3>Build this week first.</h3><p>Choose one 14-meal recipe or two 7-meal recipes.</p></div>`}
+    <div class="week-plan-head"><div><span>THIS WEEK</span><h2>${total}/${target} meals planned</h2></div><strong>${money(weeklyBudget())}</strong></div>
+    ${entries.length?entries.map((x,i)=>`<div class="week-plan-recipe"><div class="week-letter">${String.fromCharCode(65+i)}</div><div><strong>${esc(x.recipe.name)}</strong><small>${x.count} meals · ${money(mealTarget()*x.count)} used-cost target</small></div><span>${x.count}</span></div>`).join(''):`<div class="week-empty"><h3>Build this week first.</h3><p>Your target is ${target} meals: ${planExamples(target)}.</p></div>`}
     <button class="btn primary full" data-go="recipes">${total?'Edit meal choices':'Choose meals'}</button>
   </section>`;
 }
@@ -867,25 +943,28 @@ function renderWeekPlan(){
 function renderWeek(){
   const view=state.weekView;
   const total=plannedMeals();
+  const target=weeklyMealTarget();
   const done=totalPrepDone();
   const tabs=`<section class="week-flow">
-    <button class="${view==='plan'?'active':''}" data-week-view="plan"><span>1</span><b>Plan</b><small>${total}/14</small></button>
+    <button class="${view==='plan'?'active':''}" data-week-view="plan"><span>1</span><b>Plan</b><small>${total}/${target}</small></button>
     <i>→</i>
     <button class="${view==='shop'?'active':''}" data-week-view="shop"><span>2</span><b>Shop</b><small>List</small></button>
     <i>→</i>
-    <button class="${view==='prep'?'active':''}" data-week-view="prep"><span>3</span><b>Prep</b><small>${done}/14</small></button>
+    <button class="${view==='prep'?'active':''}" data-week-view="prep"><span>3</span><b>Prep</b><small>${done}/${target}</small></button>
   </section>`;
   if(view==='shop') return tabs+renderGrocery();
   if(view==='prep') return tabs+renderPrep();
-  return `<section class="page-intro"><div class="eyebrow">Your week</div><h1>Plan → Shop → <span class="accent">Prep.</span></h1><p>One place for the entire weekly flow.</p></section>`+tabs+renderWeekPlan();
+  return `<section class="page-intro"><div class="eyebrow">Your week</div><h1>Plan → Shop → <span class="accent">Prep.</span></h1><p>${target} prepared meals, one simple weekly flow.</p></section>`+tabs+renderWeekPlan();
 }
 
 function renderYou(){
   const school=currentSchool();
+  const target=weeklyMealTarget();
+  const weeklyButtons=WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${target===n?'selected':''}" data-weekly-meals="${n}"><b>${n}</b><span>${n/7}/day</span></button>`).join('');
   return `<section class="page-intro">
       <div class="eyebrow">Your Fuelr</div>
       <h1>Built around <span class="accent">you.</span></h1>
-      <p>Your school, budget, stores and meal targets shape the whole app.</p>
+      <p>Your school, weekly meal count, budget, stores and food profile shape the whole app.</p>
     </section>
     <section class="profile-school-card">
       <div class="school-badge">${esc(school.abbr)}</div>
@@ -894,8 +973,8 @@ function renderYou(){
     </section>
     <section class="you-metrics">
       <article><span>Meal cap</span><strong>${money(mealTarget())}</strong><small>per prepared meal</small></article>
-      <article><span>Weekly</span><strong>${money(weeklyBudget())}</strong><small>14 meals</small></article>
-      <article><span>Prep style</span><strong>${state.profile.prepStyle==='split'?'7 + 7':'14'}</strong><small>default</small></article>
+      <article><span>Weekly</span><strong>${money(weeklyBudget())}</strong><small>food budget</small></article>
+      <article><span>Meals</span><strong>${target}</strong><small>${weeklyMealDescription(target)}</small></article>
     </section>
     <section class="food-profile-card">
       <div><span>FOOD PROFILE</span><strong>${esc((state.profile.goal||'performance').replaceAll('_',' '))}</strong><small>${(state.profile.dietaryPreferences||[]).length?esc(state.profile.dietaryPreferences.join(' · ')):'No diet restrictions set'}</small></div>
@@ -903,12 +982,13 @@ function renderYou(){
     </section>
     <section class="settings-card you-settings">
       <div class="settings-card-head"><span class="summary-icon blue">01</span><div><h3>Food system</h3><p>Change the numbers that drive Fuelr</p></div></div>
+      <div class="field"><label>Prepared meals each week</label><div class="weekly-meal-selector">${weeklyButtons}</div><small>7 = one/day · 14 = two/day · 21 = three/day. You can still split the week across multiple recipes.</small></div>
       <div class="split"><div class="field"><label>School-year budget</label><input id="sBudget" type="number" step="1" value="${state.settings.schoolYearBudget}"></div><div class="field"><label>Academic weeks</label><input id="sWeeks" type="number" step="1" value="${state.settings.academicWeeks}"></div></div>
       <div class="split"><div class="field"><label>Preferred store</label><input id="sStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="sAlt" value="${esc(state.settings.altStore)}"></div></div>
-      <div class="derived-cap"><span>Calculated meal cap</span><strong>${money(mealTarget())}</strong><small>${money(state.settings.schoolYearBudget)} ÷ ${state.settings.academicWeeks} weeks ÷ 14 meals</small></div>
+      <div class="derived-cap"><span>Calculated meal cap</span><strong>${money(mealTarget())}</strong><small>${money(state.settings.schoolYearBudget)} ÷ ${state.settings.academicWeeks} weeks ÷ ${target} meals</small></div>
       <button id="saveSettings" class="btn primary full save-settings">Save my Fuelr</button>
     </section>
-    ${cloudEnabled() && cloudSignedIn()?`<section class="cloud-ready-card cloud-live"><div class="cloud-dot"></div><div><span>ACCOUNT + CLOUD</span><strong>${esc(state.cloud.user?.email||'Signed in')}</strong><p>Your profile and personal recipes are connected to your Fuelr account.</p></div><button class="mini-action" data-sign-out="1">Sign out</button></section>`:`<section class="cloud-ready-card"><div class="cloud-dot"></div><div><span>ACCOUNT + CLOUD</span><strong>${cloudEnabled()?'Sign in to sync':'Cloud setup pending'}</strong><p>${cloudEnabled()?'Your account keeps Fuelr available across devices.':'Fuelr is currently using on-device storage until the cloud project is activated.'}</p></div></section>`}`;
+    ${cloudEnabled() && cloudSignedIn()?`<section class="cloud-ready-card cloud-live"><div class="cloud-dot"></div><div><span>ACCOUNT + CLOUD</span><strong>${esc(state.cloud.user?.email||'Signed in')}</strong><p>Your profile, weekly plan and personal recipes are connected to your Fuelr account.</p></div><button class="mini-action" data-sign-out="1">Sign out</button></section>`:`<section class="cloud-ready-card"><div class="cloud-dot"></div><div><span>ACCOUNT + CLOUD</span><strong>${cloudEnabled()?'Sign in to sync':'Cloud setup pending'}</strong><p>${cloudEnabled()?'Your account keeps Fuelr available across devices.':'Fuelr is currently using on-device storage.'}</p></div></section>`}`;
 }
 
 function renderOnboarding(){
@@ -931,10 +1011,15 @@ function renderOnboarding(){
     <div class="onboard-card"><div class="field"><label>School-year food budget</label><div class="money-input"><span>$</span><input id="obBudget" type="number" value="${state.settings.schoolYearBudget}"></div></div><div class="field"><label>Academic weeks</label><input id="obWeeks" type="number" value="${state.settings.academicWeeks}"></div><div class="onboard-result"><span>Current target</span><strong>${money(mealTarget())}</strong><small>per meal · 14 meals each week</small></div></div>
     <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
 
-  if(step===3) return shell(`<div class="onboard-copy"><div class="eyebrow">03 · Routine</div><h1>How do you <span class="accent">prep?</span></h1><p>Set a default. You can still choose either option every week.</p></div>
-    <div class="prep-style-grid"><button class="${state.profile.prepStyle==='split'?'selected':''}" data-prep-style="split"><b>7 + 7</b><span>Two different recipes</span><small>Different lunch and dinner</small></button><button class="${state.profile.prepStyle==='single'?'selected':''}" data-prep-style="single"><b>14</b><span>One recipe</span><small>Maximum simplicity</small></button></div>
-    <div class="onboard-card"><div class="split"><div class="field"><label>Preferred store</label><input id="obStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="obAlt" value="${esc(state.settings.altStore)}"></div></div></div>
-    <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
+  if(step===3){
+    const target=weeklyMealTarget();
+    return shell(`<div class="onboard-copy"><div class="eyebrow">03 · Weekly routine</div><h1>How many meals do you <span class="accent">prep?</span></h1><p>Choose how many prepared meals Fuelr should cover each week. You can change this anytime.</p></div>
+      <div class="weekly-target-grid">
+        ${WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${target===n?'selected':''}" data-weekly-meals="${n}"><b>${n}</b><span>${n/7} prepared ${n===7?'meal':'meals'} / day</span><small>${n===7?'Great if breakfast and another meal are handled elsewhere':n===14?'Two meals a day — your current style':'All three daily meals covered'}</small></button>`).join('')}
+      </div>
+      <div class="onboard-card"><div class="split"><div class="field"><label>Preferred store</label><input id="obStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="obAlt" value="${esc(state.settings.altStore)}"></div></div></div>
+      <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
+  }
 
   if(step===4){
     const goals=[
@@ -953,58 +1038,58 @@ function renderOnboarding(){
       <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
   }
 
-  return shell(`<div class="onboard-finish"><div class="finish-school" style="--finish-primary:${s.primary};--finish-secondary:${s.secondary};--finish-on:${s.onPrimary}"><span>${s.abbr}</span></div><div class="eyebrow">05 · Ready</div><h1>Your Fuelr is <span class="accent">ready.</span></h1><p>${esc(s.name)} theme. ${money(mealTarget())} meal target. ${state.profile.prepStyle==='split'?'7 + 7':'14'} default prep.</p><div class="finish-stat"><span>YOUR MEAL CAP</span><strong>${money(mealTarget())}</strong><small>Fuelr will optimize every recipe around this target.</small></div><button class="btn primary onboard-main" data-finish-onboarding="1">Enter Fuelr →</button></div>`);
+  return shell(`<div class="onboard-finish"><div class="finish-school" style="--finish-primary:${s.primary};--finish-secondary:${s.secondary};--finish-on:${s.onPrimary}"><span>${s.abbr}</span></div><div class="eyebrow">05 · Ready</div><h1>Your Fuelr is <span class="accent">ready.</span></h1><p>${esc(s.name)} theme. ${weeklyMealTarget()} prepared meals each week. ${money(mealTarget())} per-meal target.</p><div class="finish-stat"><span>YOUR MEAL CAP</span><strong>${money(mealTarget())}</strong><small>Fuelr will optimize every recipe around this target.</small></div><button class="btn primary onboard-main" data-finish-onboarding="1">Enter Fuelr →</button></div>`);
 }
 
 function renderRecipeDetail(r){
   const photo=r.photo?esc(r.photo):'assets/meal-placeholder.svg';
-  const count=planFor(r.id)||14;
-  const factor=count/Number(r.servings||14);
+  const selectedCount=planFor(r.id);
+  const target=weeklyMealTarget();
+  const count=selectedCount || (target===7?7:14);
+  const factor=recipeBatchFactor(r,count);
   const ingredients=(r.ingredients||[]).map(i=>scaledIngredient(i,factor));
   const steps=r.instructions||[];
-  const batchUsed=(r.costPerMeal ?? mealTarget())*count;
+  const batchUsed=mealTarget()*count;
+  const buttons=WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${selectedCount===n?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="${n}" ${n>target?'disabled aria-disabled="true"':''}><b>${n}</b><span>meals</span></button>`).join('');
   return `<button class="link-btn back-link" data-go="recipes">← Back to meals</button>
     <section class="detail-shell">
       <div class="detail-photo-card">
         <img src="${photo}" alt="${esc(r.name)}" onerror="this.src='assets/meal-placeholder.svg'">
-        <span class="meal-tag detail-tag">${count}-MEAL PREP</span>
+        <span class="meal-tag detail-tag">${count}-MEAL ${selectedCount?'PREP':'PREVIEW'}</span>
       </div>
       <div class="detail-copy">
         <div class="eyebrow">Fuelr optimized</div>
         <h1>${esc(r.name)}</h1>
-        <p>${r.optimizationNote?esc(r.optimizationNote):'Optimized toward the current meal cap while protecting quality, protein, carbs and useful food volume.'}</p>
-        <div class="meal-count-actions detail-count-actions" aria-label="Choose meal count">
-          <button class="${count===7?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="7"><b>7</b><span>meals</span></button>
-          <button class="${count===14?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="14"><b>14</b><span>meals</span></button>
-        </div>
+        <p>${r.optimizationNote?esc(r.optimizationNote):'Optimized toward your current meal cap while protecting quality, protein, carbs and useful food volume.'}</p>
+        <div class="meal-count-actions detail-count-actions" aria-label="Choose meal count">${buttons}</div>
         <div class="optimize-strip">
-          <span>MEAL CAP</span>
+          <span>YOUR MEAL CAP</span>
           <strong>${money(mealTarget())}</strong>
           <small>${money(batchUsed)} used-cost target for ${count} meals</small>
         </div>
-        ${r.scaleFactor?`<div class="scale-explain"><span>OPTIMIZATION MULTIPLIER</span><strong>×${Number(r.scaleFactor).toFixed(2)}</strong><small>Every source ingredient is first scaled from the creator's serving count to this 7- or 14-meal batch — including salt, spices, oils and sauces — then the whole recipe is optimized toward the meal cap while preserving the original flavor ratios.</small></div>`:''}
+        <div class="scale-explain"><span>LIVE BUDGET ADJUSTMENT</span><strong>×${recipeBudgetFactor(r).toFixed(2)}</strong><small>Fuelr scales the stored recipe to your personal meal cap, then scales every listed ingredient to 7, 14, or 21 meals — including salt, spices, oils and sauces.</small></div>
         ${r.original?`<div class="source-compare">
           <div><span>SOURCE</span><strong>${esc(r.original.servings)} servings</strong><small>${r.original.portion?esc(r.original.portion):'original recipe'}</small></div>
           <div class="compare-arrow">→</div>
-          <div><span>FUELR</span><strong>${count} meals</strong><small>${esc(r.portion||'optimized athlete portion')}</small></div>
+          <div><span>FUELR</span><strong>${count} meals</strong><small>${esc(r.portion||'optimized portion')}</small></div>
         </div>`:''}
-        <div class="detail-price">${money(r.costPerMeal ?? mealTarget())} <small>/ meal · ${esc(r.priceStatus||'estimated')}</small></div>
+        <div class="detail-price">${money(mealTarget())} <small>/ meal target · ${esc(r.priceStatus||'estimated')}</small></div>
         <div class="macro-grid clean-macros">
-          <div class="macro"><strong>${esc(r.macros?.calories ?? '—')}</strong><small>Calories</small></div>
-          <div class="macro"><strong>${esc(r.macros?.protein ?? '—')}${r.macros?.protein?'g':''}</strong><small>Protein</small></div>
-          <div class="macro"><strong>${esc(r.macros?.carbs ?? '—')}${r.macros?.carbs?'g':''}</strong><small>Carbs</small></div>
-          <div class="macro"><strong>${esc(r.macros?.fat ?? '—')}${r.macros?.fat?'g':''}</strong><small>Fat</small></div>
+          <div class="macro"><strong>${esc(macroFor(r,'calories') ?? '—')}</strong><small>Calories</small></div>
+          <div class="macro"><strong>${esc(macroFor(r,'protein') ?? '—')}${macroFor(r,'protein')?'g':''}</strong><small>Protein</small></div>
+          <div class="macro"><strong>${esc(macroFor(r,'carbs') ?? '—')}${macroFor(r,'carbs')?'g':''}</strong><small>Carbs</small></div>
+          <div class="macro"><strong>${esc(macroFor(r,'fat') ?? '—')}${macroFor(r,'fat')?'g':''}</strong><small>Fat</small></div>
         </div>
         ${planFor(r.id)?`<button class="btn secondary full" data-clear-plan="${esc(r.id)}">Remove from this week</button>`:''}
       </div>
     </section>
     <section class="section"><div class="section-head clean-head"><div><h2>Ingredients</h2><p>Automatically scaled for ${count} meals</p></div><span class="soft-pill">${money(batchUsed)} used cost</span></div><div class="card"><div class="card-body"><div class="list">${ingredients.map(i=>`<div class="list-item"><div class="list-dot"></div><div><div class="item-main">${esc(i.item)}</div><div class="item-sub">${esc(i.quantity)} ${esc(i.unit||'')}${i.note?` · ${esc(i.note)}`:''}</div></div><div class="item-cost">${i.usedCost!=null?money(i.usedCost):''}</div></div>`).join('')||'<div class="kicker">Ingredient details will appear here with the recipe.</div>'}</div></div></div></section>
     <section class="section"><div class="section-head clean-head"><div><h2>Prep flow</h2><p>Same method, scaled batch</p></div></div><div class="card"><div class="card-body">${steps.map((s,i)=>`<div class="step"><div class="step-num">${String(i+1).padStart(2,'0')}</div><p>${esc(s)}</p></div>`).join('')||'<div class="kicker">Cooking steps will appear here with the recipe.</div>'}</div></div></section>
-    <section class="section"><div class="notice blue"><strong>Storage:</strong> for a 7-meal batch, refrigerate what you will eat within 3–4 days and freeze the rest if needed. For 14 meals, freeze the later-week portions promptly.</div></section>`;
+    <section class="section"><div class="notice blue"><strong>Storage:</strong> refrigerate what you will eat within about 3–4 days and freeze later portions promptly, especially for 14- and 21-meal batches.</div></section>`;
 }
 
 function groceryRows(r,count){
-  const factor=count/Number(r.servings||14);
+  const factor=recipeBatchFactor(r,count);
   const rows=(r.shopping||r.ingredients||[]).map(i=>scaledShopping(i,factor));
   const groups={};
   rows.forEach((it,idx)=>{ const g=it.category||'Other'; (groups[g] ||= []).push({...it,_idx:idx}); });
@@ -1016,22 +1101,23 @@ function groceryRows(r,count){
 function renderGrocery(){
   const entries=selectedEntries();
   const total=plannedMeals();
-  const usedTotal=entries.reduce((sum,x)=>sum+(x.recipe.costPerMeal??mealTarget())*x.count,0);
+  const target=weeklyMealTarget();
+  const usedTotal=entries.reduce((sum,x)=>sum+mealTarget()*x.count,0);
   const checkoutTotal=entries.reduce((sum,x)=>sum+scaledCheckoutTotal(x.recipe,x.count),0);
   return `<section class="page-intro">
       <div class="eyebrow">Combined grocery run</div>
       <h1>One list for <span class="accent">${total || 0} meals.</span></h1>
-      <p>Whether you choose one 14-meal recipe or two different 7-meal recipes, quantities scale automatically.</p>
+      <p>Your grocery list combines any valid ${target}-meal lineup — ${planExamples(target)}.</p>
     </section>
     <section class="grocery-summary">
-      <article><span>Meals planned</span><strong>${total}/14</strong><small>${entries.length===2?'two different 7-meal preps':entries.length===1?entries[0].count+'-meal prep':'choose meals first'}</small></article>
+      <article><span>Meals planned</span><strong>${total}/${target}</strong><small>${entries.length?planShape()+' meal batches':'choose meals first'}</small></article>
       <article><span>Used-cost target</span><strong>${money(usedTotal)}</strong><small>meal ingredients only</small></article>
       <article><span>Checkout estimate</span><strong>${money(checkoutTotal)}</strong><small>full packages can vary</small></article>
     </section>
     ${entries.length?entries.map(x=>`<section class="section grocery-recipe-block">
-      <div class="section-head clean-head"><div><h2>${esc(x.recipe.name)}</h2><p>${x.count} meals · ${money((x.recipe.costPerMeal??mealTarget())*x.count)} used-cost target</p></div><span class="soft-pill">${x.count} meals</span></div>
+      <div class="section-head clean-head"><div><h2>${esc(x.recipe.name)}</h2><p>${x.count} meals · ${money(mealTarget()*x.count)} used-cost target</p></div><span class="soft-pill">${x.count} meals</span></div>
       ${groceryRows(x.recipe,x.count)}
-    </section>`).join(''):`<div class="empty clean-empty"><div class="empty-orb light">✓</div><div class="eyebrow">Nothing to shop yet</div><h3>Choose 7 + 7 or one 14.</h3><p>Your combined grocery list will build itself here.</p><button class="btn primary" data-go="recipes">Choose meals</button></div>`}`;
+    </section>`).join(''):`<div class="empty clean-empty"><div class="empty-orb light">✓</div><div class="eyebrow">Nothing to shop yet</div><h3>Build your ${target}-meal week.</h3><p>${planExamples(target)} — the combined grocery list will build itself here.</p><button class="btn primary" data-go="recipes">Choose meals</button></div>`}`;
 }
 
 function prepBatchCard(entry,index){
@@ -1065,37 +1151,39 @@ function prepBatchCard(entry,index){
 function renderPrep(){
   const entries=selectedEntries();
   const total=plannedMeals();
+  const target=weeklyMealTarget();
   const done=totalPrepDone();
-  const pct=total===14?Math.round(done/14*100):0;
-  if(total!==14){
+  const pct=total===target?Math.round(done/target*100):0;
+  if(total!==target){
+    const left=Math.max(0,target-total);
     return `<section class="page-intro">
       <div class="eyebrow">Weekly prep board</div>
       <h1>Finish the plan, then <span class="accent">cook it.</span></h1>
-      <p>The Prep page unlocks when your week reaches 14 meals — either one 14-meal recipe or two different 7-meal recipes.</p>
+      <p>The Prep board unlocks when your week reaches ${target} meals. Valid combinations: ${planExamples(target)}.</p>
     </section>
     <section class="prep-lock-card">
-      <div class="prep-lock-number">${total}/14</div>
-      <h3>${total===7?'Halfway there.':'Choose your meals first.'}</h3>
-      <p>${total===7?'Pick one more 7-meal recipe, or change your current recipe to 14.':'Your prep checklist will appear here once the weekly plan is complete.'}</p>
-      <div class="progress prep-progress"><span style="width:${Math.min(100,total/14*100)}%"></span></div>
-      <button class="btn primary full" data-go="recipes">${total===7?'Choose the other 7':'Build this week'}</button>
+      <div class="prep-lock-number">${total}/${target}</div>
+      <h3>${total?'Almost there.':'Choose your meals first.'}</h3>
+      <p>${total?`Add ${left} more meals to complete this week.`:'Your prep checklist will appear here once the weekly plan is complete.'}</p>
+      <div class="progress prep-progress"><span style="width:${Math.min(100,total/target*100)}%"></span></div>
+      <button class="btn primary full" data-go="recipes">${total?'Complete the week':'Build this week'}</button>
     </section>`;
   }
 
   return `<section class="page-intro prep-intro">
       <div class="eyebrow">Weekly prep board</div>
       <h1>Cook it. Portion it. <span class="accent">Done.</span></h1>
-      <p>Check off each container as you fill it. When all 14 are ready, Fuelr is ready to roll into the next week.</p>
+      <p>Check off each container as you fill it. When all ${target} are ready, Fuelr can roll into the next week.</p>
     </section>
     <section class="prep-overview">
-      <div class="prep-overview-copy"><span>WEEK READY</span><strong>${done}/14</strong><small>${done===14?'All meals prepared':'Keep going — '+(14-done)+' left'}</small></div>
+      <div class="prep-overview-copy"><span>WEEK READY</span><strong>${done}/${target}</strong><small>${done===target?'All meals prepared':'Keep going — '+(target-done)+' left'}</small></div>
       <div class="prep-overview-bar"><div style="width:${pct}%"></div></div>
       <span class="prep-overview-pct">${pct}%</span>
     </section>
     <section class="prep-batches">${entries.map((entry,index)=>prepBatchCard(entry,index)).join('')}</section>
-    ${done===14?`<section class="week-complete-card">
+    ${done===target?`<section class="week-complete-card">
       <div class="week-complete-icon">✓</div>
-      <div><span>WEEK COMPLETE</span><h3>All 14 meals are cooked and ready.</h3><p>When you are ready, clear this week and choose the next recipe lineup.</p></div>
+      <div><span>WEEK COMPLETE</span><h3>All ${target} meals are cooked and ready.</h3><p>When you are ready, clear this week and choose the next recipe lineup.</p></div>
       <button class="btn primary" data-next-week="1">Start next week</button>
     </section>`:''}`;
 }
@@ -1103,41 +1191,44 @@ function renderPrep(){
 function renderBudget(){
   const target=mealTarget();
   const weekly=weeklyBudget();
+  const weeklyMeals=weeklyMealTarget();
   return `<section class="page-intro">
       <div class="eyebrow">Budget dashboard</div>
-      <h1>One cap. <span class="accent">No extra buckets.</span></h1>
-      <p>The old produce allowance is gone. The full school-year food budget now goes directly into the meals themselves.</p>
+      <h1>One cap. <span class="accent">Your meal count.</span></h1>
+      <p>The full school-year food budget is divided across ${weeklyMeals} prepared meals each week.</p>
     </section>
     <section class="budget-dashboard">
       <article class="budget-main-card">
         <div class="budget-ring big-ring" style="--budget-angle:360deg"><div><strong>${money(target)}</strong><span>per meal</span></div></div>
-        <div><span class="summary-label">All-in meal cap</span><strong class="budget-hero-number">${money(target)}</strong><small>${money(state.settings.schoolYearBudget)} ÷ ${state.settings.academicWeeks} weeks ÷ 14 meals</small></div>
+        <div><span class="summary-label">All-in meal cap</span><strong class="budget-hero-number">${money(target)}</strong><small>${money(state.settings.schoolYearBudget)} ÷ ${state.settings.academicWeeks} weeks ÷ ${weeklyMeals} meals</small></div>
       </article>
       <div class="budget-mini-grid">
-        <article><span>7 meals</span><strong>${money(target*7)}</strong><small>half-week prep</small></article>
-        <article><span>14 meals</span><strong>${money(weekly)}</strong><small>full-week prep</small></article>
-        <article><span>Semester</span><strong>${money(semesterBudget())}</strong><small>planned food</small></article>
-        <article><span>School year</span><strong>${money(plannedYear())}</strong><small>fully allocated</small></article>
+        <article><span>7 meals</span><strong>${money(target*7)}</strong><small>one 7-meal batch</small></article>
+        <article><span>14 meals</span><strong>${money(target*14)}</strong><small>two weeks of 7? no — two daily meals/week</small></article>
+        <article><span>21 meals</span><strong>${money(target*21)}</strong><small>three daily meals/week</small></article>
+        <article><span>Your week</span><strong>${money(weekly)}</strong><small>${weeklyMeals} prepared meals</small></article>
       </div>
     </section>
     <section class="section"><div class="card budget-breakdown"><div class="card-body">
-      <div class="budget-row"><div class="name">Option A · one recipe</div><div class="amount">14 meals</div><small>One optimized recipe can use up to ${money(weekly)} for the week.</small></div>
-      <div class="budget-row"><div class="name">Option B · two recipes</div><div class="amount">7 + 7</div><small>Each prep gets about ${money(target*7)}, for the same ${money(weekly)} weekly cap.</small></div>
-      <div class="budget-row"><div class="name">Optimization rule</div><div class="amount">scale to cap</div><small>If a source meal costs less, Fuelr increases useful ingredient quantities toward the cap. If it costs more, it scales back intelligently while protecting quality and nutrition.</small></div>
+      <div class="budget-row"><div class="name">Weekly target</div><div class="amount">${weeklyMeals} meals</div><small>${weeklyMealDescription(weeklyMeals)}. Valid batch combinations: ${planExamples(weeklyMeals)}.</small></div>
+      <div class="budget-row"><div class="name">Dynamic recipe target</div><div class="amount">${money(target)}/meal</div><small>Fuelr adjusts optimized recipe quantities when the user's weekly meal count changes.</small></div>
+      <div class="budget-row"><div class="name">Optimization rule</div><div class="amount">scale to cap</div><small>If a source meal costs less, Fuelr increases useful ingredient quantities toward the cap. If it costs more, it scales back while protecting useful food and nutrition.</small></div>
     </div></div></section>`;
 }
 
 function renderSettings(){
+  const target=weeklyMealTarget();
   return `<section class="page-intro">
       <div class="eyebrow">System settings</div>
       <h1>One budget drives <span class="accent">everything.</span></h1>
-      <p>Fuelr calculates the meal cap automatically from your school-year budget, academic weeks, and 14 weekly meals.</p>
+      <p>Fuelr calculates the meal cap automatically from your school-year budget, academic weeks, and prepared meals per week.</p>
     </section>
     <section class="settings-grid">
       <div class="settings-card">
         <div class="settings-card-head"><span class="summary-icon blue">01</span><div><h3>Budget</h3><p>Sets the automatic meal cap</p></div></div>
+        <div class="field"><label>Prepared meals each week</label><div class="weekly-meal-selector">${WEEKLY_MEAL_OPTIONS.map(n=>`<button class="${target===n?'selected':''}" data-weekly-meals="${n}"><b>${n}</b><span>${n/7}/day</span></button>`).join('')}</div></div>
         <div class="split"><div class="field"><label>School-year budget</label><input id="sBudget" type="number" step="1" value="${state.settings.schoolYearBudget}"></div><div class="field"><label>Academic weeks</label><input id="sWeeks" type="number" step="1" value="${state.settings.academicWeeks}"></div></div>
-        <div class="derived-cap"><span>Calculated meal cap</span><strong>${money(mealTarget())}</strong><small>per meal · 14 meals/week</small></div>
+        <div class="derived-cap"><span>Calculated meal cap</span><strong>${money(mealTarget())}</strong><small>per meal · ${target} meals/week</small></div>
       </div>
       <div class="settings-card">
         <div class="settings-card-head"><span class="summary-icon dark">02</span><div><h3>Stores</h3><p>Where the grocery list starts</p></div></div>
@@ -1145,7 +1236,7 @@ function renderSettings(){
       </div>
     </section>
     <button id="saveSettings" class="btn primary full save-settings">Save Fuelr settings</button>
-    <section class="section"><div class="notice blue"><strong>Streamlined scaling:</strong> Fuelr first normalizes every listed ingredient from the creator's original serving count to 7 or 14 meals — including salt, spices, seasoning packets, oils and sauces. Then it prices that normalized recipe per meal, calculates the ratio to your meal cap, and scales the full recipe toward that budget while preserving the original ingredient and flavor ratios.</div></section>`;
+    <section class="section"><div class="notice blue"><strong>Streamlined scaling:</strong> Fuelr normalizes every ingredient from the creator's source yield to 7, 14, or 21 meals, then adjusts the full recipe toward your personal meal cap.</div></section>`;
 }
 
 function render(){
@@ -1201,6 +1292,7 @@ function bindDynamic(){
 
   app.querySelectorAll('[data-school-id]').forEach(el=>el.addEventListener('click',()=>chooseSchool(el.dataset.schoolId)));
   app.querySelectorAll('[data-prep-style]').forEach(el=>el.addEventListener('click',()=>{state.profile.prepStyle=el.dataset.prepStyle;saveProfile();if(state.onboardingComplete)persistProfileToCloud();render();}));
+  app.querySelectorAll('[data-weekly-meals]').forEach(el=>el.addEventListener('click',()=>setWeeklyMealsTarget(Number(el.dataset.weeklyMeals))));
   app.querySelectorAll('[data-goal]').forEach(el=>el.addEventListener('click',()=>{state.profile.goal=el.dataset.goal;saveProfile();render();}));
   app.querySelectorAll('[data-ob-back]').forEach(el=>el.addEventListener('click',()=>{state.onboardingStep=Math.max(0,state.onboardingStep-1);render();}));
   app.querySelectorAll('[data-ob-next]').forEach(el=>el.addEventListener('click',()=>{
@@ -1237,7 +1329,7 @@ function bindDynamic(){
   if(save) save.addEventListener('click',()=>{
     state.settings.schoolYearBudget=Number(document.getElementById('sBudget').value)||DEFAULTS.schoolYearBudget;
     state.settings.academicWeeks=Number(document.getElementById('sWeeks').value)||DEFAULTS.academicWeeks;
-    state.settings.mealsPerWeek=14;
+    state.settings.mealsPerWeek=WEEKLY_MEAL_OPTIONS.includes(Number(state.settings.mealsPerWeek))?Number(state.settings.mealsPerWeek):DEFAULTS.mealsPerWeek;
     state.settings.preferredStore=document.getElementById('sStore').value||'Aldi';
     state.settings.altStore=document.getElementById('sAlt').value||'Walmart';
     saveSettings();persistProfileToCloud();scheduleCloudWeekSave();showToast('Your Fuelr was updated');render();
