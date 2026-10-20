@@ -58,3 +58,22 @@ The current public build is deployed from the repository root on the `main` bran
 ## iPhone install
 
 Open the published app in Safari → Share → Add to Home Screen.
+
+
+## Detailed app navigation
+
+Fuelr intentionally keeps the full detailed workflow as separate app sections:
+
+- Home
+- Meals
+- Prep
+- Grocery
+- Calendar
+- Budget
+- Settings
+
+The Calendar is an addition to the detailed workflow, not a replacement for Prep, Grocery, Budget, or Settings.
+
+## Native app
+
+This repository is configured for Capacitor so the same Fuelr product can become an iOS and Android app while continuing to use Supabase for accounts and personalized data. See `NATIVE_APP.md`.
