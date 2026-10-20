@@ -852,26 +852,123 @@ function clearMealPlan(id){
   scheduleCloudWeekSave();
 }
 
+const STARTER_COOKBOOK_FILES = [
+  'data/starter-breakfast.json',
+  'data/starter-lunch-1.json','data/starter-lunch-2.json','data/starter-lunch-3.json','data/starter-lunch-4.json',
+  'data/starter-dinner-1.json','data/starter-dinner-2.json','data/starter-dinner-3.json','data/starter-dinner-4.json'
+];
+
+const COOKBOOK_COST_WEIGHTS = {Protein:3,Dairy:1.6,Grains:1.5,Produce:1,Sauces:.7,Pantry:.6,Seasoning:.35,Frozen:1,Wraps:1.5,Bakery:1.5};
+const cookbookImage = category => category==='breakfast' ? 'images/fuelr-breakfast.svg' : category==='lunch' ? 'images/fuelr-lunch.svg' : 'images/fuelr-dinner.svg';
+
+function cookbookInstructions(style,name){
+  const end='Cool cooked components before sealing containers. Refrigerate portions for the next 3–4 days and freeze later portions if needed.';
+  const map={
+    cold:['Portion the yogurt base evenly into meal containers.','Add fruit and toppings, keeping crunchy ingredients separate until serving.','Refrigerate covered and add crunchy toppings just before eating.',end],
+    oats:['Combine oats, milk, protein ingredients and flavorings until evenly mixed.','Fold in fruit and divide evenly across the batch.','Refrigerate overnight; loosen with a splash of milk if desired.',end],
+    pancake:['Mix the batter until just combined.','Cook on a lightly greased griddle, flipping when bubbles form.','Divide pancakes and toppings evenly; keep yogurt or syrup separate for reheating.',end],
+    'breakfast-bowl':['Roast or sauté potatoes and vegetables until browned and tender.','Cook the protein and eggs separately so each stays well textured.','Divide all components evenly and finish with cheese or sauce.',end],
+    burrito:['Cook the protein, starch and vegetables, then let excess steam escape.','Divide filling evenly among tortillas.','Roll tightly, toast seam-side down if desired, then cool before packing.',end],
+    wrap:['Cook and season the protein, then cool slightly.','Divide protein, vegetables, cheese and sauce among wraps.','Roll tightly and keep wet sauces separate if desired.',end],
+    sandwich:['Cook hot protein or eggs and prepare vegetables.','Build each sandwich with an even amount of filling.','Wrap individually and reheat or toast before eating when possible.',end],
+    rice:['Cook rice according to package directions.','Cook protein and vegetables separately until done and crisp-tender.','Divide rice, protein, vegetables and sauce evenly.',end],
+    pasta:['Cook pasta just to al dente and drain well.','Cook the protein and vegetables, then combine with the measured sauce and pasta.','Divide evenly into meal containers and add cheese after portioning.',end],
+    noodle:['Cook noodles just to al dente and drain.','Cook protein and vegetables over high heat, then add the measured sauce.','Toss with noodles and divide evenly into meal containers.',end],
+    'cold-pasta':['Cook pasta to al dente, rinse briefly to stop cooking, and cool.','Cook or prepare the protein, then combine with vegetables and dressing.','Fold in the pasta and divide evenly. Refrigerate until serving.',end],
+    quesadilla:['Cook the protein and vegetables.','Fill tortillas evenly with the protein mixture and cheese, then toast until crisp.','Cool on a rack before packing; store salsa separately.',end],
+    plate:['Season and cook the protein until browned and cooked through.','Roast or steam the starch and vegetables until tender.','Divide protein, starch and vegetables evenly so every container is complete.',end],
+    stew:['Brown the protein with aromatics and seasonings.','Add beans, vegetables and liquid ingredients and simmer until flavors come together.','Cook the rice or starch separately if listed, then portion evenly with the stew.',end],
+    bake:['Combine wet ingredients and seasonings with the bread or grain base.','Fold in fruit or vegetables and spread evenly in a baking dish.','Bake until set, cool, and cut into equal portions.',end]
+  };
+  return (map[style]||map.plate).map((line,i)=>i===0?`${line} Base method for ${name}.`:line);
+}
+
+function hydrateStarterRecipe(row,category){
+  const [id,name,style,portion,macroArray,rawIngredients]=row;
+  const weights=(rawIngredients||[]).map(i=>COOKBOOK_COST_WEIGHTS[i[3]]||1);
+  const totalWeight=weights.reduce((a,b)=>a+b,0)||1;
+  const ingredients=(rawIngredients||[]).map((i,index)=>({
+    item:i[0],
+    quantity:String(i[1]),
+    unit:i[2],
+    category:i[3]||'Other',
+    note:'',
+    usedCost:Number((78.125*weights[index]/totalWeight).toFixed(2))
+  }));
+  const shopping=ingredients.map(i=>({
+    item:i.item,
+    category:i.category,
+    buyQuantity:i.quantity,
+    unit:i.unit,
+    preferredStore:'Aldi',
+    altStore:'Walmart',
+    checkoutCost:Number((i.usedCost*1.08).toFixed(2)),
+    priceStatus:'estimated'
+  }));
+  return {
+    id,name,
+    sourceName:'Fuelr Original',
+    catalogCategory:category,
+    photo:cookbookImage(category),
+    servings:14,
+    portion,
+    costPerMeal:5.58,
+    checkoutTotal:Number(shopping.reduce((sum,i)=>sum+i.checkoutCost,0).toFixed(2)),
+    priceStatus:'Fuelr estimate — not live store pricing',
+    macros:{calories:macroArray?.[0]||null,protein:macroArray?.[1]||null,carbs:macroArray?.[2]||null,fat:macroArray?.[3]||null},
+    macrosStatus:'Fuelr estimated macros for an athlete-oriented portion; verify against exact brands and labels.',
+    optimizationNote:'Fuelr Original starter recipe built around protein, training carbohydrates and produce. Fuelr dynamically rescales the full recipe to your meal cap and selected batch size.',
+    ingredients,shopping,
+    instructions:cookbookInstructions(style,name),
+    scaleFactor:1,
+    mealType:category==='breakfast'?'breakfast':'main'
+  };
+}
+
 async function syncRecipes(silent=false){
   syncBtn.classList.add('syncing');
   try{
-    const res = await fetch('data/recipes.json?v=' + Date.now(), {cache:'no-store'});
-    if(!res.ok) throw new Error('Recipe catalog unavailable');
-    const data = await res.json();
-    state.catalogRecipes = Array.isArray(data.recipes) ? data.recipes : [];
-    state.recipes = [...state.catalogRecipes, ...state.userRecipes];
-    state.lastSync = new Date().toISOString();
-    localStorage.setItem('pf_last_sync', state.lastSync);
-    if(!silent) showToast('Recipe library synced');
+    const baseRequest=fetch('data/recipes.json?v=' + Date.now(), {cache:'no-store'});
+    const starterRequests=STARTER_COOKBOOK_FILES.map(path=>fetch(path+'?v='+Date.now(),{cache:'no-store'}));
+    const [baseRes,...starterRes]=await Promise.all([baseRequest,...starterRequests]);
+    if(!baseRes.ok) throw new Error('Recipe catalog unavailable');
+    const base=await baseRes.json();
+
+    const starter=[];
+    for(let i=0;i<starterRes.length;i++){
+      const res=starterRes[i];
+      if(!res.ok) throw new Error('Starter cookbook unavailable');
+      const payload=await res.json();
+      const category=payload.category==='mixed'?'breakfast':payload.category;
+      (payload.recipes||[]).forEach(row=>{
+        // starter-breakfast.json contains the 20 breakfast recipes; chunk files supply lunch/dinner.
+        starter.push(hydrateStarterRecipe(row,category));
+      });
+    }
+
+    const seen=new Set();
+    const starterUnique=starter.filter(r=>r?.id && !seen.has(r.id) && seen.add(r.id));
+    const featured=(Array.isArray(base.recipes)?base.recipes:[]).map(r=>({
+      ...r,
+      catalogCategory:r.catalogCategory||'featured',
+      photo:r.id==='hot-honey-steak-hash-brown-burritos'?'images/featured-steak-burrito.svg':
+        r.id==='buffalo-chicken-subs'?'images/featured-buffalo-subs.svg':
+        (r.photo||'assets/meal-placeholder.svg')
+    }));
+    state.catalogRecipes=[...starterUnique,...featured];
+    state.recipes=[...state.catalogRecipes,...state.userRecipes];
+    state.lastSync=new Date().toISOString();
+    localStorage.setItem('pf_last_sync',state.lastSync);
+    if(!silent) showToast(`Recipe library synced · ${state.catalogRecipes.length} built-in recipes`);
   }catch(e){
-    state.recipes = [...state.catalogRecipes, ...state.userRecipes];
+    console.error('Fuelr recipe sync failed',e);
+    state.recipes=[...state.catalogRecipes,...state.userRecipes];
     if(!silent) showToast('Could not sync — using saved app data');
   }finally{
     syncBtn.classList.remove('syncing');
     render();
   }
 }
-
 function setTab(tab){
   tab=normalizeTab(tab);
   state.tab=tab;
@@ -985,12 +1082,37 @@ function renderRecipes(){
   const total=plannedMeals();
   const target=weeklyMealTarget();
   const remaining=Math.max(0,target-total);
-  const cards=state.recipes.length ? state.recipes.map(recipeCard).join('') : '<div class="empty clean-empty"><h3>Your recipes will live here.</h3><p>Add your first recipe and Fuelr will scale it for 7, 14, or 21 meals.</p></div>';
+  const filter=state.recipeFilter||'all';
+  const query=(state.recipeSearch||'').trim().toLowerCase();
+  const builtInIds=new Set(state.catalogRecipes.map(r=>r.id));
+  const filtered=state.recipes.filter(r=>{
+    const isMine=!builtInIds.has(r.id);
+    const category=r.catalogCategory || (isMine?'mine':'featured');
+    const categoryMatch=filter==='all' || (filter==='mine'&&isMine) || category===filter;
+    const text=`${r.name||''} ${r.portion||''} ${r.sourceName||''}`.toLowerCase();
+    return categoryMatch && (!query || text.includes(query));
+  });
+  const counts={
+    breakfast:state.catalogRecipes.filter(r=>r.catalogCategory==='breakfast').length,
+    lunch:state.catalogRecipes.filter(r=>r.catalogCategory==='lunch').length,
+    dinner:state.catalogRecipes.filter(r=>r.catalogCategory==='dinner').length,
+    featured:state.catalogRecipes.filter(r=>r.catalogCategory==='featured').length,
+    mine:state.userRecipes.length
+  };
+  const chips=[
+    ['all','All',state.recipes.length],['breakfast','Breakfast',counts.breakfast],['lunch','Lunch',counts.lunch],
+    ['dinner','Dinner',counts.dinner],['featured','Featured',counts.featured],['mine','My Recipes',counts.mine]
+  ];
+  const cards=filtered.length ? filtered.map(recipeCard).join('') : '<div class="empty clean-empty"><h3>No recipes found.</h3><p>Try another category or search, or add your own recipe.</p></div>';
   const dots=Array.from({length:target/7},(_,i)=>`<i class="${total>=(i+1)*7?'on':''}"></i>`).join('');
   return `<section class="page-intro meals-intro">
-      <div class="eyebrow">Meal library</div>
-      <div class="title-action-row"><div><h1>Build <span class="accent">${target} meals.</span></h1><p>${planExamples(target)}. Fuelr handles ingredient scaling, quantities, groceries, and the weekly budget underneath.</p></div><button class="add-recipe-btn" data-add-recipe="1"><span>+</span>Add recipe</button></div>
-      <div class="meals-meta"><span>${state.recipes.length} recipes</span><span>•</span><span>${total}/${target} planned</span><span>•</span><span>${money(mealTarget())} cap / meal</span></div>
+      <div class="eyebrow">Fuelr cookbook</div>
+      <div class="title-action-row"><div><h1>Choose what you <span class="accent">actually want to eat.</span></h1><p>Start with 60 Fuelr Original breakfast, lunch and dinner ideas, keep your featured recipes, or add anything of your own.</p></div><button class="add-recipe-btn" data-add-recipe="1"><span>+</span>Add recipe</button></div>
+      <div class="meals-meta"><span>${state.catalogRecipes.length} built in</span><span>•</span><span>${state.userRecipes.length} yours</span><span>•</span><span>${total}/${target} planned</span></div>
+    </section>
+    <section class="cookbook-toolbar">
+      <div class="cookbook-search"><span>⌕</span><input id="recipeSearch" value="${esc(state.recipeSearch||'')}" placeholder="Search chicken, burrito, pancakes..."></div>
+      <div class="cookbook-filters">${chips.map(([id,label,count])=>`<button class="${filter===id?'active':''}" data-recipe-filter="${id}"><span>${label}</span><b>${count}</b></button>`).join('')}</div>
     </section>
     <section class="plan-status-bar">
       <div><span class="plan-status-label">WEEKLY PLAN</span><strong>${total}/${target} meals</strong></div>
@@ -998,15 +1120,9 @@ function renderRecipes(){
       <span>${total===target?'Week complete':total===0?'Choose a batch':remaining+' meals left'}</span>
     </section>
     <section class="floating-meal-stage large-stage">
-      <div class="meal-swipe-rail">${cards}</div>
-      <div class="swipe-hint"><span>←</span> swipe meals · choose a batch <span>→</span></div>
+      <div class="meal-swipe-rail cookbook-grid">${cards}</div>
     </section>
-    <div class="sync-strip light-sync"><span class="status-dot"></span><span>Fuelr recipe library</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready'}</span></div>
-    <section class="meal-info-row">
-      <div class="info-bubble"><b>01</b><span>Add or choose</span></div>
-      <div class="info-bubble"><b>02</b><span>Fuelr scales it</span></div>
-      <div class="info-bubble"><b>03</b><span>Shop + prep</span></div>
-    </section>`;
+    <div class="sync-strip light-sync"><span class="status-dot"></span><span>Fuelr recipe library</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready'}</span></div>`;
 }
 
 function renderAddRecipe(){
@@ -1801,6 +1917,8 @@ function bindDynamic(){
   app.querySelectorAll('[data-calendar-clear]').forEach(el=>el.addEventListener('click',()=>clearCalendarSlot(Number(el.dataset.calendarDay),el.dataset.calendarSlot)));
   app.querySelectorAll('[data-week-view]').forEach(el=>el.addEventListener('click',()=>setWeekView(el.dataset.weekView)));
   app.querySelectorAll('[data-add-recipe]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=true;state.importDraft=null;state.detailId='';render();window.scrollTo({top:0,behavior:'smooth'});}));
+  app.querySelectorAll('[data-recipe-filter]').forEach(el=>el.addEventListener('click',()=>{state.recipeFilter=el.dataset.recipeFilter||'all';render();}));
+  document.getElementById('recipeSearch')?.addEventListener('input',e=>{state.recipeSearch=e.target.value;render();});
   app.querySelectorAll('[data-close-add]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=false;state.importDraft=null;render();}));
   document.querySelectorAll('input[name="urMealType"]').forEach(el=>el.addEventListener('change',()=>document.querySelectorAll('.recipe-type-picker label').forEach(label=>label.classList.toggle('selected-default',Boolean(label.querySelector('input:checked'))))));
   document.getElementById('importRecipeUrl')?.addEventListener('click',importRecipeUrl);
