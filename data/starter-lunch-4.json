@@ -1,0 +1,274 @@
+{
+  "version": 1,
+  "category": "lunch",
+  "recipes": [
+    [
+      "greek-chicken-pita-bowls",
+      "Greek Chicken Pita Bowls",
+      "rice",
+      "Greek chicken, pita, rice and cucumber tomato salad",
+      [
+        720,
+        58,
+        83,
+        18
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          5.25,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Whole-wheat pitas",
+          14,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Cucumbers",
+          14,
+          "large",
+          "Produce"
+        ],
+        [
+          "Tomatoes",
+          14,
+          "large",
+          "Produce"
+        ],
+        [
+          "Tzatziki",
+          42,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Feta cheese",
+          21,
+          "oz",
+          "Dairy"
+        ]
+      ]
+    ],
+    [
+      "chicken-fajita-burrito-bowls",
+      "Chicken Fajita Burrito Bowls",
+      "rice",
+      "Fajita chicken, rice, beans and peppers",
+      [
+        750,
+        59,
+        94,
+        15
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Black beans",
+          7,
+          "cups",
+          "Protein"
+        ],
+        [
+          "Bell peppers",
+          21,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Onions",
+          7,
+          "large",
+          "Produce"
+        ],
+        [
+          "Corn",
+          7,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Salsa",
+          28,
+          "oz",
+          "Sauces"
+        ]
+      ]
+    ],
+    [
+      "beef-enchilada-rice-bowls",
+      "Ground Beef Enchilada Rice Bowls",
+      "rice",
+      "Lean beef, enchilada rice, beans and peppers",
+      [
+        790,
+        57,
+        91,
+        22
+      ],
+      [
+        [
+          "93% lean ground beef",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Black beans",
+          7,
+          "cups",
+          "Protein"
+        ],
+        [
+          "Enchilada sauce",
+          42,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Shredded cheese",
+          28,
+          "oz",
+          "Dairy"
+        ]
+      ]
+    ],
+    [
+      "tuna-pasta-power-bowls",
+      "Tuna Pasta Power Bowls",
+      "cold-pasta",
+      "Tuna pasta with peas, spinach and yogurt dressing",
+      [
+        690,
+        52,
+        82,
+        16
+      ],
+      [
+        [
+          "Canned tuna in water, drained",
+          98,
+          "oz",
+          "Protein"
+        ],
+        [
+          "Dry pasta",
+          7,
+          "lb",
+          "Grains"
+        ],
+        [
+          "Frozen peas",
+          7,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Spinach",
+          28,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Nonfat Greek yogurt",
+          56,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Light mayonnaise",
+          21,
+          "tbsp",
+          "Sauces"
+        ],
+        [
+          "Celery",
+          14,
+          "cups",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "chicken-parmesan-pasta-bowls",
+      "Chicken Parmesan Pasta Bowls",
+      "pasta",
+      "Breaded chicken, marinara, pasta and broccoli",
+      [
+        800,
+        64,
+        93,
+        18
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Panko breadcrumbs",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Dry pasta",
+          7,
+          "lb",
+          "Grains"
+        ],
+        [
+          "Marinara sauce",
+          56,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Part-skim mozzarella",
+          28,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Broccoli florets",
+          7,
+          "lb",
+          "Produce"
+        ]
+      ]
+    ]
+  ]
+}
