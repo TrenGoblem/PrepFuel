@@ -500,3 +500,15 @@ body[data-school="ucf"] .bottom-nav button.active .nav-icon{color:#ffc904!import
 @media(max-width:520px){
   .auth-shell{padding-top:42px}.auth-shell h1{font-size:38px}.auth-mark{width:74px;height:74px;border-radius:23px}
 }
+
+
+/* FUELR FOOD PROFILE */
+.goal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:7px}
+.goal-grid button{min-height:44px;border-radius:13px;border:1px solid #e1e5eb;background:#f7f8fa;color:#65707d;font-size:10px;font-weight:900;cursor:pointer}
+.goal-grid button.selected{background:color-mix(in srgb,var(--school-primary) 9%,white);border-color:var(--school-primary);color:#202833}
+.food-profile-card{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.food-profile-card>div{padding:14px;border-radius:18px;background:#fff;border:1px solid #e5e8ed}
+.food-profile-card span{display:block;font-size:8px;letter-spacing:.12em;color:var(--school-primary);font-weight:900}
+.food-profile-card strong{display:block;margin-top:6px;font-size:16px;text-transform:capitalize;color:#252c35}
+.food-profile-card small{display:block;margin-top:4px;color:#929aa5;font-size:9.5px;line-height:1.4}
+@media(max-width:430px){.food-profile-card{grid-template-columns:1fr}.goal-grid{grid-template-columns:1fr 1fr}}
