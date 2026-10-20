@@ -650,3 +650,183 @@ body[data-school="ucf"] .bottom-nav button.active .nav-icon{color:#ffc904!import
   .bottom-nav.detailed-nav small{font-size:6.7px!important}
   .bottom-nav.detailed-nav .nav-icon{width:19px;height:19px}
 }
+
+
+/* FUELR CAMPUS CATALOG + LIGHT/DARK POLISH */
+:root{
+  --fuelr-bg:#f4f5f7;
+  --fuelr-surface:#ffffff;
+  --fuelr-surface-2:#f8f9fb;
+  --fuelr-text:#252c35;
+  --fuelr-muted:#8d96a1;
+  --fuelr-border:#e2e6ec;
+}
+body{
+  background:
+    radial-gradient(circle at 12% -8%,color-mix(in srgb,var(--school-primary) 10%,transparent) 0,transparent 33%),
+    radial-gradient(circle at 94% 12%,color-mix(in srgb,var(--school-secondary) 7%,transparent) 0,transparent 26%),
+    var(--fuelr-bg);
+}
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+  opacity:.22;
+  background-image:
+    linear-gradient(120deg,transparent 0 48%,color-mix(in srgb,var(--school-primary) 9%,transparent) 49%,transparent 50%),
+    linear-gradient(30deg,transparent 0 48%,color-mix(in srgb,var(--school-secondary) 6%,transparent) 49%,transparent 50%);
+  background-size:72px 72px,96px 96px;
+  mask-image:linear-gradient(to bottom,black,transparent 62%);
+}
+.dashboard-hero,.page-intro{
+  position:relative;
+  isolation:isolate;
+}
+.dashboard-hero:after,.page-intro:after{
+  content:"";
+  position:absolute;
+  width:170px;height:170px;
+  right:-55px;top:-78px;
+  border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--school-primary) 15%,transparent),transparent 68%);
+  z-index:-1;
+  pointer-events:none;
+}
+.school-select-card{
+  padding:14px;
+  border-radius:18px;
+  background:#fff;
+  border:1px solid #e2e6ec;
+  box-shadow:0 10px 25px rgba(44,52,64,.045);
+  margin:10px 0;
+}
+.school-select-card label{display:block;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#727d89;margin-bottom:7px}
+.school-select-card select,.settings-school-select select{
+  width:100%;min-height:46px;border-radius:13px;border:1px solid #dfe4ea;background:#f8f9fb;padding:0 12px;color:#2d3540;font-size:10.5px;font-weight:750
+}
+.school-select-card small{display:block;margin-top:7px;font-size:8.5px;line-height:1.4;color:#949da8}
+.college-choice-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}
+.college-choice-row button{min-height:70px;border-radius:17px;border:1px solid #e1e5eb;background:#fff;text-align:left;padding:13px;cursor:pointer}
+.college-choice-row button.selected{border:2px solid var(--school-primary);background:color-mix(in srgb,var(--school-primary) 6%,white)}
+.college-choice-row b{display:block;font-size:13px;color:#28303a}.college-choice-row span{display:block;margin-top:3px;font-size:9px;color:#8e98a3}
+.popular-school-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0}
+.popular-school-row button{min-height:66px;padding:8px;border-radius:15px;border:1px solid #e1e5eb;background:#fff;cursor:pointer;overflow:hidden}
+.popular-school-row button.selected{outline:2px solid var(--school-primary);outline-offset:1px}
+.popular-school-row span{display:grid;place-items:center;width:34px;height:28px;margin:0 auto 5px;border-radius:9px;background:var(--choice-primary);color:var(--choice-on);font-size:8px;font-weight:950}
+.popular-school-row small{display:block;font-size:7.2px;line-height:1.15;color:#707b87}
+.brand-licensing-note{padding:10px 12px;border-radius:13px;background:#f7f8fa;border:1px solid #e5e8ed;font-size:8px;line-height:1.45;color:#929ba5}
+
+.appearance-card{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;padding:15px 16px;margin-bottom:12px;border-radius:20px;background:#fff;border:1px solid #e2e6ec}
+.appearance-card>div:first-child>span{font-size:8px;letter-spacing:.12em;color:var(--school-primary);font-weight:950}
+.appearance-card h3{margin:4px 0 2px;font-size:15px;color:#2c3440}.appearance-card p{margin:0;font-size:9px;color:#929ba5}
+.appearance-selector{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.appearance-selector button{min-width:76px;border:1px solid #dfe4ea;border-radius:14px;background:#f8f9fb;padding:7px;cursor:pointer;color:#47515c}
+.appearance-selector button.selected{border:2px solid var(--school-primary);background:color-mix(in srgb,var(--school-primary) 5%,white)}
+.appearance-preview{display:block;height:28px;border-radius:8px;margin-bottom:5px;border:1px solid rgba(0,0,0,.08)}
+.light-preview{background:linear-gradient(135deg,#fff 0 48%,#f0f2f5 49% 100%)}
+.dark-preview{background:linear-gradient(135deg,#151a21 0 48%,#242c35 49% 100%)}
+.appearance-selector b{font-size:8.5px}
+
+body[data-appearance="dark"]{
+  --fuelr-bg:#0f141a;
+  --fuelr-surface:#171d24;
+  --fuelr-surface-2:#202731;
+  --fuelr-text:#eef2f6;
+  --fuelr-muted:#9aa6b2;
+  --fuelr-border:#2c3540;
+  color:#eef2f6;
+  background:
+    radial-gradient(circle at 12% -8%,color-mix(in srgb,var(--school-primary) 20%,transparent) 0,transparent 33%),
+    radial-gradient(circle at 94% 12%,color-mix(in srgb,var(--school-secondary) 13%,transparent) 0,transparent 26%),
+    #0f141a;
+}
+body[data-appearance="dark"] .topbar,
+body[data-appearance="dark"] .bottom-nav,
+body[data-appearance="dark"] .auth-card,
+body[data-appearance="dark"] .school-select-card,
+body[data-appearance="dark"] .college-choice-row button,
+body[data-appearance="dark"] .popular-school-row button,
+body[data-appearance="dark"] .appearance-card,
+body[data-appearance="dark"] .summary-card,
+body[data-appearance="dark"] .meal-float-card,
+body[data-appearance="dark"] .card,
+body[data-appearance="dark"] .settings-card,
+body[data-appearance="dark"] .profile-school-card,
+body[data-appearance="dark"] .food-profile-card>div,
+body[data-appearance="dark"] .week-plan-card,
+body[data-appearance="dark"] .prep-batch-card,
+body[data-appearance="dark"] .prep-lock-card,
+body[data-appearance="dark"] .week-calendar-card,
+body[data-appearance="dark"] .calendar-picker,
+body[data-appearance="dark"] .calendar-summary article,
+body[data-appearance="dark"] .grocery-summary article,
+body[data-appearance="dark"] .budget-main-card,
+body[data-appearance="dark"] .budget-mini-grid article,
+body[data-appearance="dark"] .quick-tile,
+body[data-appearance="dark"] .onboard-card,
+body[data-appearance="dark"] .weekly-target-grid button,
+body[data-appearance="dark"] .school-choice,
+body[data-appearance="dark"] .no-school-btn{
+  background:#171d24!important;
+  border-color:#2c3540!important;
+  color:#eef2f6!important;
+}
+body[data-appearance="dark"] h1,
+body[data-appearance="dark"] h2,
+body[data-appearance="dark"] h3,
+body[data-appearance="dark"] strong,
+body[data-appearance="dark"] .summary-value,
+body[data-appearance="dark"] .item-main,
+body[data-appearance="dark"] .meal-card-copy h3,
+body[data-appearance="dark"] .calendar-cell strong,
+body[data-appearance="dark"] .calendar-day strong,
+body[data-appearance="dark"] .settings-card h3,
+body[data-appearance="dark"] .profile-school-card h2,
+body[data-appearance="dark"] .appearance-card h3{
+  color:#eef2f6!important;
+}
+body[data-appearance="dark"] p,
+body[data-appearance="dark"] small,
+body[data-appearance="dark"] .item-sub,
+body[data-appearance="dark"] .subtitle,
+body[data-appearance="dark"] .summary-label,
+body[data-appearance="dark"] .calendar-day span,
+body[data-appearance="dark"] .calendar-cell small,
+body[data-appearance="dark"] .appearance-card p,
+body[data-appearance="dark"] .college-choice-row span,
+body[data-appearance="dark"] .popular-school-row small{
+  color:#9aa6b2!important;
+}
+body[data-appearance="dark"] input,
+body[data-appearance="dark"] textarea,
+body[data-appearance="dark"] select,
+body[data-appearance="dark"] .auth-switch,
+body[data-appearance="dark"] .weekly-meal-selector button,
+body[data-appearance="dark"] .goal-grid button,
+body[data-appearance="dark"] .recipe-type-picker span,
+body[data-appearance="dark"] .calendar-cell,
+body[data-appearance="dark"] .calendar-picker-list>button,
+body[data-appearance="dark"] .brand-licensing-note,
+body[data-appearance="dark"] .onboard-note{
+  background:#202731!important;
+  border-color:#313b47!important;
+  color:#edf2f7!important;
+}
+body[data-appearance="dark"] .calendar-header{background:#131920!important;border-color:#2b3440!important}
+body[data-appearance="dark"] .calendar-row,
+body[data-appearance="dark"] .account-setting-row{border-color:#29323c!important}
+body[data-appearance="dark"] .bottom-nav{box-shadow:0 -10px 30px rgba(0,0,0,.25)}
+body[data-appearance="dark"] .bottom-nav button.active{background:color-mix(in srgb,var(--school-primary) 18%,#171d24)!important}
+body[data-appearance="dark"] .school-select-card select,
+body[data-appearance="dark"] .settings-school-select select{background:#202731!important;color:#edf2f7!important}
+body[data-appearance="dark"] .appearance-selector button{background:#202731;border-color:#313b47;color:#dfe6ed}
+body[data-appearance="dark"] .appearance-selector button.selected{background:color-mix(in srgb,var(--school-primary) 16%,#171d24)!important}
+body[data-appearance="dark"] .noise{opacity:.12}
+
+@media(max-width:560px){
+  .popular-school-row{grid-template-columns:repeat(4,1fr)}
+  .appearance-card{grid-template-columns:1fr}
+  .appearance-selector{width:100%}
+}
