@@ -98,6 +98,7 @@ function setWeekView(view){
   localStorage.setItem('pf_tab','week');
   state.detailId='';
   render();
+  scheduleCloudWeekSave();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function beginSchoolChange(){
@@ -128,6 +129,7 @@ function mapCloudRecipe(row){
   }));
   return {
     id:row.id,
+    clientSourceId:row.client_source_id || null,
     name:row.name,
     sourceName:row.source_name || 'My recipe',
     photo:row.photo_url || 'assets/meal-placeholder.svg',
@@ -167,7 +169,24 @@ function mapCloudRecipe(row){
 async function loadCloudUserData(){
   if(!cloudSignedIn()) return;
   try{
-    const profile=await window.FuelrCloud.getProfile();
+    const localWasOnboarded=localStorage.getItem('fuelr_onboarding_done')==='1';
+    let profile=await window.FuelrCloud.getProfile();
+
+    // First sign-in on an existing device: move the user's current Fuelr setup into the account
+    // instead of overwriting it with the new profile defaults.
+    if(profile && !profile.onboarding_complete && localWasOnboarded){
+      profile=await window.FuelrCloud.saveProfile({
+        schoolId:state.profile.schoolId || 'fuelr',
+        schoolYearBudget:state.settings.schoolYearBudget,
+        academicWeeks:state.settings.academicWeeks,
+        preferredStore:state.settings.preferredStore,
+        altStore:state.settings.altStore,
+        prepStyle:state.profile.prepStyle,
+        portionMode:state.profile.portionMode,
+        onboardingComplete:true
+      });
+    }
+
     if(profile){
       state.profile.schoolId=profile.school_id || 'fuelr';
       state.profile.prepStyle=profile.prep_style || 'split';
@@ -185,9 +204,68 @@ async function loadCloudUserData(){
       state.onboardingComplete=false;
       state.onboardingStep=0;
     }
+
+    // One-time migration of recipes created before accounts were turned on.
+    const migrationKey='fuelr_local_recipes_migrated_'+state.cloud.user.id;
+    const localRecipes=JSON.parse(localStorage.getItem('fuelr_user_recipes')||'[]');
+    if(localRecipes.length && localStorage.getItem(migrationKey)!=='1'){
+      for(const recipe of localRecipes){
+        await window.FuelrCloud.createRecipe({...recipe,clientSourceId:recipe.id});
+      }
+      localStorage.setItem(migrationKey,'1');
+    }
+
     const rows=await window.FuelrCloud.listRecipes();
     state.userRecipes=(rows||[]).map(mapCloudRecipe);
     state.recipes=[...state.catalogRecipes,...state.userRecipes];
+
+    // Remap any pre-account local recipe IDs to their new cloud UUIDs.
+    const remapped={};
+    Object.entries(state.selections).forEach(([id,count])=>{
+      const migrated=state.userRecipes.find(r=>r.clientSourceId===id);
+      remapped[migrated?.id || id]=count;
+    });
+    state.selections=remapped;
+    saveSelections();
+
+    const week=await window.FuelrCloud.getCurrentWeek();
+    if(week){
+      state.selections={};
+      (week.weekly_plan_recipes||[])
+        .slice()
+        .sort((a,b)=>(a.slot||0)-(b.slot||0))
+        .forEach(row=>{
+          const id=row.recipe_id || row.recipe_key;
+          if(id) state.selections[id]=Number(row.meal_count);
+        });
+
+      state.checked={};
+      (week.grocery_items||[]).forEach(row=>{
+        if(row.item_key) state.checked[row.item_key]=Boolean(row.checked);
+      });
+
+      state.prepChecks={};
+      (week.prep_checks||[]).forEach(row=>{
+        const id=row.recipe_id || row.recipe_key;
+        if(!id) return;
+        const key=row.check_type==='meal'
+          ? prepMealKey(id,Number(row.meal_index))
+          : prepStageKey(id,row.check_type);
+        state.prepChecks[key]=Boolean(row.checked);
+      });
+
+      saveSelections();
+      localStorage.setItem('pf_checked',JSON.stringify(state.checked));
+      savePrepChecks();
+      state.weekView=week.status==='prepping' || week.status==='complete'
+        ? 'prep'
+        : week.status==='shopping'
+          ? 'shop'
+          : state.weekView;
+      localStorage.setItem('fuelr_week_view',state.weekView);
+    }else if(plannedMeals()>0){
+      await saveCloudWeekState();
+    }
   }catch(err){
     console.warn('Fuelr cloud load:',err);
     state.cloud.error='Could not load your cloud data.';
@@ -211,6 +289,95 @@ async function persistProfileToCloud(){
     console.warn('Fuelr cloud profile save:',err);
     showToast('Saved on device — cloud sync needs attention');
   }
+}
+
+
+function cloudWeekStatus(){
+  if(plannedMeals()<14) return 'planning';
+  if(totalPrepDone()===14) return 'complete';
+  if(state.weekView==='prep') return 'prepping';
+  if(state.weekView==='shop') return 'shopping';
+  return 'planning';
+}
+
+function buildCloudWeekPayload(){
+  const entries=selectedEntries();
+  const grocery=[];
+  const prep=[];
+
+  entries.forEach(({recipe,count})=>{
+    const factor=count/Number(recipe.servings||14);
+    const rows=(recipe.shopping||recipe.ingredients||[]).map(i=>scaledShopping(i,factor));
+    rows.forEach((item,idx)=>{
+      const itemKey=`${recipe.id}:${count}:${idx}`;
+      const rawQty=item.buyQuantity ?? item.quantity ?? null;
+      const numericQty=rawQty!==null && rawQty!=='' && Number.isFinite(Number(rawQty))
+        ? Number(rawQty)
+        : null;
+      grocery.push({
+        recipeId:recipe.id,
+        cloudOwned:Boolean(recipe.cloudOwned),
+        itemKey,
+        item:item.item,
+        quantity:numericQty,
+        unit:item.unit||null,
+        category:item.category||'Other',
+        preferredStore:item.preferredStore||state.settings.preferredStore,
+        altStore:item.altStore||state.settings.altStore,
+        checkoutCost:item.checkoutCost??null,
+        checked:Boolean(state.checked[itemKey])
+      });
+    });
+
+    ['cooked','portioned','stored'].forEach(stage=>{
+      prep.push({
+        recipeId:recipe.id,
+        cloudOwned:Boolean(recipe.cloudOwned),
+        checkType:stage,
+        mealIndex:null,
+        checked:Boolean(state.prepChecks[prepStageKey(recipe.id,stage)])
+      });
+    });
+
+    for(let i=1;i<=count;i++){
+      prep.push({
+        recipeId:recipe.id,
+        cloudOwned:Boolean(recipe.cloudOwned),
+        checkType:'meal',
+        mealIndex:i,
+        checked:Boolean(state.prepChecks[prepMealKey(recipe.id,i)])
+      });
+    }
+  });
+
+  return {
+    mealTarget:mealTarget(),
+    status:cloudWeekStatus(),
+    recipes:entries.map(({recipe,count})=>({
+      id:recipe.id,
+      name:recipe.name,
+      cloudOwned:Boolean(recipe.cloudOwned),
+      count
+    })),
+    grocery,
+    prep
+  };
+}
+
+async function saveCloudWeekState(){
+  if(!cloudSignedIn()) return;
+  try{
+    await window.FuelrCloud.saveCurrentWeek(buildCloudWeekPayload());
+  }catch(err){
+    console.warn('Fuelr week sync:',err);
+    state.cloud.error='Weekly cloud sync needs attention.';
+  }
+}
+
+function scheduleCloudWeekSave(){
+  if(!cloudSignedIn()) return;
+  clearTimeout(scheduleCloudWeekSave.t);
+  scheduleCloudWeekSave.t=setTimeout(()=>saveCloudWeekState(),300);
 }
 
 async function initCloud(){
@@ -319,18 +486,18 @@ function totalPrepDone(){ return selectedEntries().reduce((sum,x)=>sum+prepDoneF
 function togglePrepMeal(id,index){
   const key=prepMealKey(id,index);
   state.prepChecks[key]=!state.prepChecks[key];
-  savePrepChecks(); render();
+  savePrepChecks(); render(); scheduleCloudWeekSave();
 }
 function togglePrepStage(id,stage){
   const key=prepStageKey(id,stage);
   state.prepChecks[key]=!state.prepChecks[key];
-  savePrepChecks(); render();
+  savePrepChecks(); render(); scheduleCloudWeekSave();
 }
 function markPrepBatch(id,count){
   const allDone=prepDoneFor(id,count)===count;
   for(let i=1;i<=count;i++) state.prepChecks[prepMealKey(id,i)]=!allDone;
   ['cooked','portioned','stored'].forEach(stage=>state.prepChecks[prepStageKey(id,stage)]=!allDone);
-  savePrepChecks(); render();
+  savePrepChecks(); render(); scheduleCloudWeekSave();
 }
 function startNextWeek(){
   if(!confirm('Start a new week? This clears the current meal plan, grocery checks, and prep progress.')) return;
@@ -344,6 +511,7 @@ function startNextWeek(){
   state.tab='recipes';
   localStorage.setItem('pf_tab','recipes');
   showToast('New week started — choose your meals');
+  if(cloudSignedIn()) window.FuelrCloud.clearCurrentWeek().catch(err=>console.warn('Fuelr clear week:',err));
   render();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -380,6 +548,7 @@ function scaledCheckoutTotal(r,count){
 }
 function setMealPlan(id,count){
   count=Number(count);
+  if(planFor(id)===count) return;
   if(count===14){
     state.selections={[id]:14};
   }else{
@@ -395,6 +564,7 @@ function setMealPlan(id,count){
   const total=plannedMeals();
   showToast(total===14 ? '14 meals planned for the week' : '7 meals planned — choose another 7');
   render();
+  scheduleCloudWeekSave();
 }
 function clearMealPlan(id){
   delete state.selections[id];
@@ -404,6 +574,7 @@ function clearMealPlan(id){
   saveSelections();
   showToast('Meal removed from this week');
   render();
+  scheduleCloudWeekSave();
 }
 
 async function syncRecipes(silent=false){
@@ -963,7 +1134,7 @@ function bindDynamic(){
   app.querySelectorAll('[data-recipe]').forEach(el=>el.addEventListener('click',e=>{ if(e.target.closest('[data-plan-id],[data-clear-plan]')) return; state.detailId=el.dataset.recipe;render();window.scrollTo({top:0,behavior:'smooth'});}));
   app.querySelectorAll('[data-plan-id]').forEach(el=>el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setMealPlan(el.dataset.planId,Number(el.dataset.planCount));}));
   app.querySelectorAll('[data-clear-plan]').forEach(el=>el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();clearMealPlan(el.dataset.clearPlan);}));
-  app.querySelectorAll('[data-check]').forEach(el=>el.addEventListener('change',()=>{state.checked[el.dataset.check]=el.checked;localStorage.setItem('pf_checked',JSON.stringify(state.checked));render();}));
+  app.querySelectorAll('[data-check]').forEach(el=>el.addEventListener('change',()=>{state.checked[el.dataset.check]=el.checked;localStorage.setItem('pf_checked',JSON.stringify(state.checked));render();scheduleCloudWeekSave();}));
   app.querySelectorAll('[data-prep-meal-id]').forEach(el=>el.addEventListener('click',()=>togglePrepMeal(el.dataset.prepMealId,Number(el.dataset.prepMealIndex))));
   app.querySelectorAll('[data-prep-stage-id]').forEach(el=>el.addEventListener('click',()=>togglePrepStage(el.dataset.prepStageId,el.dataset.prepStage)));
   app.querySelectorAll('[data-prep-all-id]').forEach(el=>el.addEventListener('click',()=>markPrepBatch(el.dataset.prepAllId,Number(el.dataset.prepAllCount))));
@@ -975,7 +1146,7 @@ function bindDynamic(){
   app.querySelectorAll('[data-change-school]').forEach(el=>el.addEventListener('click',beginSchoolChange));
 
   app.querySelectorAll('[data-school-id]').forEach(el=>el.addEventListener('click',()=>chooseSchool(el.dataset.schoolId)));
-  app.querySelectorAll('[data-prep-style]').forEach(el=>el.addEventListener('click',()=>{state.profile.prepStyle=el.dataset.prepStyle;saveProfile();render();}));
+  app.querySelectorAll('[data-prep-style]').forEach(el=>el.addEventListener('click',()=>{state.profile.prepStyle=el.dataset.prepStyle;saveProfile();if(state.onboardingComplete)persistProfileToCloud();render();}));
   app.querySelectorAll('[data-ob-back]').forEach(el=>el.addEventListener('click',()=>{state.onboardingStep=Math.max(0,state.onboardingStep-1);render();}));
   app.querySelectorAll('[data-ob-next]').forEach(el=>el.addEventListener('click',()=>{
     if(state.onboardingStep===1 && !state.profile.schoolId){ showToast('Choose a school or Fuelr theme'); return; }
@@ -1008,7 +1179,7 @@ function bindDynamic(){
     state.settings.mealsPerWeek=14;
     state.settings.preferredStore=document.getElementById('sStore').value||'Aldi';
     state.settings.altStore=document.getElementById('sAlt').value||'Walmart';
-    saveSettings();persistProfileToCloud();showToast('Your Fuelr was updated');render();
+    saveSettings();persistProfileToCloud();scheduleCloudWeekSave();showToast('Your Fuelr was updated');render();
   });
 }
 
