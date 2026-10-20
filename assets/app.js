@@ -6,13 +6,31 @@ const DEFAULTS = {
   altStore: 'Walmart'
 };
 
+const SCHOOL_THEMES = [
+  {id:'fuelr',name:'Fuelr',abbr:'FR',primary:'#657ff0',secondary:'#1d232b',accent:'#9db4ff',onPrimary:'#ffffff'},
+  {id:'ucf',name:'University of Central Florida',abbr:'UCF',primary:'#ffc904',secondary:'#000000',accent:'#ffdf66',onPrimary:'#111111'},
+  {id:'uf',name:'University of Florida',abbr:'UF',primary:'#0021a5',secondary:'#fa4616',accent:'#fa4616',onPrimary:'#ffffff'},
+  {id:'fsu',name:'Florida State University',abbr:'FSU',primary:'#782f40',secondary:'#ceb888',accent:'#ceb888',onPrimary:'#ffffff'},
+  {id:'usf',name:'University of South Florida',abbr:'USF',primary:'#006747',secondary:'#cfc493',accent:'#cfc493',onPrimary:'#ffffff'},
+  {id:'miami',name:'University of Miami',abbr:'UM',primary:'#f47321',secondary:'#005030',accent:'#005030',onPrimary:'#ffffff'},
+  {id:'fiu',name:'Florida International University',abbr:'FIU',primary:'#081e3f',secondary:'#b6862c',accent:'#b6862c',onPrimary:'#ffffff'},
+  {id:'fau',name:'Florida Atlantic University',abbr:'FAU',primary:'#003366',secondary:'#cc0000',accent:'#cc0000',onPrimary:'#ffffff'}
+];
+
 const storedSettings = JSON.parse(localStorage.getItem('pf_settings') || '{}');
 const storedSelections = JSON.parse(localStorage.getItem('pf_meal_selections') || '{}');
+const storedProfile = JSON.parse(localStorage.getItem('fuelr_profile') || '{}');
+const storedUserRecipes = JSON.parse(localStorage.getItem('fuelr_user_recipes') || '[]');
 const legacySelected = localStorage.getItem('pf_selected_recipe') || '';
+const savedTab = localStorage.getItem('pf_tab') || 'home';
+const normalizeTab = tab => ['prep','grocery'].includes(tab) ? 'week' : ['budget','settings'].includes(tab) ? 'you' : (['home','recipes','week','you'].includes(tab) ? tab : 'home');
 
 const state = {
-  tab: localStorage.getItem('pf_tab') || 'home',
+  tab: normalizeTab(savedTab),
+  weekView: localStorage.getItem('fuelr_week_view') || (savedTab==='grocery'?'shop':savedTab==='prep'?'prep':'plan'),
   recipes: [],
+  catalogRecipes: [],
+  userRecipes: Array.isArray(storedUserRecipes) ? storedUserRecipes : [],
   selections: Object.keys(storedSelections).length ? storedSelections : (legacySelected ? {[legacySelected]:14} : {}),
   checked: JSON.parse(localStorage.getItem('pf_checked') || '{}'),
   prepChecks: JSON.parse(localStorage.getItem('pf_prep_checks') || '{}'),
@@ -23,6 +41,15 @@ const state = {
     preferredStore: storedSettings.preferredStore || DEFAULTS.preferredStore,
     altStore: storedSettings.altStore || DEFAULTS.altStore
   },
+  profile: {
+    schoolId: storedProfile.schoolId || '',
+    prepStyle: storedProfile.prepStyle || 'split',
+    portionMode: storedProfile.portionMode || 'athlete',
+    ...storedProfile
+  },
+  onboardingComplete: localStorage.getItem('fuelr_onboarding_done') === '1',
+  onboardingStep: 0,
+  addRecipeMode: false,
   lastSync: localStorage.getItem('pf_last_sync') || '',
   detailId: ''
 };
@@ -43,6 +70,40 @@ const planFor = id => Number(state.selections[id] || 0);
 const selectedEntries = () => Object.entries(state.selections)
   .map(([id,count]) => ({recipe:state.recipes.find(r=>r.id===id),count:Number(count)}))
   .filter(x=>x.recipe && (x.count===7 || x.count===14));
+
+const currentSchool = () => SCHOOL_THEMES.find(s=>s.id===state.profile.schoolId) || SCHOOL_THEMES[0];
+function saveProfile(){ localStorage.setItem('fuelr_profile', JSON.stringify(state.profile)); }
+function saveUserRecipes(){ localStorage.setItem('fuelr_user_recipes', JSON.stringify(state.userRecipes)); }
+function applySchoolTheme(){
+  const s=currentSchool();
+  const root=document.documentElement;
+  root.style.setProperty('--school-primary',s.primary);
+  root.style.setProperty('--school-secondary',s.secondary);
+  root.style.setProperty('--school-accent',s.accent);
+  root.style.setProperty('--school-on-primary',s.onPrimary);
+  document.body.dataset.school=s.id;
+}
+function chooseSchool(id){
+  state.profile.schoolId=id;
+  saveProfile();
+  applySchoolTheme();
+  render();
+}
+function setWeekView(view){
+  state.weekView=['plan','shop','prep'].includes(view)?view:'plan';
+  localStorage.setItem('fuelr_week_view',state.weekView);
+  state.tab='week';
+  localStorage.setItem('pf_tab','week');
+  state.detailId='';
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function beginSchoolChange(){
+  state.onboardingComplete=false;
+  state.onboardingStep=1;
+  render();
+}
+
 
 function saveSettings(){ localStorage.setItem('pf_settings', JSON.stringify(state.settings)); }
 function saveSelections(){ localStorage.setItem('pf_meal_selections', JSON.stringify(state.selections)); localStorage.removeItem('pf_selected_recipe'); }
@@ -152,11 +213,13 @@ async function syncRecipes(silent=false){
     const res = await fetch('data/recipes.json?v=' + Date.now(), {cache:'no-store'});
     if(!res.ok) throw new Error('Recipe catalog unavailable');
     const data = await res.json();
-    state.recipes = Array.isArray(data.recipes) ? data.recipes : [];
+    state.catalogRecipes = Array.isArray(data.recipes) ? data.recipes : [];
+    state.recipes = [...state.catalogRecipes, ...state.userRecipes];
     state.lastSync = new Date().toISOString();
     localStorage.setItem('pf_last_sync', state.lastSync);
     if(!silent) showToast('Recipe library synced');
   }catch(e){
+    state.recipes = [...state.catalogRecipes, ...state.userRecipes];
     if(!silent) showToast('Could not sync — using saved app data');
   }finally{
     syncBtn.classList.remove('syncing');
@@ -164,7 +227,18 @@ async function syncRecipes(silent=false){
   }
 }
 
-function setTab(tab){ state.tab=tab; state.detailId=''; localStorage.setItem('pf_tab',tab); render(); window.scrollTo({top:0,behavior:'smooth'}); }
+function setTab(tab){
+  if(tab==='grocery'){ setWeekView('shop'); return; }
+  if(tab==='prep'){ setWeekView('prep'); return; }
+  if(tab==='budget' || tab==='settings') tab='you';
+  tab=normalizeTab(tab);
+  state.tab=tab;
+  state.detailId='';
+  state.addRecipeMode=false;
+  localStorage.setItem('pf_tab',tab);
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
 function recipeCard(r){
   const photo = r.photo ? esc(r.photo) : 'assets/meal-placeholder.svg';
@@ -211,7 +285,7 @@ function renderHome(){
       <p>One 14-meal prep, or two different 7-meal preps. Every recipe is optimized toward the same ${money(mealTarget())} meal cap.</p>
       <div class="hero-actions">
         <button class="btn primary" data-go="recipes">${total?'Edit meal plan':'Choose meals'}</button>
-        <button class="btn ghost" data-go="grocery">Open grocery list</button>
+        <button class="btn ghost" data-go="week">Open grocery list</button>
       </div>
     </div>
     <div class="dashboard-prompt">
@@ -243,35 +317,204 @@ function renderHome(){
   </section>
 
   <section class="quick-row">
-    <button class="quick-tile" data-go="grocery"><span class="quick-kicker">GROCERY</span><strong>One combined run.</strong><small>Lists scale automatically to each 7- or 14-meal choice.</small><span class="quick-arrow">→</span></button>
-    <button class="quick-tile" data-go="budget"><span class="quick-kicker">BUDGET</span><strong>${money(weeklyBudget())}/week.</strong><small>The entire food budget is now inside the meals.</small><span class="quick-arrow">→</span></button>
+    <button class="quick-tile" data-go="week"><span class="quick-kicker">GROCERY</span><strong>One combined run.</strong><small>Lists scale automatically to each 7- or 14-meal choice.</small><span class="quick-arrow">→</span></button>
+    <button class="quick-tile" data-go="you"><span class="quick-kicker">BUDGET</span><strong>${money(weeklyBudget())}/week.</strong><small>The entire food budget is now inside the meals.</small><span class="quick-arrow">→</span></button>
   </section>`;
 }
 
 function renderRecipes(){
+  if(state.addRecipeMode) return renderAddRecipe();
   const total=plannedMeals();
-  const cards=state.recipes.length ? state.recipes.map(recipeCard).join('') : '<div class="empty clean-empty"><h3>Recipe #1 goes here.</h3><p>Send a recipe and Fuelr will optimize it to the meal cap automatically.</p></div>';
-  return `<section class="page-intro">
-      <div class="eyebrow">Meal lineup</div>
-      <h1>Pick 7 + 7, or <span class="accent">all 14.</span></h1>
-      <p>Every recipe has two clear buttons: make 7 meals or make 14. Two 7-meal choices give you different lunch and dinner preps; one 14-meal choice keeps the whole week the same.</p>
+  const cards=state.recipes.length ? state.recipes.map(recipeCard).join('') : '<div class="empty clean-empty"><h3>Your recipes will live here.</h3><p>Add your first recipe and Fuelr will scale it for 7 or 14 meals.</p></div>';
+  return `<section class="page-intro meals-intro">
+      <div class="eyebrow">Meal library</div>
+      <div class="title-action-row"><div><h1>Pick 7 + 7, or <span class="accent">all 14.</span></h1><p>Every recipe has two clear buttons. Fuelr handles the scaling, quantities and weekly budget underneath.</p></div><button class="add-recipe-btn" data-add-recipe="1"><span>+</span>Add recipe</button></div>
       <div class="meals-meta"><span>${state.recipes.length} recipes</span><span>•</span><span>${total}/14 planned</span><span>•</span><span>${money(mealTarget())} cap / meal</span></div>
     </section>
     <section class="plan-status-bar">
       <div><span class="plan-status-label">WEEKLY PLAN</span><strong>${total}/14 meals</strong></div>
       <div class="plan-dots"><i class="${total>=7?'on':''}"></i><i class="${total>=14?'on':''}"></i></div>
-      <span>${total===0?'Choose a 7 or 14':total===7?'Choose one more 7':'Week complete'}</span>
+      <span>${total===0?'Choose 7 or 14':total===7?'Choose one more 7':'Week complete'}</span>
     </section>
     <section class="floating-meal-stage large-stage">
       <div class="meal-swipe-rail">${cards}</div>
       <div class="swipe-hint"><span>←</span> swipe meals · choose 7 or 14 <span>→</span></div>
     </section>
-    <div class="sync-strip light-sync"><span class="status-dot"></span><span>Recipe library online</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready'}</span></div>
+    <div class="sync-strip light-sync"><span class="status-dot"></span><span>Fuelr recipe library</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready'}</span></div>
     <section class="meal-info-row">
-      <div class="info-bubble"><b>01</b><span>Recipe priced</span></div>
-      <div class="info-bubble"><b>02</b><span>Scaled to cap</span></div>
-      <div class="info-bubble"><b>03</b><span>Choose 7 or 14</span></div>
+      <div class="info-bubble"><b>01</b><span>Add or choose</span></div>
+      <div class="info-bubble"><b>02</b><span>Fuelr scales it</span></div>
+      <div class="info-bubble"><b>03</b><span>Shop + prep</span></div>
     </section>`;
+}
+
+
+function renderAddRecipe(){
+  return `<button class="link-btn back-link" data-close-add="1">← Back to meals</button>
+    <section class="page-intro add-recipe-intro">
+      <div class="eyebrow">Personal recipe</div>
+      <h1>Add it once. <span class="accent">Fuelr scales it.</span></h1>
+      <p>Enter the source recipe exactly as written. Fuelr converts it from its original serving count into optimized 7- and 14-meal batches.</p>
+    </section>
+    <section class="add-recipe-card">
+      <div class="split">
+        <div class="field"><label>Recipe name</label><input id="urName" placeholder="Chicken burrito bowls"></div>
+        <div class="field"><label>Source servings</label><input id="urServings" type="number" min="1" step="1" placeholder="10"></div>
+      </div>
+      <div class="field"><label>Estimated source batch cost</label><input id="urBatchCost" type="number" min="0" step=".01" placeholder="40.00"><small>Total ingredient cost for the original source batch.</small></div>
+      <div class="field"><label>Ingredients</label><textarea id="urIngredients" rows="8" placeholder="2 tbsp | buffalo seasoning&#10;1500 g | chicken thighs&#10;4 whole | baguettes&#10;16 slices | provolone"></textarea><small>One ingredient per line: quantity + unit | ingredient name. Include salt, spices, oils and sauces too.</small></div>
+      <div class="split macro-inputs">
+        <div class="field"><label>Calories / source serving</label><input id="urCalories" type="number" min="0" placeholder="650"></div>
+        <div class="field"><label>Protein g</label><input id="urProtein" type="number" min="0" placeholder="50"></div>
+        <div class="field"><label>Carbs g</label><input id="urCarbs" type="number" min="0" placeholder="70"></div>
+        <div class="field"><label>Fat g</label><input id="urFat" type="number" min="0" placeholder="20"></div>
+      </div>
+      <div class="field"><label>Directions</label><textarea id="urDirections" rows="5" placeholder="One step per line"></textarea></div>
+      <div class="recipe-form-note"><strong>How Fuelr handles this:</strong> every listed ingredient is first normalized from the source serving count to 7 or 14 meals. Then the full recipe is optimized toward your ${money(mealTarget())} meal cap while preserving the original ratios.</div>
+      <button class="btn primary full" id="saveUserRecipe">Save to my meals</button>
+    </section>`;
+}
+
+function parseUserIngredients(text){
+  return String(text||'').split(/\n+/).map(x=>x.trim()).filter(Boolean).map(line=>{
+    const parts=line.split('|');
+    if(parts.length<2) return null;
+    const left=parts[0].trim().split(/\s+/);
+    const qty=Number(left.shift());
+    if(!Number.isFinite(qty)) return null;
+    const unit=left.join(' ') || 'unit';
+    const item=parts.slice(1).join('|').trim();
+    return item ? {item,quantity:qty,unit,note:'scaled from your source recipe'} : null;
+  }).filter(Boolean);
+}
+
+function saveNewUserRecipe(){
+  const name=document.getElementById('urName')?.value.trim();
+  const sourceServings=Number(document.getElementById('urServings')?.value);
+  const batchCost=Number(document.getElementById('urBatchCost')?.value);
+  const sourceIngredients=parseUserIngredients(document.getElementById('urIngredients')?.value);
+  if(!name || !sourceServings || !sourceIngredients.length){
+    showToast('Add a name, source servings and ingredients');
+    return;
+  }
+  const sourceCostPerMeal=batchCost>0 ? batchCost/sourceServings : mealTarget();
+  const budgetMultiplier=sourceCostPerMeal>0 ? mealTarget()/sourceCostPerMeal : 1;
+  const toFourteen=(14/sourceServings)*budgetMultiplier;
+  const ingredients=sourceIngredients.map(i=>({...i,quantity:formatQty(Number(i.quantity)*toFourteen)}));
+  const macroValue=id=>Number(document.getElementById(id)?.value)||null;
+  const sourceMacros={calories:macroValue('urCalories'),protein:macroValue('urProtein'),carbs:macroValue('urCarbs'),fat:macroValue('urFat')};
+  const macros=Object.fromEntries(Object.entries(sourceMacros).map(([k,v])=>[k,v==null?null:Math.round(v*budgetMultiplier*10)/10]));
+  const directions=String(document.getElementById('urDirections')?.value||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  const id='user-'+Date.now();
+  const recipe={
+    id,
+    name,
+    sourceName:'My recipe',
+    photo:'assets/meal-placeholder.svg',
+    servings:14,
+    portion:'Fuelr optimized serving',
+    costPerMeal:Math.round(mealTarget()*100)/100,
+    checkoutTotal:null,
+    priceStatus:batchCost>0?'based on your source cost':'price estimate needed',
+    scaleFactor:Math.round(budgetMultiplier*100)/100,
+    macros,
+    macrosStatus:'Fuelr estimate from your source serving',
+    userOwned:true,
+    optimizationNote:`Your source makes ${sourceServings} servings. Fuelr first normalizes every ingredient to the selected 7- or 14-meal batch, then applies a ${budgetMultiplier.toFixed(2)}× budget multiplier toward your current meal cap.`,
+    original:{
+      servings:sourceServings,
+      portion:'source serving',
+      macros:sourceMacros,
+      ingredients:sourceIngredients.map(i=>`${i.quantity} ${i.unit} ${i.item}`)
+    },
+    ingredients,
+    shopping:ingredients.map(i=>({item:i.item,category:'My recipe',buyQuantity:i.quantity,unit:i.unit,preferredStore:state.settings.preferredStore,altStore:state.settings.altStore,priceStatus:'price needed'})),
+    instructions:directions
+  };
+  state.userRecipes.push(recipe);
+  saveUserRecipes();
+  state.recipes=[...state.catalogRecipes,...state.userRecipes];
+  state.addRecipeMode=false;
+  state.detailId=id;
+  showToast('Recipe added to your Fuelr');
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderWeekPlan(){
+  const entries=selectedEntries();
+  const total=plannedMeals();
+  return `<section class="week-plan-card">
+    <div class="week-plan-head"><div><span>THIS WEEK</span><h2>${total}/14 meals planned</h2></div><strong>${money(weeklyBudget())}</strong></div>
+    ${entries.length?entries.map((x,i)=>`<div class="week-plan-recipe"><div class="week-letter">${String.fromCharCode(65+i)}</div><div><strong>${esc(x.recipe.name)}</strong><small>${x.count} meals · ${money((x.recipe.costPerMeal??mealTarget())*x.count)} used-cost target</small></div><span>${x.count}</span></div>`).join(''):`<div class="week-empty"><h3>Build this week first.</h3><p>Choose one 14-meal recipe or two 7-meal recipes.</p></div>`}
+    <button class="btn primary full" data-go="recipes">${total?'Edit meal choices':'Choose meals'}</button>
+  </section>`;
+}
+
+function renderWeek(){
+  const view=state.weekView;
+  const total=plannedMeals();
+  const done=totalPrepDone();
+  const tabs=`<section class="week-flow">
+    <button class="${view==='plan'?'active':''}" data-week-view="plan"><span>1</span><b>Plan</b><small>${total}/14</small></button>
+    <i>→</i>
+    <button class="${view==='shop'?'active':''}" data-week-view="shop"><span>2</span><b>Shop</b><small>List</small></button>
+    <i>→</i>
+    <button class="${view==='prep'?'active':''}" data-week-view="prep"><span>3</span><b>Prep</b><small>${done}/14</small></button>
+  </section>`;
+  if(view==='shop') return tabs+renderGrocery();
+  if(view==='prep') return tabs+renderPrep();
+  return `<section class="page-intro"><div class="eyebrow">Your week</div><h1>Plan → Shop → <span class="accent">Prep.</span></h1><p>One place for the entire weekly flow.</p></section>`+tabs+renderWeekPlan();
+}
+
+function renderYou(){
+  const school=currentSchool();
+  return `<section class="page-intro">
+      <div class="eyebrow">Your Fuelr</div>
+      <h1>Built around <span class="accent">you.</span></h1>
+      <p>Your school, budget, stores and meal targets shape the whole app.</p>
+    </section>
+    <section class="profile-school-card">
+      <div class="school-badge">${esc(school.abbr)}</div>
+      <div><span>CAMPUS THEME</span><h2>${esc(school.name)}</h2><p>Fuelr automatically carries your school colors through the interface.</p></div>
+      <button class="mini-action" data-change-school="1">Change</button>
+    </section>
+    <section class="you-metrics">
+      <article><span>Meal cap</span><strong>${money(mealTarget())}</strong><small>per prepared meal</small></article>
+      <article><span>Weekly</span><strong>${money(weeklyBudget())}</strong><small>14 meals</small></article>
+      <article><span>Prep style</span><strong>${state.profile.prepStyle==='split'?'7 + 7':'14'}</strong><small>default</small></article>
+    </section>
+    <section class="settings-card you-settings">
+      <div class="settings-card-head"><span class="summary-icon blue">01</span><div><h3>Food system</h3><p>Change the numbers that drive Fuelr</p></div></div>
+      <div class="split"><div class="field"><label>School-year budget</label><input id="sBudget" type="number" step="1" value="${state.settings.schoolYearBudget}"></div><div class="field"><label>Academic weeks</label><input id="sWeeks" type="number" step="1" value="${state.settings.academicWeeks}"></div></div>
+      <div class="split"><div class="field"><label>Preferred store</label><input id="sStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="sAlt" value="${esc(state.settings.altStore)}"></div></div>
+      <div class="derived-cap"><span>Calculated meal cap</span><strong>${money(mealTarget())}</strong><small>${money(state.settings.schoolYearBudget)} ÷ ${state.settings.academicWeeks} weeks ÷ 14 meals</small></div>
+      <button id="saveSettings" class="btn primary full save-settings">Save my Fuelr</button>
+    </section>
+    <section class="cloud-ready-card"><div class="cloud-dot"></div><div><span>ACCOUNT + CLOUD</span><strong>Cloud foundation is next.</strong><p>Your current setup is stored on this device. The Supabase connection will move profiles, recipes, weeks and prep history into user accounts.</p></div></section>`;
+}
+
+function renderOnboarding(){
+  const s=currentSchool();
+  const step=state.onboardingStep;
+  const shell=(body,back=true)=>`<div class="onboarding-shell">
+    <div class="onboarding-progress"><i class="${step>=0?'on':''}"></i><i class="${step>=1?'on':''}"></i><i class="${step>=2?'on':''}"></i><i class="${step>=3?'on':''}"></i><i class="${step>=4?'on':''}"></i></div>
+    ${body}
+    ${back && step>0?`<button class="onboard-back" data-ob-back="1">← Back</button>`:''}
+  </div>`;
+  if(step===0) return shell(`<div class="onboard-hero"><div class="onboard-logo">FR</div><div class="eyebrow">Welcome to Fuelr</div><h1>Your food system.<br><span class="accent">Built for you.</span></h1><p>Fuelr turns your budget, school, recipes and weekly routine into one simple meal-prep system.</p><button class="btn primary onboard-main" data-ob-next="1">Build my Fuelr →</button></div>`,false);
+  if(step===1) return shell(`<div class="onboard-copy"><div class="eyebrow">01 · Campus</div><h1>Where do you <span class="accent">go to school?</span></h1><p>Pick your school and Fuelr adapts its visual identity around your campus colors.</p></div>
+    <div class="school-grid">${SCHOOL_THEMES.filter(x=>x.id!=='fuelr').map(x=>`<button class="school-choice ${state.profile.schoolId===x.id?'selected':''}" data-school-id="${x.id}" style="--choice-primary:${x.primary};--choice-secondary:${x.secondary};--choice-on:${x.onPrimary}"><span class="school-choice-badge">${x.abbr}</span><strong>${x.name}</strong><small>${state.profile.schoolId===x.id?'Selected':'Choose school'}</small></button>`).join('')}</div>
+    <button class="no-school-btn ${state.profile.schoolId==='fuelr'?'selected':''}" data-school-id="fuelr">No school / use Fuelr theme</button>
+    <button class="btn primary onboard-main" data-ob-next="1" ${!state.profile.schoolId?'disabled':''}>Continue →</button>`);
+  if(step===2) return shell(`<div class="onboard-copy"><div class="eyebrow">02 · Budget</div><h1>Give every dollar a <span class="accent">job.</span></h1><p>Fuelr calculates your per-meal target automatically.</p></div>
+    <div class="onboard-card"><div class="field"><label>School-year food budget</label><div class="money-input"><span>$</span><input id="obBudget" type="number" value="${state.settings.schoolYearBudget}"></div></div><div class="field"><label>Academic weeks</label><input id="obWeeks" type="number" value="${state.settings.academicWeeks}"></div><div class="onboard-result"><span>Current target</span><strong>${money(mealTarget())}</strong><small>per meal · 14 meals each week</small></div></div>
+    <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
+  if(step===3) return shell(`<div class="onboard-copy"><div class="eyebrow">03 · Routine</div><h1>How do you <span class="accent">prep?</span></h1><p>Set a default. You can still choose either option every week.</p></div>
+    <div class="prep-style-grid"><button class="${state.profile.prepStyle==='split'?'selected':''}" data-prep-style="split"><b>7 + 7</b><span>Two different recipes</span><small>Different lunch and dinner</small></button><button class="${state.profile.prepStyle==='single'?'selected':''}" data-prep-style="single"><b>14</b><span>One recipe</span><small>Maximum simplicity</small></button></div>
+    <div class="onboard-card"><div class="split"><div class="field"><label>Preferred store</label><input id="obStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="obAlt" value="${esc(state.settings.altStore)}"></div></div></div>
+    <button class="btn primary onboard-main" data-ob-next="1">Continue →</button>`);
+  return shell(`<div class="onboard-finish"><div class="finish-school" style="--finish-primary:${s.primary};--finish-secondary:${s.secondary};--finish-on:${s.onPrimary}"><span>${s.abbr}</span></div><div class="eyebrow">04 · Ready</div><h1>Your Fuelr is <span class="accent">ready.</span></h1><p>${esc(s.name)} theme. ${money(mealTarget())} meal target. ${state.profile.prepStyle==='split'?'7 + 7':'14'} default prep.</p><div class="finish-stat"><span>YOUR MEAL CAP</span><strong>${money(mealTarget())}</strong><small>Fuelr will optimize every recipe around this target.</small></div><button class="btn primary onboard-main" data-finish-onboarding="1">Enter Fuelr →</button></div>`);
 }
 
 function renderRecipeDetail(r){
@@ -467,13 +710,20 @@ function renderSettings(){
 }
 
 function render(){
-  nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.tab===state.tab && !state.detailId));
+  const topbar=document.querySelector('.topbar');
+  const onboarding=!state.onboardingComplete;
+  nav.classList.toggle('hidden',onboarding);
+  topbar?.classList.toggle('onboarding-mode',onboarding);
+  if(onboarding){
+    app.innerHTML=renderOnboarding();
+    bindDynamic();
+    return;
+  }
+  nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.tab===state.tab && !state.detailId && !state.addRecipeMode));
   if(state.detailId){ const r=state.recipes.find(x=>x.id===state.detailId); app.innerHTML=r?renderRecipeDetail(r):renderRecipes(); }
   else if(state.tab==='recipes') app.innerHTML=renderRecipes();
-  else if(state.tab==='prep') app.innerHTML=renderPrep();
-  else if(state.tab==='grocery') app.innerHTML=renderGrocery();
-  else if(state.tab==='budget') app.innerHTML=renderBudget();
-  else if(state.tab==='settings') app.innerHTML=renderSettings();
+  else if(state.tab==='week') app.innerHTML=renderWeek();
+  else if(state.tab==='you') app.innerHTML=renderYou();
   else app.innerHTML=renderHome();
   bindDynamic();
 }
@@ -488,6 +738,38 @@ function bindDynamic(){
   app.querySelectorAll('[data-prep-stage-id]').forEach(el=>el.addEventListener('click',()=>togglePrepStage(el.dataset.prepStageId,el.dataset.prepStage)));
   app.querySelectorAll('[data-prep-all-id]').forEach(el=>el.addEventListener('click',()=>markPrepBatch(el.dataset.prepAllId,Number(el.dataset.prepAllCount))));
   app.querySelectorAll('[data-next-week]').forEach(el=>el.addEventListener('click',()=>startNextWeek()));
+  app.querySelectorAll('[data-week-view]').forEach(el=>el.addEventListener('click',()=>setWeekView(el.dataset.weekView)));
+  app.querySelectorAll('[data-add-recipe]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=true;state.detailId='';render();window.scrollTo({top:0,behavior:'smooth'});}));
+  app.querySelectorAll('[data-close-add]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=false;render();}));
+  document.getElementById('saveUserRecipe')?.addEventListener('click',saveNewUserRecipe);
+  app.querySelectorAll('[data-change-school]').forEach(el=>el.addEventListener('click',beginSchoolChange));
+
+  app.querySelectorAll('[data-school-id]').forEach(el=>el.addEventListener('click',()=>chooseSchool(el.dataset.schoolId)));
+  app.querySelectorAll('[data-prep-style]').forEach(el=>el.addEventListener('click',()=>{state.profile.prepStyle=el.dataset.prepStyle;saveProfile();render();}));
+  app.querySelectorAll('[data-ob-back]').forEach(el=>el.addEventListener('click',()=>{state.onboardingStep=Math.max(0,state.onboardingStep-1);render();}));
+  app.querySelectorAll('[data-ob-next]').forEach(el=>el.addEventListener('click',()=>{
+    if(state.onboardingStep===1 && !state.profile.schoolId){ showToast('Choose a school or Fuelr theme'); return; }
+    if(state.onboardingStep===2){
+      state.settings.schoolYearBudget=Number(document.getElementById('obBudget')?.value)||DEFAULTS.schoolYearBudget;
+      state.settings.academicWeeks=Number(document.getElementById('obWeeks')?.value)||DEFAULTS.academicWeeks;
+      saveSettings();
+    }
+    if(state.onboardingStep===3){
+      state.settings.preferredStore=document.getElementById('obStore')?.value||'Aldi';
+      state.settings.altStore=document.getElementById('obAlt')?.value||'Walmart';
+      saveSettings(); saveProfile();
+    }
+    state.onboardingStep=Math.min(4,state.onboardingStep+1); render(); window.scrollTo({top:0,behavior:'smooth'});
+  }));
+  app.querySelectorAll('[data-finish-onboarding]').forEach(el=>el.addEventListener('click',()=>{
+    state.onboardingComplete=true;
+    localStorage.setItem('fuelr_onboarding_done','1');
+    saveProfile(); saveSettings(); applySchoolTheme();
+    state.tab='home'; localStorage.setItem('pf_tab','home');
+    showToast('Fuelr is ready');
+    render(); window.scrollTo({top:0,behavior:'smooth'});
+  }));
+
   const save=document.getElementById('saveSettings');
   if(save) save.addEventListener('click',()=>{
     state.settings.schoolYearBudget=Number(document.getElementById('sBudget').value)||DEFAULTS.schoolYearBudget;
@@ -495,12 +777,13 @@ function bindDynamic(){
     state.settings.mealsPerWeek=14;
     state.settings.preferredStore=document.getElementById('sStore').value||'Aldi';
     state.settings.altStore=document.getElementById('sAlt').value||'Walmart';
-    saveSettings();showToast('Settings saved · meal cap recalculated');render();
+    saveSettings();showToast('Your Fuelr was updated');render();
   });
 }
 
 nav.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
 document.querySelectorAll('.brand-button').forEach(b=>b.addEventListener('click',()=>setTab('home')));
 syncBtn.addEventListener('click',()=>syncRecipes(false));
+applySchoolTheme();
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 syncRecipes(true);
