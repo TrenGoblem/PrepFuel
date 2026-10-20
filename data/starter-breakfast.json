@@ -1,0 +1,1000 @@
+{
+  "version": 1,
+  "category": "breakfast",
+  "recipes": [
+    [
+      "greek-yogurt-crunch-bowls",
+      "High-Protein Greek Yogurt Crunch Bowls",
+      "cold",
+      "Greek yogurt, berries, granola and peanut butter",
+      [
+        540,
+        46,
+        63,
+        14
+      ],
+      [
+        [
+          "Nonfat Greek yogurt",
+          196,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Mixed berries",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Protein granola",
+          14,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Peanut butter",
+          14,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Honey",
+          7,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "blueberry-protein-overnight-oats",
+      "Blueberry Protein Overnight Oats",
+      "oats",
+      "Creamy overnight oats with blueberries",
+      [
+        560,
+        42,
+        79,
+        10
+      ],
+      [
+        [
+          "Old-fashioned oats",
+          14,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Nonfat Greek yogurt",
+          98,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Milk",
+          14,
+          "cups",
+          "Dairy"
+        ],
+        [
+          "Vanilla protein powder",
+          14,
+          "scoops",
+          "Protein"
+        ],
+        [
+          "Blueberries",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Chia seeds",
+          14,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "chocolate-pb-overnight-oats",
+      "Chocolate Peanut Butter Overnight Oats",
+      "oats",
+      "Chocolate oats with banana and peanut butter",
+      [
+        610,
+        44,
+        78,
+        16
+      ],
+      [
+        [
+          "Old-fashioned oats",
+          14,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Milk",
+          14,
+          "cups",
+          "Dairy"
+        ],
+        [
+          "Chocolate protein powder",
+          14,
+          "scoops",
+          "Protein"
+        ],
+        [
+          "Bananas",
+          14,
+          "medium",
+          "Produce"
+        ],
+        [
+          "Peanut butter",
+          14,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Cocoa powder",
+          14,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "banana-protein-pancakes",
+      "Banana Protein Pancakes",
+      "pancake",
+      "Protein pancakes with banana and yogurt",
+      [
+        590,
+        43,
+        79,
+        12
+      ],
+      [
+        [
+          "Protein pancake mix",
+          14,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Bananas",
+          14,
+          "medium",
+          "Produce"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Nonfat Greek yogurt",
+          56,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Maple syrup",
+          14,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "chocolate-chip-protein-pancakes",
+      "Chocolate Chip Protein Pancakes",
+      "pancake",
+      "Protein pancakes with mini chocolate chips",
+      [
+        630,
+        45,
+        82,
+        14
+      ],
+      [
+        [
+          "Protein pancake mix",
+          14,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Milk",
+          10.5,
+          "cups",
+          "Dairy"
+        ],
+        [
+          "Mini chocolate chips",
+          7,
+          "cups",
+          "Pantry"
+        ],
+        [
+          "Nonfat Greek yogurt",
+          56,
+          "oz",
+          "Dairy"
+        ]
+      ]
+    ],
+    [
+      "berry-cottage-cheese-pancakes",
+      "Berry Cottage Cheese Pancakes",
+      "pancake",
+      "Cottage-cheese pancakes with berries",
+      [
+        570,
+        47,
+        66,
+        14
+      ],
+      [
+        [
+          "Old-fashioned oats",
+          10.5,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Low-fat cottage cheese",
+          98,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Mixed berries",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Maple syrup",
+          10.5,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "turkey-egg-breakfast-burritos",
+      "Turkey Egg Breakfast Burritos",
+      "burrito",
+      "Egg, turkey, potato and cheese burrito",
+      [
+        650,
+        50,
+        69,
+        20
+      ],
+      [
+        [
+          "Lean ground turkey",
+          5.25,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Diced potatoes",
+          7,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Shredded cheddar",
+          28,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Large tortillas",
+          14,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Salsa",
+          28,
+          "oz",
+          "Sauces"
+        ]
+      ]
+    ],
+    [
+      "chicken-sausage-egg-potato-bowls",
+      "Chicken Sausage Egg Potato Bowls",
+      "breakfast-bowl",
+      "Eggs, chicken sausage, potatoes and peppers",
+      [
+        620,
+        48,
+        58,
+        22
+      ],
+      [
+        [
+          "Chicken breakfast sausage",
+          5.25,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Diced potatoes",
+          8.75,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Shredded cheddar",
+          21,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Spinach",
+          14,
+          "cups",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "spinach-feta-egg-white-wraps",
+      "Spinach Feta Egg White Wraps",
+      "wrap",
+      "Egg whites, spinach and feta wrap",
+      [
+        510,
+        46,
+        55,
+        12
+      ],
+      [
+        [
+          "Liquid egg whites",
+          112,
+          "oz",
+          "Protein"
+        ],
+        [
+          "Eggs",
+          14,
+          "large",
+          "Protein"
+        ],
+        [
+          "Spinach",
+          28,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Feta cheese",
+          21,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Large whole-wheat tortillas",
+          14,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Tomatoes",
+          14,
+          "medium",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "steak-egg-breakfast-hash",
+      "Steak & Egg Breakfast Hash",
+      "breakfast-bowl",
+      "Lean steak, eggs, potatoes and peppers",
+      [
+        680,
+        55,
+        61,
+        22
+      ],
+      [
+        [
+          "Lean sirloin steak",
+          5.25,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Diced potatoes",
+          8.75,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Onions",
+          7,
+          "medium",
+          "Produce"
+        ],
+        [
+          "Shredded cheese",
+          14,
+          "oz",
+          "Dairy"
+        ]
+      ]
+    ],
+    [
+      "southwest-egg-black-bean-bowls",
+      "Southwest Egg & Black Bean Bowls",
+      "breakfast-bowl",
+      "Eggs, black beans, potatoes, corn and salsa",
+      [
+        600,
+        39,
+        79,
+        16
+      ],
+      [
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Black beans",
+          14,
+          "cups",
+          "Protein"
+        ],
+        [
+          "Diced potatoes",
+          7,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Corn",
+          7,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Shredded cheese",
+          21,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Salsa",
+          28,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Spinach",
+          14,
+          "cups",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "apple-cinnamon-protein-oats",
+      "Apple Cinnamon Protein Oats",
+      "oats",
+      "Protein oats with apples and cinnamon",
+      [
+        570,
+        39,
+        83,
+        10
+      ],
+      [
+        [
+          "Old-fashioned oats",
+          14,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Milk",
+          14,
+          "cups",
+          "Dairy"
+        ],
+        [
+          "Vanilla protein powder",
+          14,
+          "scoops",
+          "Protein"
+        ],
+        [
+          "Apples",
+          14,
+          "large",
+          "Produce"
+        ],
+        [
+          "Walnuts",
+          7,
+          "cups",
+          "Pantry"
+        ],
+        [
+          "Cinnamon",
+          14,
+          "tsp",
+          "Seasoning"
+        ]
+      ]
+    ],
+    [
+      "strawberry-cheesecake-yogurt-oats",
+      "Strawberry Cheesecake Yogurt Oats",
+      "oats",
+      "Strawberry yogurt oats with graham crunch",
+      [
+        590,
+        45,
+        75,
+        13
+      ],
+      [
+        [
+          "Old-fashioned oats",
+          14,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Nonfat Greek yogurt",
+          112,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Strawberries",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Light cream cheese",
+          28,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Graham crackers",
+          56,
+          "sheets",
+          "Grains"
+        ],
+        [
+          "Vanilla protein powder",
+          7,
+          "scoops",
+          "Protein"
+        ]
+      ]
+    ],
+    [
+      "pb-banana-yogurt-parfaits",
+      "Peanut Butter Banana Yogurt Parfaits",
+      "cold",
+      "Greek yogurt, banana, oats and peanut butter",
+      [
+        610,
+        43,
+        73,
+        17
+      ],
+      [
+        [
+          "Nonfat Greek yogurt",
+          112,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Bananas",
+          14,
+          "medium",
+          "Produce"
+        ],
+        [
+          "Old-fashioned oats",
+          10.5,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Peanut butter",
+          28,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Honey",
+          7,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Cinnamon",
+          14,
+          "tsp",
+          "Seasoning"
+        ]
+      ]
+    ],
+    [
+      "ham-egg-cheese-english-muffins",
+      "Ham Egg & Cheese English Muffins",
+      "sandwich",
+      "Two egg-and-ham breakfast sandwiches",
+      [
+        620,
+        48,
+        64,
+        19
+      ],
+      [
+        [
+          "Whole-grain English muffins",
+          28,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Lean ham",
+          5.25,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Reduced-fat cheese",
+          28,
+          "slices",
+          "Dairy"
+        ],
+        [
+          "Spinach",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Tomatoes",
+          14,
+          "medium",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "turkey-bacon-egg-bagels",
+      "Turkey Bacon Egg Bagels",
+      "sandwich",
+      "Egg, turkey bacon and cheese bagel",
+      [
+        640,
+        45,
+        70,
+        20
+      ],
+      [
+        [
+          "Whole-grain bagels",
+          14,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Turkey bacon",
+          56,
+          "slices",
+          "Protein"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Reduced-fat cheese",
+          28,
+          "slices",
+          "Dairy"
+        ],
+        [
+          "Spinach",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Tomatoes",
+          14,
+          "medium",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "sweet-potato-egg-scramble-bowls",
+      "Sweet Potato Egg Scramble Bowls",
+      "breakfast-bowl",
+      "Egg scramble with sweet potato, turkey and spinach",
+      [
+        620,
+        47,
+        62,
+        20
+      ],
+      [
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Lean ground turkey",
+          4.375,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Sweet potatoes",
+          8.75,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Spinach",
+          28,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Shredded cheese",
+          14,
+          "oz",
+          "Dairy"
+        ]
+      ]
+    ],
+    [
+      "breakfast-fried-rice",
+      "Breakfast Fried Rice with Eggs & Turkey Sausage",
+      "rice",
+      "Rice, egg, turkey sausage and vegetables",
+      [
+        650,
+        44,
+        78,
+        18
+      ],
+      [
+        [
+          "Dry jasmine rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Turkey sausage",
+          4.375,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Frozen peas and carrots",
+          7,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Green onions",
+          7,
+          "bunches",
+          "Produce"
+        ],
+        [
+          "Low-sodium soy sauce",
+          14,
+          "tbsp",
+          "Sauces"
+        ],
+        [
+          "Sesame oil",
+          7,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "cinnamon-french-toast-protein-bake",
+      "Cinnamon French Toast Protein Bake",
+      "bake",
+      "Baked French toast with berries and yogurt",
+      [
+        590,
+        42,
+        82,
+        11
+      ],
+      [
+        [
+          "Whole-grain bread",
+          56,
+          "slices",
+          "Grains"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Liquid egg whites",
+          56,
+          "oz",
+          "Protein"
+        ],
+        [
+          "Milk",
+          14,
+          "cups",
+          "Dairy"
+        ],
+        [
+          "Mixed berries",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Nonfat Greek yogurt",
+          56,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Cinnamon",
+          14,
+          "tsp",
+          "Seasoning"
+        ]
+      ]
+    ],
+    [
+      "breakfast-quesadillas",
+      "Breakfast Quesadillas with Eggs & Chicken Sausage",
+      "quesadilla",
+      "Egg, chicken sausage, pepper and cheese quesadilla",
+      [
+        640,
+        49,
+        59,
+        23
+      ],
+      [
+        [
+          "Large tortillas",
+          28,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Chicken breakfast sausage",
+          4.375,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Eggs",
+          28,
+          "large",
+          "Protein"
+        ],
+        [
+          "Shredded cheese",
+          28,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Salsa",
+          28,
+          "oz",
+          "Sauces"
+        ]
+      ]
+    ]
+  ]
+}
