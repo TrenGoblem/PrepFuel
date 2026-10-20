@@ -284,3 +284,80 @@ body{background:radial-gradient(circle at 12% 4%,rgba(255,255,255,.9),transparen
   .plan-status-bar{grid-template-columns:1fr auto;gap:10px}
   .plan-status-bar>span:last-child{grid-column:1/-1}
 }
+
+
+/* PREPFUEL PREP BOARD + ACTION BUTTONS V1 */
+
+/* Six-item floating navigation */
+.bottom-nav{grid-template-columns:repeat(6,1fr);padding-left:6px;padding-right:6px}
+.bottom-nav button{min-width:0}
+.bottom-nav small{font-size:8.8px}
+.nav-icon{width:21px;height:21px}.nav-icon svg{width:20px;height:20px}
+
+/* 7 / 14 are now two separate actions, not a segmented toggle */
+.meal-count-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.meal-count-actions button{display:flex;align-items:baseline;justify-content:center;gap:5px;min-height:47px;border-radius:14px;border:1px solid #dfe4eb;background:#fff;color:#495360;box-shadow:0 7px 18px rgba(45,53,65,.055);cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease,color .16s ease}
+.meal-count-actions button b{font-size:18px;line-height:1;letter-spacing:-.04em}
+.meal-count-actions button span{font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.05em;color:#8a94a0}
+.meal-count-actions button.active{background:#1c222a;border-color:#1c222a;color:#fff;box-shadow:0 10px 22px rgba(28,34,42,.16)}
+.meal-count-actions button.active span{color:#aebcff}
+.meal-count-actions button:active{transform:scale(.97)}
+.detail-count-actions{margin:15px 0 12px}
+.meal-float-card.selected .meal-count-actions button.active{background:#6079db;border-color:#6079db}
+.meal-float-card.selected .meal-count-actions button.active span{color:#eef2ff}
+
+/* Weekly prep page */
+.prep-lock-card{margin-top:10px;padding:25px;border-radius:26px;background:#fff;border:1px solid #e3e7ed;box-shadow:0 16px 38px rgba(47,55,67,.08);text-align:center}
+.prep-lock-number{display:grid;place-items:center;width:92px;height:92px;margin:0 auto 16px;border-radius:30px;background:linear-gradient(145deg,#f0f3ff,#e6ebfb);color:#526cc9;font-size:25px;font-weight:950;letter-spacing:-.05em}
+.prep-lock-card h3{margin:0 0 7px;font-size:21px;letter-spacing:-.035em}
+.prep-lock-card p{margin:0 auto 18px;max-width:430px;color:#87919e;font-size:13px;line-height:1.55}
+.prep-progress{margin:0 auto 18px;max-width:420px}
+
+.prep-intro{padding-bottom:10px}
+.prep-overview{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:17px 18px;border-radius:22px;background:#1d232b;color:#fff;box-shadow:0 15px 34px rgba(28,34,42,.16)}
+.prep-overview-copy{min-width:96px}.prep-overview-copy span{display:block;font-size:8px;letter-spacing:.15em;font-weight:900;color:#9dacbf}.prep-overview-copy strong{display:block;margin-top:3px;font-size:24px;letter-spacing:-.04em}.prep-overview-copy small{display:block;margin-top:2px;color:#aab3bf;font-size:9.5px}
+.prep-overview-bar{height:10px;border-radius:999px;background:#323a45;overflow:hidden}.prep-overview-bar>div{height:100%;border-radius:inherit;background:linear-gradient(90deg,#718af1,#a5b7ff);transition:width .25s ease}
+.prep-overview-pct{font-size:13px;font-weight:900;color:#afbdff}
+
+.prep-batches{display:grid;gap:16px;margin-top:18px}
+.prep-batch-card{padding:16px;border-radius:25px;background:#fff;border:1px solid #e4e8ee;box-shadow:0 14px 34px rgba(47,55,67,.075)}
+.prep-batch-head{display:grid;grid-template-columns:74px 1fr auto;gap:12px;align-items:center}
+.prep-batch-head>img{width:74px;height:74px;object-fit:cover;border-radius:18px;background:#eef1f4}
+.prep-batch-label{font-size:8px;letter-spacing:.15em;color:#7186bf;font-weight:900}
+.prep-batch-copy h3{margin:5px 0 3px;font-size:18px;line-height:1.06;letter-spacing:-.035em}
+.prep-batch-copy p{margin:0;color:#919aa5;font-size:10px}
+.prep-mini-ring{--prep-angle:0deg;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#6f87e9 0 var(--prep-angle),#e7eaf0 var(--prep-angle) 360deg)}
+.prep-mini-ring>div{width:42px;height:42px;border-radius:50%;background:#fff;display:grid;place-items:center}.prep-mini-ring strong{font-size:11px;color:#364054}
+
+.prep-stage-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:15px}
+.prep-stage-row button{border:1px solid #e2e6ec;background:#f7f8fa;color:#77818e;border-radius:12px;padding:9px 6px;font-size:9px;font-weight:850;cursor:pointer}
+.prep-stage-row button span{margin-right:4px;color:#9aa4b0}
+.prep-stage-row button.done{background:#eef3ff;border-color:#d9e2ff;color:#536cc6}.prep-stage-row button.done span{color:#536cc6}
+
+.prep-meal-title{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-top:18px;margin-bottom:9px}
+.prep-meal-title span{font-size:12px;font-weight:900;color:#303740}.prep-meal-title small{font-size:9px;color:#929ba6;text-align:right}
+.prep-meal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.prep-meal-check{aspect-ratio:1;border-radius:12px;border:1px solid #dfe4ea;background:#fff;color:#737e8b;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 5px 13px rgba(44,52,64,.045);transition:.16s ease}
+.prep-meal-check.done{background:#1d232b;border-color:#1d232b;color:#fff;box-shadow:0 7px 17px rgba(28,34,42,.13)}
+.prep-meal-check:active{transform:scale(.94)}
+.prep-all-btn{width:100%;margin-top:12px;padding:11px;border-radius:13px;border:1px solid #dde2e8;background:#f6f7f9;color:#5f6976;font-size:10px;font-weight:900;cursor:pointer}
+.prep-all-btn.complete{background:#edf8f2;border-color:#d3ecdf;color:#347b59}
+
+.week-complete-card{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;margin-top:18px;padding:18px;border-radius:24px;background:linear-gradient(145deg,#f4fbf7,#edf8f3);border:1px solid #d5ebdf;box-shadow:0 12px 30px rgba(56,116,84,.07)}
+.week-complete-icon{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:#2e9b68;color:#fff;font-size:22px;font-weight:900}
+.week-complete-card span{display:block;font-size:8px;letter-spacing:.15em;color:#4b8a68;font-weight:900}.week-complete-card h3{margin:4px 0 3px;font-size:17px}.week-complete-card p{margin:0;color:#75897d;font-size:10.5px;line-height:1.45}
+.week-complete-card .btn{white-space:nowrap}
+
+@media(min-width:700px){
+  .prep-batches{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:520px){
+  .bottom-nav{width:calc(100% - 12px);gap:1px}
+  .bottom-nav button{padding-left:0;padding-right:0}
+  .bottom-nav small{font-size:8px}
+  .prep-overview{grid-template-columns:1fr auto}.prep-overview-bar{grid-column:1/-1;grid-row:2}.prep-overview-pct{grid-column:2;grid-row:1}
+  .prep-batch-head{grid-template-columns:62px 1fr auto}.prep-batch-head>img{width:62px;height:62px;border-radius:15px}
+  .prep-mini-ring{width:49px;height:49px}.prep-mini-ring>div{width:38px;height:38px}
+  .prep-meal-grid{gap:5px}.prep-meal-check{border-radius:10px;font-size:10px}
+  .week-complete-card{grid-template-columns:auto 1fr}.week-complete-card .btn{grid-column:1/-1;width:100%}
+}
