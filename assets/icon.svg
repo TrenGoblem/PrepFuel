@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#111827"/><stop offset="1" stop-color="#05070b"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="512" height="512" rx="112" fill="url(#g)"/>
+<rect x="108" y="128" width="296" height="256" rx="42" fill="none" stroke="#24344a" stroke-width="8"/>
+<text x="256" y="306" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="164" font-weight="900" letter-spacing="-14" fill="#f4f7fb">P<tspan fill="#6ca9ff">F</tspan></text>
+<path d="M145 355h222" stroke="#ef3f4f" stroke-width="12" stroke-linecap="round" filter="url(#glow)"/>
+</svg>
