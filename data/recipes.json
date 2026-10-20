@@ -1,5 +1,333 @@
 {
-  "version": 1,
-  "updatedAt": "2026-10-19",
-  "recipes": []
+  "version": 2,
+  "updatedAt": "2026-10-20",
+  "optimizationPolicy": {
+    "targetMealCost": 5,
+    "targetNote": "PrepFuel optimizes each recipe toward about $5 per athlete-sized meal while preserving food quality, protein, carbs and total food volume. If a source serving is too small/cheap, portions are increased; if it is too expensive, ingredient ratios or value-equivalent cuts/brands are adjusted.",
+    "produceBudgetSeparate": true,
+    "produceBudgetWeekly": 8.05,
+    "priceStatus": "estimated until store-verified"
+  },
+  "recipes": [
+    {
+      "id": "hot-honey-steak-hash-brown-burritos",
+      "name": "Hot Honey Steak Hash Brown Burritos",
+      "sourceName": "Noah Perlo Fit",
+      "photo": "images/hot-honey-steak-burrito.svg",
+      "servings": 14,
+      "portion": "1 large stuffed burrito",
+      "costPerMeal": 4.93,
+      "checkoutTotal": 76.64,
+      "priceStatus": "estimated",
+      "macros": {
+        "calories": 731,
+        "protein": 64,
+        "carbs": 68,
+        "fat": 22.5
+      },
+      "macrosStatus": "creator-posted source macros",
+      "optimizationNote": "This source recipe already lands almost exactly on the PrepFuel target, so the optimized version keeps the original 14-burrito quantities and protects the big steak portion. The cost strategy is to use a good-value lean top-round or sirloin-tip cut, store-brand hash browns/cheese/tortillas, and measured butter/hot honey. That keeps quality and the creator-posted macros while targeting about $4.93 per meal.",
+      "original": {
+        "servings": 14,
+        "portion": "1 burrito",
+        "macros": {
+          "calories": 731,
+          "protein": 64,
+          "carbs": 68,
+          "fat": 22.5
+        },
+        "ingredients": [
+          "3 kg lean steak, fully trimmed",
+          "1.5 kg frozen hash brown potatoes, oil free",
+          "6 medium jalapeños, diced",
+          "500 g shredded Mexican cheese",
+          "2 tsp yogurt butter per burrito",
+          "1 tbsp hot honey per burrito",
+          "14 large low carb tortillas"
+        ]
+      },
+      "ingredients": [
+        {
+          "item": "Lean steak, fully trimmed",
+          "quantity": "3",
+          "unit": "kg",
+          "note": "Choose top round or sirloin tip for quality/value; about 6.6 lb",
+          "usedCost": 42.9
+        },
+        {
+          "item": "Frozen hash brown potatoes, oil free",
+          "quantity": "1.5",
+          "unit": "kg",
+          "note": "about 3.3 lb",
+          "usedCost": 4.5
+        },
+        {
+          "item": "Jalapeños, diced",
+          "quantity": "6",
+          "unit": "medium",
+          "usedCost": 1.5
+        },
+        {
+          "item": "Shredded Mexican cheese",
+          "quantity": "500",
+          "unit": "g",
+          "note": "about 17.6 oz",
+          "usedCost": 5.25
+        },
+        {
+          "item": "Yogurt butter",
+          "quantity": "28",
+          "unit": "tsp",
+          "note": "2 tsp per burrito",
+          "usedCost": 2
+        },
+        {
+          "item": "Hot honey",
+          "quantity": "14",
+          "unit": "tbsp",
+          "note": "1 tbsp per burrito",
+          "usedCost": 3.95
+        },
+        {
+          "item": "Large low carb tortillas",
+          "quantity": "14",
+          "unit": "tortillas",
+          "usedCost": 8.98
+        }
+      ],
+      "shopping": [
+        {
+          "item": "Lean steak, fully trimmed",
+          "category": "Protein",
+          "buyQuantity": "6.6",
+          "unit": "lb",
+          "preferredStore": "Aldi",
+          "altStore": "Walmart",
+          "checkoutCost": 42.9,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Frozen hash brown potatoes, oil free",
+          "category": "Frozen",
+          "buyQuantity": "2",
+          "unit": "30 oz bags",
+          "preferredStore": "Aldi",
+          "altStore": "Walmart",
+          "checkoutCost": 4.98,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Jalapeños",
+          "category": "Produce",
+          "buyQuantity": "6",
+          "unit": "medium",
+          "preferredStore": "Aldi",
+          "altStore": "Walmart",
+          "checkoutCost": 1.5,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Shredded Mexican cheese",
+          "category": "Dairy",
+          "buyQuantity": "24",
+          "unit": "oz total",
+          "preferredStore": "Aldi",
+          "altStore": "Walmart",
+          "checkoutCost": 6.75,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Yogurt butter",
+          "category": "Dairy",
+          "buyQuantity": "1",
+          "unit": "package",
+          "preferredStore": "Walmart",
+          "altStore": "Aldi",
+          "checkoutCost": 4.29,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Hot honey",
+          "category": "Sauces",
+          "buyQuantity": "1",
+          "unit": "bottle",
+          "preferredStore": "Walmart",
+          "altStore": "Aldi",
+          "checkoutCost": 5.99,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Large low carb tortillas",
+          "category": "Wraps",
+          "buyQuantity": "2",
+          "unit": "8-count packs",
+          "preferredStore": "Walmart",
+          "altStore": "Aldi",
+          "checkoutCost": 10.23,
+          "priceStatus": "estimated"
+        }
+      ],
+      "instructions": [
+        "Trim the steak well and cut it into small bite-size pieces so every burrito gets an even amount.",
+        "Cook the hash browns until browned and crisp. Keep them fairly dry so the burritos do not get soggy.",
+        "Cook the steak in batches over high heat until browned and cooked to your preferred doneness. Add the diced jalapeños near the end.",
+        "Mix the measured yogurt butter and hot honey into the steak mixture, or portion them evenly across the 14 burritos.",
+        "Lay out 14 tortillas. Divide hash browns, steak mixture and cheese evenly so every burrito is a true full meal.",
+        "Roll tightly and toast the seam side down if desired. Cool before packing.",
+        "Refrigerate only the first 3–4 days of meals. Freeze the later-week burritos and thaw in the refrigerator before reheating."
+      ]
+    },
+    {
+      "id": "buffalo-chicken-subs",
+      "name": "Loaded Buffalo Chicken Subs",
+      "sourceName": "Noah Perlo Fit",
+      "photo": "images/buffalo-chicken-subs.svg",
+      "servings": 14,
+      "portion": "2 stuffed sub segments per meal",
+      "costPerMeal": 4.86,
+      "checkoutTotal": 74.93,
+      "priceStatus": "estimated",
+      "macros": {
+        "calories": 930,
+        "protein": 90,
+        "carbs": 76,
+        "fat": 31
+      },
+      "macrosStatus": "PrepFuel estimate based on creator-posted 481 cal / 43g protein / 39g carbs / 17g fat per source sub",
+      "optimizationNote": "The source version makes 12 smaller subs and is well under the $5 meal budget. PrepFuel turns it into 14 full athlete meals by making 28 sub segments—2 per meal—while increasing chicken to 4 kg, using about 1.5 ultra-thin cheese slices per sub, and cutting ranch to 1.5 tbsp per sub. That uses the budget on more protein and food volume instead of extra sauce.",
+      "original": {
+        "servings": 12,
+        "portion": "1 sub",
+        "macros": {
+          "calories": 481,
+          "protein": 43,
+          "carbs": 39,
+          "fat": 17
+        },
+        "ingredients": [
+          "1.5 kg trimmed chicken thighs",
+          "4 packets buffalo seasoning",
+          "Avocado oil cooking spray",
+          "16 slices ultra-thin provolone or Swiss",
+          "4 baguettes, hollowed and cut into 3 segments",
+          "3 tbsp fat-free ranch per sub"
+        ]
+      },
+      "ingredients": [
+        {
+          "item": "Trimmed boneless skinless chicken thighs",
+          "quantity": "4",
+          "unit": "kg",
+          "note": "about 8.8 lb; increased for protein and portion size",
+          "usedCost": 33.43
+        },
+        {
+          "item": "Buffalo seasoning",
+          "quantity": "10",
+          "unit": "packets",
+          "note": "season to taste; 10 keeps the larger batch fully coated",
+          "usedCost": 8.5
+        },
+        {
+          "item": "Avocado oil cooking spray",
+          "quantity": "As needed",
+          "unit": "",
+          "note": "light coating only",
+          "usedCost": 0.9
+        },
+        {
+          "item": "Ultra-thin provolone or Swiss",
+          "quantity": "42",
+          "unit": "slices",
+          "note": "about 1.5 slices per sub segment",
+          "usedCost": 7.5
+        },
+        {
+          "item": "Baguettes",
+          "quantity": "10",
+          "unit": "baguettes",
+          "note": "hollow interiors, cut each into thirds; use 28 segments and freeze the 2 extras",
+          "usedCost": 13.91
+        },
+        {
+          "item": "Fat-free ranch",
+          "quantity": "42",
+          "unit": "tbsp",
+          "note": "1.5 tbsp per sub segment; 3 tbsp per full meal",
+          "usedCost": 3.8
+        }
+      ],
+      "shopping": [
+        {
+          "item": "Boneless skinless chicken thighs",
+          "category": "Protein",
+          "buyQuantity": "8.8",
+          "unit": "lb",
+          "preferredStore": "Aldi",
+          "altStore": "Walmart",
+          "checkoutCost": 33.43,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Buffalo seasoning",
+          "category": "Seasoning",
+          "buyQuantity": "10",
+          "unit": "packets",
+          "preferredStore": "Walmart",
+          "altStore": "Aldi",
+          "checkoutCost": 8.5,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Avocado oil cooking spray",
+          "category": "Pantry",
+          "buyQuantity": "1",
+          "unit": "can",
+          "preferredStore": "Aldi",
+          "altStore": "Walmart",
+          "checkoutCost": 4.29,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Ultra-thin provolone or Swiss",
+          "category": "Dairy",
+          "buyQuantity": "3",
+          "unit": "packs",
+          "preferredStore": "Aldi",
+          "altStore": "Walmart",
+          "checkoutCost": 8.97,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Baguettes",
+          "category": "Bakery",
+          "buyQuantity": "10",
+          "unit": "baguettes",
+          "preferredStore": "Aldi",
+          "altStore": "Walmart",
+          "checkoutCost": 14.9,
+          "priceStatus": "estimated"
+        },
+        {
+          "item": "Fat-free ranch",
+          "category": "Sauces",
+          "buyQuantity": "2",
+          "unit": "bottles",
+          "preferredStore": "Walmart",
+          "altStore": "Aldi",
+          "checkoutCost": 4.84,
+          "priceStatus": "estimated"
+        }
+      ],
+      "instructions": [
+        "Trim the chicken thighs and cut them into bite-size pieces. Toss thoroughly with the buffalo seasoning.",
+        "Cook the chicken in batches using only a light coat of avocado oil spray. Brown well and cook through.",
+        "Hollow out the baguettes to remove excess bread from the center, then cut each baguette into 3 sub segments.",
+        "Build 28 sub segments with the buffalo chicken and ultra-thin provolone or Swiss. Toast until the bread is crisp and cheese melts.",
+        "Finish each sub segment with about 1.5 tbsp fat-free ranch. One PrepFuel meal is 2 sub segments.",
+        "Use 28 of the 30 baguette segments for the 14 meals; freeze the two extra empty segments or use them separately.",
+        "Refrigerate the first 3–4 days of cooked portions. Freeze the later-week portions and thaw in the refrigerator before reheating."
+      ]
+    }
+  ]
 }
