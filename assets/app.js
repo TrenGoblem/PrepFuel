@@ -253,7 +253,7 @@ function recipeCard(r){
       </div>
     </div>
     <div class="meal-card-copy">
-      <div class="meal-card-label">PREPFUEL OPTIMIZED</div>
+      <div class="meal-card-label">FUELR OPTIMIZED</div>
       <h3>${esc(r.name)}</h3>
       <div class="meal-stats">
         ${r.macros?.protein ? `<span><b>${esc(r.macros.protein)}g</b> protein</span>`:''}
@@ -285,7 +285,7 @@ function renderHome(){
       <p>One 14-meal prep, or two different 7-meal preps. Every recipe is optimized toward the same ${money(mealTarget())} meal cap.</p>
       <div class="hero-actions">
         <button class="btn primary" data-go="recipes">${total?'Edit meal plan':'Choose meals'}</button>
-        <button class="btn ghost" data-go="week">Open grocery list</button>
+        <button class="btn ghost" data-week-view="shop">Open grocery list</button>
       </div>
     </div>
     <div class="dashboard-prompt">
@@ -317,7 +317,7 @@ function renderHome(){
   </section>
 
   <section class="quick-row">
-    <button class="quick-tile" data-go="week"><span class="quick-kicker">GROCERY</span><strong>One combined run.</strong><small>Lists scale automatically to each 7- or 14-meal choice.</small><span class="quick-arrow">→</span></button>
+    <button class="quick-tile" data-week-view="shop"><span class="quick-kicker">GROCERY</span><strong>One combined run.</strong><small>Lists scale automatically to each 7- or 14-meal choice.</small><span class="quick-arrow">→</span></button>
     <button class="quick-tile" data-go="you"><span class="quick-kicker">BUDGET</span><strong>${money(weeklyBudget())}/week.</strong><small>The entire food budget is now inside the meals.</small><span class="quick-arrow">→</span></button>
   </section>`;
 }
@@ -547,7 +547,7 @@ function renderRecipeDetail(r){
         ${r.original?`<div class="source-compare">
           <div><span>SOURCE</span><strong>${esc(r.original.servings)} servings</strong><small>${r.original.portion?esc(r.original.portion):'original recipe'}</small></div>
           <div class="compare-arrow">→</div>
-          <div><span>PREPFUEL</span><strong>${count} meals</strong><small>${esc(r.portion||'optimized athlete portion')}</small></div>
+          <div><span>FUELR</span><strong>${count} meals</strong><small>${esc(r.portion||'optimized athlete portion')}</small></div>
         </div>`:''}
         <div class="detail-price">${money(r.costPerMeal ?? mealTarget())} <small>/ meal · ${esc(r.priceStatus||'estimated')}</small></div>
         <div class="macro-grid clean-macros">
