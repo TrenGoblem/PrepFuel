@@ -25,7 +25,8 @@ const storedProfile = JSON.parse(localStorage.getItem('fuelr_profile') || '{}');
 const storedUserRecipes = JSON.parse(localStorage.getItem('fuelr_user_recipes') || '[]');
 const legacySelected = localStorage.getItem('pf_selected_recipe') || '';
 const savedTab = localStorage.getItem('pf_tab') || 'home';
-const normalizeTab = tab => ['prep','grocery'].includes(tab) ? 'week' : ['budget','settings'].includes(tab) ? 'you' : (['home','recipes','week','you'].includes(tab) ? tab : 'home');
+const storedSchedule = JSON.parse(localStorage.getItem('fuelr_week_schedule') || '{}');
+const normalizeTab = tab => ['prep','grocery'].includes(tab) ? 'week' : ['budget','settings'].includes(tab) ? 'you' : (['home','recipes','week','calendar','you'].includes(tab) ? tab : 'home');
 
 const state = {
   tab: normalizeTab(savedTab),
@@ -36,6 +37,8 @@ const state = {
   selections: Object.keys(storedSelections).length ? storedSelections : (legacySelected ? {[legacySelected]:14} : {}),
   checked: JSON.parse(localStorage.getItem('pf_checked') || '{}'),
   prepChecks: JSON.parse(localStorage.getItem('pf_prep_checks') || '{}'),
+  schedule: storedSchedule && typeof storedSchedule === 'object' ? storedSchedule : {},
+  calendarPick: '',
   settings: {
     schoolYearBudget: Number(storedSettings.schoolYearBudget) || DEFAULTS.schoolYearBudget,
     academicWeeks: Number(storedSettings.academicWeeks) || DEFAULTS.academicWeeks,
@@ -93,6 +96,28 @@ const macroFor = (r,key) => {
 const planShape = () => selectedEntries().map(x=>x.count).sort((a,b)=>b-a).join(' + ');
 const planExamples = target => target===7 ? '7' : target===14 ? '7 + 7 or 14' : '7 + 7 + 7, 14 + 7, or 21';
 const weeklyMealDescription = target => target===7 ? '1 prepared meal per day' : target===14 ? '2 prepared meals per day' : '3 prepared meals per day';
+const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const SLOT_LABELS = {breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner'};
+const recipeMealType = r => r?.mealType === 'breakfast' ? 'breakfast' : 'main';
+const recipeBatchAllowed = (r,count) => recipeMealType(r)==='breakfast' ? Number(count)<=7 : Number(count)<=14;
+const slotCompatible = (r,slot) => recipeMealType(r)==='breakfast' ? slot==='breakfast' : (slot==='lunch' || slot==='dinner');
+const calendarSlotKey = (day,slot) => day+':'+slot;
+const currentWeekStart = () => {
+  const d=new Date();
+  const diff=(d.getDay()+6)%7;
+  const monday=new Date(d);
+  monday.setHours(12,0,0,0);
+  monday.setDate(d.getDate()-diff);
+  return monday.toISOString().slice(0,10);
+};
+const weekDate = day => {
+  const [y,m,d]=currentWeekStart().split('-').map(Number);
+  const date=new Date(y,m-1,d+Number(day),12,0,0);
+  return date;
+};
+const calendarAssignedCount = id => Object.values(state.schedule).filter(x=>x===id).length;
+const scheduledMeals = () => Object.keys(state.schedule).filter(k=>state.schedule[k]).length;
+
 
 
 const currentSchool = () => SCHOOL_THEMES.find(s=>s.id===state.profile.schoolId) || SCHOOL_THEMES[0];
@@ -155,6 +180,7 @@ function mapCloudRecipe(row){
     clientSourceId:row.client_source_id || null,
     name:row.name,
     sourceName:row.source_name || 'My recipe',
+    mealType:row.meal_type === 'breakfast' ? 'breakfast' : 'main',
     photo:row.signed_photo_url || row.photo_url || 'assets/meal-placeholder.svg',
     photoPath:row.photo_url || null,
     servings:Number(row.optimized_servings||14),
@@ -285,9 +311,17 @@ async function loadCloudUserData(){
         state.prepChecks[key]=Boolean(row.checked);
       });
 
+      state.schedule={};
+      (week.weekly_schedule_slots||[]).forEach(row=>{
+        const id=row.recipe_id || row.recipe_key;
+        if(id) state.schedule[calendarSlotKey(Number(row.day_index),row.slot_type)]=id;
+      });
+      reconcileSchedule(!Object.keys(state.schedule).length);
+
       saveSelections();
       localStorage.setItem('pf_checked',JSON.stringify(state.checked));
       savePrepChecks();
+      saveSchedule();
       state.weekView=week.status==='prepping' || week.status==='complete'
         ? 'prep'
         : week.status==='shopping'
@@ -385,9 +419,21 @@ function buildCloudWeekPayload(){
     }
   });
 
+  const schedule=Object.entries(state.schedule).map(([key,recipeId])=>{
+    const [dayIndex,slotType]=key.split(':');
+    const recipe=state.recipes.find(r=>r.id===recipeId);
+    return {
+      dayIndex:Number(dayIndex),
+      slotType,
+      recipeId,
+      cloudOwned:Boolean(recipe?.cloudOwned)
+    };
+  }).filter(x=>x.recipeId);
+
   return {
     mealTarget:mealTarget(),
     status:cloudWeekStatus(),
+    schedule,
     recipes:entries.map(({recipe,count})=>({
       id:recipe.id,
       name:recipe.name,
@@ -509,6 +555,103 @@ async function signOutCloud(){
 function saveSettings(){ localStorage.setItem('pf_settings', JSON.stringify(state.settings)); }
 function saveSelections(){ localStorage.setItem('pf_meal_selections', JSON.stringify(state.selections)); localStorage.removeItem('pf_selected_recipe'); }
 function savePrepChecks(){ localStorage.setItem('pf_prep_checks', JSON.stringify(state.prepChecks)); }
+function saveSchedule(){ localStorage.setItem('fuelr_week_schedule', JSON.stringify(state.schedule)); }
+function resetSchedule(){ state.schedule={}; state.calendarPick=''; saveSchedule(); }
+
+function reconcileSchedule(autoFill=true){
+  const selected=new Map(selectedEntries().map(x=>[x.recipe.id,x]));
+  const kept={};
+  const counts={};
+
+  Object.entries(state.schedule).forEach(([key,id])=>{
+    const entry=selected.get(id);
+    if(!entry) return;
+    const [day,slot]=key.split(':');
+    if(!slotCompatible(entry.recipe,slot)) return;
+    counts[id]=(counts[id]||0)+1;
+    if(counts[id] <= entry.count) kept[key]=id;
+  });
+
+  state.schedule=kept;
+
+  if(autoFill){
+    selectedEntries().forEach(({recipe,count})=>{
+      let need=count-calendarAssignedCount(recipe.id);
+      if(need<=0) return;
+      const slots=[];
+      for(let day=0;day<7;day++){
+        if(recipeMealType(recipe)==='breakfast') slots.push(calendarSlotKey(day,'breakfast'));
+        else {
+          slots.push(calendarSlotKey(day,'lunch'));
+          slots.push(calendarSlotKey(day,'dinner'));
+        }
+      }
+      for(const key of slots){
+        if(need<=0) break;
+        if(!state.schedule[key]){
+          state.schedule[key]=recipe.id;
+          need--;
+        }
+      }
+    });
+  }
+  saveSchedule();
+}
+
+function assignCalendarSlot(day,slot,recipeId){
+  const recipe=state.recipes.find(r=>r.id===recipeId);
+  const planned=planFor(recipeId);
+  if(!recipe || !planned || !slotCompatible(recipe,slot)) return;
+
+  const key=calendarSlotKey(day,slot);
+  const existingHere=state.schedule[key];
+  if(existingHere===recipeId){ state.calendarPick=''; render(); return; }
+
+  if(calendarAssignedCount(recipeId)>=planned){
+    const moveKey=Object.keys(state.schedule).find(k=>state.schedule[k]===recipeId && k!==key);
+    if(moveKey) delete state.schedule[moveKey];
+  }
+
+  state.schedule[key]=recipeId;
+  state.calendarPick='';
+  saveSchedule();
+  render();
+  scheduleCloudWeekSave();
+}
+
+function clearCalendarSlot(day,slot){
+  delete state.schedule[calendarSlotKey(day,slot)];
+  state.calendarPick='';
+  saveSchedule();
+  render();
+  scheduleCloudWeekSave();
+}
+
+function autoFillCalendar(){
+  reconcileSchedule(true);
+  state.calendarPick='';
+  render();
+  scheduleCloudWeekSave();
+}
+
+function ensureLocalWeekRollover(){
+  const now=currentWeekStart();
+  const saved=localStorage.getItem('fuelr_week_start');
+  if(saved && saved!==now){
+    state.selections={};
+    state.checked={};
+    state.prepChecks={};
+    state.schedule={};
+    saveSelections();
+    localStorage.setItem('pf_checked','{}');
+    savePrepChecks();
+    saveSchedule();
+    state.weekView='plan';
+    localStorage.setItem('fuelr_week_view','plan');
+  }
+  localStorage.setItem('fuelr_week_start',now);
+}
+
 function resetPrepChecks(){ state.prepChecks={}; savePrepChecks(); }
 function prepMealKey(id,index){ return id+':meal:'+index; }
 function prepStageKey(id,stage){ return id+':stage:'+stage; }
@@ -539,9 +682,12 @@ function startNextWeek(){
   state.selections={};
   state.checked={};
   state.prepChecks={};
+  state.schedule={};
+  state.calendarPick='';
   saveSelections();
   localStorage.setItem('pf_checked','{}');
   savePrepChecks();
+  saveSchedule();
   state.detailId='';
   state.tab='recipes';
   localStorage.setItem('pf_tab','recipes');
@@ -601,6 +747,7 @@ function setWeeklyMealsTarget(count){
   saveSelections();
   localStorage.setItem('pf_checked','{}');
   savePrepChecks();
+  reconcileSchedule(true);
   saveSettings();
   if(state.onboardingComplete){
     persistProfileToCloud();
@@ -613,8 +760,13 @@ function setWeeklyMealsTarget(count){
 function setMealPlan(id,count){
   count=Number(count);
   const target=weeklyMealTarget();
+  const recipe=state.recipes.find(r=>r.id===id);
   if(!WEEKLY_MEAL_OPTIONS.includes(count) || count>target){
     showToast(`Your weekly target is ${target} meals`);
+    return;
+  }
+  if(recipe && !recipeBatchAllowed(recipe,count)){
+    showToast(recipeMealType(recipe)==='breakfast' ? 'Breakfast recipes fill the 7 breakfast slots' : 'Lunch / dinner recipes can fill up to 14 weekly slots');
     return;
   }
   if(planFor(id)===count) return;
@@ -636,6 +788,7 @@ function setMealPlan(id,count){
   localStorage.setItem('pf_checked','{}');
   resetPrepChecks();
   saveSelections();
+  reconcileSchedule(true);
 
   const total=plannedMeals();
   showToast(total===target
@@ -651,6 +804,7 @@ function clearMealPlan(id){
   localStorage.setItem('pf_checked','{}');
   resetPrepChecks();
   saveSelections();
+  reconcileSchedule(true);
   showToast('Meal removed from this week');
   render();
   scheduleCloudWeekSave();
