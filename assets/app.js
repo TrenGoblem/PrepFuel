@@ -206,7 +206,7 @@ function renderHome(){
 
   return `<section class="dashboard-hero">
     <div class="dashboard-intro">
-      <div class="eyebrow">PrepFuel · streamlined weekly system</div>
+      <div class="eyebrow">Fuelr · streamlined weekly system</div>
       <h1>Build the week your <span class="accent">way.</span></h1>
       <p>One 14-meal prep, or two different 7-meal preps. Every recipe is optimized toward the same ${money(mealTarget())} meal cap.</p>
       <div class="hero-actions">
@@ -250,7 +250,7 @@ function renderHome(){
 
 function renderRecipes(){
   const total=plannedMeals();
-  const cards=state.recipes.length ? state.recipes.map(recipeCard).join('') : '<div class="empty clean-empty"><h3>Recipe #1 goes here.</h3><p>Send a recipe and PrepFuel will optimize it to the meal cap automatically.</p></div>';
+  const cards=state.recipes.length ? state.recipes.map(recipeCard).join('') : '<div class="empty clean-empty"><h3>Recipe #1 goes here.</h3><p>Send a recipe and Fuelr will optimize it to the meal cap automatically.</p></div>';
   return `<section class="page-intro">
       <div class="eyebrow">Meal lineup</div>
       <h1>Pick 7 + 7, or <span class="accent">all 14.</span></h1>
@@ -288,7 +288,7 @@ function renderRecipeDetail(r){
         <span class="meal-tag detail-tag">${count}-MEAL PREP</span>
       </div>
       <div class="detail-copy">
-        <div class="eyebrow">PrepFuel optimized</div>
+        <div class="eyebrow">Fuelr optimized</div>
         <h1>${esc(r.name)}</h1>
         <p>${r.optimizationNote?esc(r.optimizationNote):'Optimized toward the current meal cap while protecting quality, protein, carbs and useful food volume.'}</p>
         <div class="meal-count-actions detail-count-actions" aria-label="Choose meal count">
@@ -403,7 +403,7 @@ function renderPrep(){
   return `<section class="page-intro prep-intro">
       <div class="eyebrow">Weekly prep board</div>
       <h1>Cook it. Portion it. <span class="accent">Done.</span></h1>
-      <p>Check off each container as you fill it. When all 14 are ready, PrepFuel is ready to roll into the next week.</p>
+      <p>Check off each container as you fill it. When all 14 are ready, Fuelr is ready to roll into the next week.</p>
     </section>
     <section class="prep-overview">
       <div class="prep-overview-copy"><span>WEEK READY</span><strong>${done}/14</strong><small>${done===14?'All meals prepared':'Keep going — '+(14-done)+' left'}</small></div>
@@ -441,7 +441,7 @@ function renderBudget(){
     <section class="section"><div class="card budget-breakdown"><div class="card-body">
       <div class="budget-row"><div class="name">Option A · one recipe</div><div class="amount">14 meals</div><small>One optimized recipe can use up to ${money(weekly)} for the week.</small></div>
       <div class="budget-row"><div class="name">Option B · two recipes</div><div class="amount">7 + 7</div><small>Each prep gets about ${money(target*7)}, for the same ${money(weekly)} weekly cap.</small></div>
-      <div class="budget-row"><div class="name">Optimization rule</div><div class="amount">scale to cap</div><small>If a source meal costs less, PrepFuel increases useful ingredient quantities toward the cap. If it costs more, it scales back intelligently while protecting quality and nutrition.</small></div>
+      <div class="budget-row"><div class="name">Optimization rule</div><div class="amount">scale to cap</div><small>If a source meal costs less, Fuelr increases useful ingredient quantities toward the cap. If it costs more, it scales back intelligently while protecting quality and nutrition.</small></div>
     </div></div></section>`;
 }
 
@@ -449,7 +449,7 @@ function renderSettings(){
   return `<section class="page-intro">
       <div class="eyebrow">System settings</div>
       <h1>One budget drives <span class="accent">everything.</span></h1>
-      <p>PrepFuel calculates the meal cap automatically from your school-year budget, academic weeks, and 14 weekly meals.</p>
+      <p>Fuelr calculates the meal cap automatically from your school-year budget, academic weeks, and 14 weekly meals.</p>
     </section>
     <section class="settings-grid">
       <div class="settings-card">
@@ -462,8 +462,8 @@ function renderSettings(){
         <div class="split"><div class="field"><label>Preferred store</label><input id="sStore" value="${esc(state.settings.preferredStore)}"></div><div class="field"><label>Backup store</label><input id="sAlt" value="${esc(state.settings.altStore)}"></div></div>
       </div>
     </section>
-    <button id="saveSettings" class="btn primary full save-settings">Save PrepFuel settings</button>
-    <section class="section"><div class="notice blue"><strong>Streamlined scaling:</strong> PrepFuel first normalizes every listed ingredient from the creator's original serving count to 7 or 14 meals — including salt, spices, seasoning packets, oils and sauces. Then it prices that normalized recipe per meal, calculates the ratio to your meal cap, and scales the full recipe toward that budget while preserving the original ingredient and flavor ratios.</div></section>`;
+    <button id="saveSettings" class="btn primary full save-settings">Save Fuelr settings</button>
+    <section class="section"><div class="notice blue"><strong>Streamlined scaling:</strong> Fuelr first normalizes every listed ingredient from the creator's original serving count to 7 or 14 meals — including salt, spices, seasoning packets, oils and sauces. Then it prices that normalized recipe per meal, calculates the ratio to your meal cap, and scales the full recipe toward that budget while preserving the original ingredient and flavor ratios.</div></section>`;
 }
 
 function render(){
