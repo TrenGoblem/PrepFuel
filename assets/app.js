@@ -56,6 +56,7 @@ const state = {
   onboardingComplete: localStorage.getItem('fuelr_onboarding_done') === '1',
   onboardingStep: 0,
   addRecipeMode: false,
+  importDraft: null,
   lastSync: localStorage.getItem('pf_last_sync') || '',
   detailId: '',
   cloud: { ready:false, session:null, user:null, mode:'signin', error:'', message:'' }
@@ -1012,9 +1013,28 @@ function renderAddRecipe(){
     <section class="page-intro add-recipe-intro">
       <div class="eyebrow">Personal recipe</div>
       <h1>Add it once. <span class="accent">Fuelr scales it.</span></h1>
-      <p>Enter the source recipe exactly as written, then tell Fuelr where it belongs in your weekly calendar.</p>
+      <p>Use a recipe link, paste recipe text, or enter it manually. Fuelr keeps the detailed recipe editor so you can review everything before saving.</p>
     </section>
+
+    <section class="recipe-import-panel">
+      <div class="recipe-import-head"><div><span>FAST ADD</span><h3>Bring a recipe into Fuelr</h3><p>Importing fills the editor below. Nothing is saved until you review it and tap Save.</p></div><span class="import-badge">BETA</span></div>
+      <div class="recipe-import-grid">
+        <div class="import-method">
+          <label>From a recipe link</label>
+          <div class="import-url-row"><input id="urImportUrl" type="url" placeholder="https://example.com/recipe"><button id="importRecipeUrl" class="btn primary">Import</button></div>
+          <small>Works best with recipe sites that publish standard Recipe structured data.</small>
+        </div>
+        <div class="import-method">
+          <label>Paste recipe text</label>
+          <textarea id="urPasteRecipe" rows="4" placeholder="Paste the recipe title, servings, ingredients and directions here..."></textarea>
+          <button id="parsePastedRecipe" class="btn secondary full">Fill editor from pasted text</button>
+        </div>
+      </div>
+      <div id="recipeImportStatus" class="recipe-import-status hidden"></div>
+    </section>
+
     <section class="add-recipe-card">
+      <div class="recipe-editor-label"><span>REVIEW + EDIT</span><small>Fuelr never skips this step - check the imported quantities before saving.</small></div>
       <div class="split">
         <div class="field"><label>Recipe name</label><input id="urName" placeholder="Chicken burrito bowls"></div>
         <div class="field"><label>Source servings</label><input id="urServings" type="number" min="1" step="1" placeholder="10"></div>
@@ -1025,32 +1045,167 @@ function renderAddRecipe(){
           <label class="selected-default"><input type="radio" name="urMealType" value="main" checked><span><b>Lunch / Dinner</b><small>Can move between lunch and dinner</small></span></label>
         </div>
       </div>
-      <div class="field"><label>Estimated source batch cost</label><input id="urBatchCost" type="number" min="0" step=".01" placeholder="40.00"><small>Total ingredient cost for the original source batch.</small></div>
-      <div class="field"><label>Recipe photo</label><input id="urPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small>Optional · JPG, PNG or WebP · up to 5 MB.</small></div>
-      <div class="field"><label>Ingredients</label><textarea id="urIngredients" rows="8" placeholder="2 tbsp | buffalo seasoning&#10;1500 g | chicken thighs&#10;4 whole | baguettes&#10;16 slices | provolone"></textarea><small>One ingredient per line: quantity + unit | ingredient name. Include salt, spices, oils and sauces too.</small></div>
+      <div class="field"><label>Estimated source batch cost</label><input id="urBatchCost" type="number" min="0" step=".01" placeholder="40.00"><small>Optional. Total ingredient cost for the original source batch; Fuelr uses it for budget optimization.</small></div>
+      <div class="field"><label>Recipe photo</label><input id="urPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small>Optional · JPG, PNG or WebP · up to 5 MB. Imported links may also provide a source image automatically.</small></div>
+      <div class="field"><label>Ingredients</label><textarea id="urIngredients" rows="9" placeholder="2 tbsp | buffalo seasoning&#10;1500 g | chicken thighs&#10;4 whole | baguettes&#10;16 slices | provolone"></textarea><small>You can use Fuelr's quantity | ingredient format or paste normal ingredient lines such as “1 1/2 cups rice”. Fuelr now understands common fractions and units.</small></div>
       <div class="split macro-inputs">
         <div class="field"><label>Calories / source serving</label><input id="urCalories" type="number" min="0" placeholder="650"></div>
         <div class="field"><label>Protein g</label><input id="urProtein" type="number" min="0" placeholder="50"></div>
         <div class="field"><label>Carbs g</label><input id="urCarbs" type="number" min="0" placeholder="70"></div>
         <div class="field"><label>Fat g</label><input id="urFat" type="number" min="0" placeholder="20"></div>
       </div>
-      <div class="field"><label>Directions</label><textarea id="urDirections" rows="5" placeholder="One step per line"></textarea></div>
-      <div class="recipe-form-note"><strong>How Fuelr handles this:</strong> every listed ingredient is normalized from the source serving count to the selected batch, then optimized toward your personal meal cap. Breakfast recipes lock to breakfast; lunch/dinner recipes can be moved between those two calendar slots.</div>
+      <div class="field"><label>Directions</label><textarea id="urDirections" rows="6" placeholder="One step per line"></textarea></div>
+      <div class="recipe-form-note"><strong>How Fuelr handles this:</strong> every listed ingredient is normalized from the source serving count to the selected batch, then optimized toward your personal meal cap. Breakfast recipes lock to breakfast; lunch/dinner recipes can move between those two calendar slots.</div>
       <button class="btn primary full" id="saveUserRecipe">Save to my meals</button>
     </section>`;
 }
 
-function parseUserIngredients(text){
-  return String(text||'').split(/\n+/).map(x=>x.trim()).filter(Boolean).map(line=>{
+const FRACTION_CHARS={'¼':.25,'½':.5,'¾':.75,'⅓':1/3,'⅔':2/3,'⅛':.125,'⅜':.375,'⅝':.625,'⅞':.875};
+const COMMON_UNITS=new Set(['tsp','teaspoon','teaspoons','tbsp','tablespoon','tablespoons','cup','cups','oz','ounce','ounces','lb','lbs','pound','pounds','g','gram','grams','kg','kilogram','kilograms','ml','milliliter','milliliters','l','liter','liters','clove','cloves','slice','slices','packet','packets','can','cans','bag','bags','bottle','bottles','piece','pieces','whole','medium','large','small','pinch','pinches','dash','dashes','scoop','scoops','serving','servings']);
+
+function parseQtyToken(token){
+  token=String(token||'').trim();
+  if(!token) return null;
+  if(FRACTION_CHARS[token]!=null) return FRACTION_CHARS[token];
+  if(/^\d+(\.\d+)?$/.test(token)) return Number(token);
+  const frac=token.match(/^(\d+)\/(\d+)$/);
+  if(frac && Number(frac[2])) return Number(frac[1])/Number(frac[2]);
+  const mixed=token.match(/^(\d+)[- ](\d+)\/(\d+)$/);
+  if(mixed && Number(mixed[3])) return Number(mixed[1])+Number(mixed[2])/Number(mixed[3]);
+  const unicode=token.match(/^(\d+)([¼½¾⅓⅔⅛⅜⅝⅞])$/);
+  if(unicode) return Number(unicode[1])+FRACTION_CHARS[unicode[2]];
+  return null;
+}
+
+function parseNaturalIngredient(line){
+  line=String(line||'').replace(/^[-•*]\s*/,'').trim();
+  if(!line) return null;
+
+  if(line.includes('|')){
     const parts=line.split('|');
-    if(parts.length<2) return null;
-    const left=parts[0].trim().split(/\s+/);
-    const qty=Number(left.shift());
-    if(!Number.isFinite(qty)) return null;
-    const unit=left.join(' ') || 'unit';
-    const item=parts.slice(1).join('|').trim();
-    return item ? {item,quantity:qty,unit,note:'scaled from your source recipe'} : null;
-  }).filter(Boolean);
+    const left=parts.shift().trim().split(/\s+/);
+    let qty=parseQtyToken(left[0]);
+    let consumed=1;
+    if(qty!=null && left[1] && /^\d+\/\d+$/.test(left[1]) && /^\d+$/.test(left[0])){
+      qty=Number(left[0])+parseQtyToken(left[1]);
+      consumed=2;
+    }
+    if(qty==null) qty=1;
+    const unit=left.slice(consumed).join(' ') || 'unit';
+    const item=parts.join('|').trim();
+    return item?{item,quantity:qty,unit,note:'scaled from your source recipe'}:null;
+  }
+
+  const tokens=line.split(/\s+/);
+  let qty=parseQtyToken(tokens[0]);
+  let consumed=1;
+  if(qty!=null && tokens[1] && /^\d+\/\d+$/.test(tokens[1]) && /^\d+$/.test(tokens[0])){
+    qty=Number(tokens[0])+parseQtyToken(tokens[1]);
+    consumed=2;
+  }
+
+  if(qty==null){
+    return {item:line,quantity:1,unit:'source amount',note:'Source did not provide a numeric quantity - review before saving'};
+  }
+
+  let unit='unit';
+  const maybeUnit=String(tokens[consumed]||'').toLowerCase().replace(/[.,]/g,'');
+  if(COMMON_UNITS.has(maybeUnit)){
+    unit=tokens[consumed].replace(/[.,]/g,'');
+    consumed++;
+  }
+  const item=tokens.slice(consumed).join(' ').replace(/^of\s+/i,'').trim();
+  return item?{item,quantity:qty,unit,note:'scaled from your source recipe'}:{item:line,quantity:qty,unit,note:'review imported ingredient'};
+}
+
+function parseUserIngredients(text){
+  return String(text||'').split(/\n+/).map(parseNaturalIngredient).filter(Boolean);
+}
+
+function numberFromText(value){
+  const m=String(value||'').replace(/,/g,'').match(/\d+(?:\.\d+)?/);
+  return m?Number(m[0]):null;
+}
+
+function setRecipeImportStatus(message,type='info'){
+  const el=document.getElementById('recipeImportStatus');
+  if(!el) return;
+  el.textContent=message;
+  el.className='recipe-import-status '+type;
+}
+
+function fillRecipeEditor(data){
+  if(!data) return;
+  const set=(id,value)=>{ const el=document.getElementById(id); if(el && value!==null && value!==undefined && value!=='') el.value=value; };
+  set('urName',data.name||'');
+  set('urServings',numberFromText(data.servings)||'');
+  if(Array.isArray(data.ingredients)) set('urIngredients',data.ingredients.join('\n'));
+  if(Array.isArray(data.instructions)) set('urDirections',data.instructions.join('\n'));
+  set('urCalories',numberFromText(data.nutrition?.calories));
+  set('urProtein',numberFromText(data.nutrition?.protein));
+  set('urCarbs',numberFromText(data.nutrition?.carbs));
+  set('urFat',numberFromText(data.nutrition?.fat));
+  state.importDraft={
+    sourceUrl:data.sourceUrl||null,
+    sourceName:data.sourceUrl?new URL(data.sourceUrl).hostname.replace(/^www\./,''):null,
+    image:data.image||null
+  };
+}
+
+async function importRecipeUrl(){
+  const input=document.getElementById('urImportUrl');
+  const url=input?.value.trim();
+  if(!url){ setRecipeImportStatus('Paste a recipe link first.','error'); return; }
+  if(!cloudSignedIn()){ setRecipeImportStatus('Sign in to Fuelr before importing recipe links.','error'); return; }
+  const button=document.getElementById('importRecipeUrl');
+  if(button){ button.disabled=true; button.textContent='Importing...'; }
+  setRecipeImportStatus('Reading the recipe and filling the editor...','loading');
+  try{
+    const data=await window.FuelrCloud.importRecipeUrl(url);
+    fillRecipeEditor(data);
+    setRecipeImportStatus('Imported. Review the servings, ingredients and directions below before saving.','success');
+  }catch(err){
+    setRecipeImportStatus(err?.message||'Could not import that recipe. You can still paste it manually.','error');
+  }finally{
+    if(button){ button.disabled=false; button.textContent='Import'; }
+  }
+}
+
+function parsePastedRecipeText(){
+  const raw=String(document.getElementById('urPasteRecipe')?.value||'').trim();
+  if(!raw){ setRecipeImportStatus('Paste a recipe first.','error'); return; }
+  const lines=raw.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  const low=lines.map(x=>x.toLowerCase());
+  const ingIndex=low.findIndex(x=>/^ingredients?\b/.test(x));
+  const dirIndex=low.findIndex(x=>/^(instructions?|directions?|method|steps?)\b/.test(x));
+  const servingLine=lines.find(x=>/\b(serves|servings?|yield)\b/i.test(x));
+  const name=(ingIndex>0?lines.slice(0,ingIndex):lines).find(x=>!/(serves|servings?|yield|calories|protein|carbs?|fat)\b/i.test(x)) || '';
+
+  let ingredients=[];
+  if(ingIndex>=0){
+    const to=dirIndex>ingIndex?dirIndex:lines.length;
+    ingredients=lines.slice(ingIndex+1,to);
+  }else{
+    ingredients=lines.filter(x=>parseQtyToken(x.replace(/^[-•*]\s*/,'').split(/\s+/)[0])!=null);
+  }
+  const instructions=dirIndex>=0?lines.slice(dirIndex+1):[];
+  const findMacro=label=>{
+    const line=lines.find(x=>new RegExp('\\b'+label+'\\b','i').test(x));
+    return numberFromText(line);
+  };
+  fillRecipeEditor({
+    name,
+    servings:numberFromText(servingLine),
+    ingredients,
+    instructions,
+    nutrition:{
+      calories:findMacro('calories?'),
+      protein:findMacro('protein'),
+      carbs:findMacro('carbs?|carbohydrates?'),
+      fat:findMacro('fat')
+    }
+  });
+  setRecipeImportStatus('Filled what Fuelr could recognize. Review every field below before saving.','success');
 }
 
 async function saveNewUserRecipe(){
@@ -1073,7 +1228,7 @@ async function saveNewUserRecipe(){
   const directions=String(document.getElementById('urDirections')?.value||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
   const id='user-'+Date.now();
   let photoPath=null;
-  let photoUrl='assets/meal-placeholder.svg';
+  let photoUrl=state.importDraft?.image || 'assets/meal-placeholder.svg';
   const photoFile=document.getElementById('urPhoto')?.files?.[0] || null;
   if(photoFile && cloudSignedIn()){
     try{
@@ -1088,7 +1243,8 @@ async function saveNewUserRecipe(){
   const recipe={
     id,
     name,
-    sourceName:'My recipe',
+    sourceName:state.importDraft?.sourceName || 'My recipe',
+    sourceUrl:state.importDraft?.sourceUrl || null,
     mealType,
     photo:photoUrl,
     photoPath,
@@ -1131,6 +1287,7 @@ async function saveNewUserRecipe(){
   if(!cloudSignedIn()) saveUserRecipes();
   state.recipes=[...state.catalogRecipes,...state.userRecipes];
   state.addRecipeMode=false;
+  state.importDraft=null;
   state.detailId=recipe.id;
   showToast(cloudSignedIn()?'Recipe saved to your account':'Recipe saved on this device');
   render();
@@ -1642,9 +1799,11 @@ function bindDynamic(){
   app.querySelectorAll('[data-calendar-assign]').forEach(el=>el.addEventListener('click',()=>assignCalendarSlot(Number(el.dataset.calendarDay),el.dataset.calendarSlot,el.dataset.calendarAssign)));
   app.querySelectorAll('[data-calendar-clear]').forEach(el=>el.addEventListener('click',()=>clearCalendarSlot(Number(el.dataset.calendarDay),el.dataset.calendarSlot)));
   app.querySelectorAll('[data-week-view]').forEach(el=>el.addEventListener('click',()=>setWeekView(el.dataset.weekView)));
-  app.querySelectorAll('[data-add-recipe]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=true;state.detailId='';render();window.scrollTo({top:0,behavior:'smooth'});}));
-  app.querySelectorAll('[data-close-add]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=false;render();}));
+  app.querySelectorAll('[data-add-recipe]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=true;state.importDraft=null;state.detailId='';render();window.scrollTo({top:0,behavior:'smooth'});}));
+  app.querySelectorAll('[data-close-add]').forEach(el=>el.addEventListener('click',()=>{state.addRecipeMode=false;state.importDraft=null;render();}));
   document.querySelectorAll('input[name="urMealType"]').forEach(el=>el.addEventListener('change',()=>document.querySelectorAll('.recipe-type-picker label').forEach(label=>label.classList.toggle('selected-default',Boolean(label.querySelector('input:checked'))))));
+  document.getElementById('importRecipeUrl')?.addEventListener('click',importRecipeUrl);
+  document.getElementById('parsePastedRecipe')?.addEventListener('click',parsePastedRecipeText);
   document.getElementById('saveUserRecipe')?.addEventListener('click',saveNewUserRecipe);
   app.querySelectorAll('[data-change-school]').forEach(el=>el.addEventListener('click',beginSchoolChange));
 
