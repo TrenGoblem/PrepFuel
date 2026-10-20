@@ -1,0 +1,286 @@
+{
+  "version": 1,
+  "category": "lunch",
+  "recipes": [
+    [
+      "honey-garlic-chicken-noodles",
+      "Honey Garlic Chicken Noodles",
+      "noodle",
+      "Chicken noodles with broccoli and carrots",
+      [
+        770,
+        58,
+        102,
+        14
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry noodles",
+          7,
+          "lb",
+          "Grains"
+        ],
+        [
+          "Broccoli florets",
+          5.25,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Carrots",
+          3.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Honey",
+          21,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Low-sodium soy sauce",
+          28,
+          "tbsp",
+          "Sauces"
+        ],
+        [
+          "Garlic",
+          28,
+          "cloves",
+          "Produce"
+        ],
+        [
+          "Sesame oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "chicken-caesar-pasta-salad",
+      "Chicken Caesar Pasta Salad",
+      "cold-pasta",
+      "Chicken Caesar pasta salad",
+      [
+        710,
+        57,
+        72,
+        22
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry pasta",
+          5.25,
+          "lb",
+          "Grains"
+        ],
+        [
+          "Romaine lettuce",
+          28,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Cherry tomatoes",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Light Caesar dressing",
+          28,
+          "tbsp",
+          "Sauces"
+        ],
+        [
+          "Parmesan cheese",
+          21,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Whole-grain croutons",
+          7,
+          "cups",
+          "Grains"
+        ]
+      ]
+    ],
+    [
+      "turkey-pesto-mozzarella-sandwiches",
+      "Turkey Pesto Mozzarella Sandwiches",
+      "sandwich",
+      "Turkey pesto sandwiches with spinach and tomato",
+      [
+        680,
+        52,
+        67,
+        22
+      ],
+      [
+        [
+          "Whole-grain sandwich rolls",
+          28,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Sliced turkey breast",
+          7,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Part-skim mozzarella",
+          28,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Pesto",
+          21,
+          "tbsp",
+          "Sauces"
+        ],
+        [
+          "Spinach",
+          28,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Tomatoes",
+          14,
+          "large",
+          "Produce"
+        ],
+        [
+          "Balsamic glaze",
+          14,
+          "tbsp",
+          "Sauces"
+        ]
+      ]
+    ],
+    [
+      "philly-cheesesteak-rice-bowls",
+      "Philly Cheesesteak Rice Bowls",
+      "rice",
+      "Lean beef, rice, peppers, onions and provolone",
+      [
+        780,
+        58,
+        86,
+        22
+      ],
+      [
+        [
+          "Lean shaved beef or sirloin",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Bell peppers",
+          21,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Onions",
+          7,
+          "large",
+          "Produce"
+        ],
+        [
+          "Provolone",
+          28,
+          "slices",
+          "Dairy"
+        ],
+        [
+          "Mushrooms",
+          7,
+          "lb",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "cheeseburger-wraps",
+      "Cheeseburger Wraps",
+      "wrap",
+      "Lean beef, cheese and burger vegetables in wraps",
+      [
+        730,
+        55,
+        62,
+        25
+      ],
+      [
+        [
+          "93% lean ground beef",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Large tortillas",
+          28,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Reduced-fat cheddar",
+          28,
+          "slices",
+          "Dairy"
+        ],
+        [
+          "Shredded lettuce",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Tomatoes",
+          14,
+          "large",
+          "Produce"
+        ],
+        [
+          "Pickles",
+          56,
+          "oz",
+          "Produce"
+        ],
+        [
+          "Light burger sauce",
+          28,
+          "tbsp",
+          "Sauces"
+        ]
+      ]
+    ]
+  ]
+}
