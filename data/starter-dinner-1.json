@@ -1,0 +1,274 @@
+{
+  "version": 1,
+  "category": "dinner",
+  "recipes": [
+    [
+      "lemon-pepper-chicken-rice-broccoli",
+      "Lemon Pepper Chicken Rice & Broccoli",
+      "plate",
+      "Chicken, rice and broccoli",
+      [
+        720,
+        60,
+        88,
+        14
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Broccoli florets",
+          10.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Olive oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Lemons",
+          7,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Lemon pepper seasoning",
+          14,
+          "tbsp",
+          "Seasoning"
+        ]
+      ]
+    ],
+    [
+      "garlic-herb-chicken-potatoes-green-beans",
+      "Garlic Herb Chicken Potatoes & Green Beans",
+      "plate",
+      "Chicken, roasted potatoes and green beans",
+      [
+        730,
+        60,
+        77,
+        18
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Gold potatoes",
+          12.25,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Green beans",
+          10.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Olive oil",
+          21,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Garlic",
+          28,
+          "cloves",
+          "Produce"
+        ],
+        [
+          "Italian seasoning",
+          14,
+          "tbsp",
+          "Seasoning"
+        ]
+      ]
+    ],
+    [
+      "ground-beef-rice-broccoli",
+      "Ground Beef Rice & Broccoli",
+      "plate",
+      "Lean beef, rice and broccoli",
+      [
+        760,
+        56,
+        86,
+        22
+      ],
+      [
+        [
+          "93% lean ground beef",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Broccoli florets",
+          10.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Low-sodium soy sauce",
+          21,
+          "tbsp",
+          "Sauces"
+        ],
+        [
+          "Garlic",
+          28,
+          "cloves",
+          "Produce"
+        ],
+        [
+          "Olive oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Green onions",
+          7,
+          "bunches",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "ground-beef-potatoes-green-beans",
+      "Ground Beef Potatoes & Green Beans",
+      "plate",
+      "Lean beef, roasted potatoes and green beans",
+      [
+        770,
+        55,
+        75,
+        25
+      ],
+      [
+        [
+          "93% lean ground beef",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Gold potatoes",
+          12.25,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Green beans",
+          10.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Olive oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Garlic",
+          28,
+          "cloves",
+          "Produce"
+        ],
+        [
+          "Paprika",
+          14,
+          "tbsp",
+          "Seasoning"
+        ],
+        [
+          "Onions",
+          7,
+          "large",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "turkey-meatballs-marinara-pasta-zucchini",
+      "Turkey Meatballs Marinara Pasta & Zucchini",
+      "pasta",
+      "Turkey meatballs, pasta, marinara and zucchini",
+      [
+        780,
+        59,
+        91,
+        20
+      ],
+      [
+        [
+          "93% lean ground turkey",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry pasta",
+          7,
+          "lb",
+          "Grains"
+        ],
+        [
+          "Marinara sauce",
+          56,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Zucchini",
+          14,
+          "large",
+          "Produce"
+        ],
+        [
+          "Parmesan cheese",
+          21,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Eggs",
+          14,
+          "large",
+          "Protein"
+        ],
+        [
+          "Breadcrumbs",
+          3.5,
+          "cups",
+          "Grains"
+        ]
+      ]
+    ]
+  ]
+}
