@@ -478,3 +478,25 @@ body[data-school="ucf"] .bottom-nav button.active .nav-icon{color:#ffc904!import
   .you-metrics{grid-template-columns:1fr 1fr 1fr;gap:7px}.you-metrics article{padding:11px 9px}.you-metrics strong{font-size:16px}
   .bottom-nav{width:min(calc(100% - 22px),520px)!important}
 }
+
+
+/* FUELR ACCOUNT CLOUD UI */
+.auth-shell{min-height:calc(100dvh - 32px);max-width:520px;margin:0 auto;padding:58px 4px 42px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.auth-mark{width:82px;height:82px;border-radius:25px;display:grid;place-items:center;background:var(--school-secondary);color:var(--school-accent);font-size:25px;font-weight:950;letter-spacing:-.07em;box-shadow:0 20px 45px rgba(28,34,42,.16);margin-bottom:22px}
+.auth-shell h1{font-size:43px;line-height:.98;letter-spacing:-.06em;margin:9px 0 11px;color:#1f252d}
+.auth-shell>p{margin:0;max-width:420px;color:#858f9b;font-size:13px;line-height:1.55}
+.auth-card{width:100%;margin-top:24px;padding:17px;border-radius:24px;background:#fff;border:1px solid #e2e6ec;box-shadow:0 18px 42px rgba(44,52,64,.085);text-align:left}
+.auth-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;border-radius:14px;background:#f2f4f7;border:1px solid #e5e8ed;margin-bottom:13px}
+.auth-switch button{border:0;background:transparent;padding:9px;border-radius:10px;color:#7d8793;font-size:10px;font-weight:900}
+.auth-switch button.active{background:#fff;color:#252c35;box-shadow:0 5px 12px rgba(45,53,65,.08)}
+.auth-submit{margin-top:8px;min-height:49px}
+.auth-footnote{display:block;text-align:center;margin:10px 8px 2px;color:#9aa2ac;font-size:9px;line-height:1.45}
+.auth-message{margin:9px 0;padding:10px 12px;border-radius:12px;background:#f1f6ff;border:1px solid #dce7ff;color:#526895;font-size:10px;line-height:1.4}
+.auth-message.error{background:#fff2f3;border-color:#f1d8dc;color:#9d4f59}
+.cloud-loading{min-height:70dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#68727e}.cloud-loading .auth-mark{margin:0}.cloud-loading strong{font-size:12px;letter-spacing:.04em}
+.cloud-ready-card.cloud-live{background:color-mix(in srgb,var(--school-primary) 5%,white);border-color:color-mix(in srgb,var(--school-primary) 18%,#e2e6eb)}
+.cloud-ready-card.cloud-live .cloud-dot{background:#3abf7d;box-shadow:0 0 0 5px rgba(58,191,125,.12)}
+.cloud-ready-card .mini-action{align-self:center}
+@media(max-width:520px){
+  .auth-shell{padding-top:42px}.auth-shell h1{font-size:38px}.auth-mark{width:74px;height:74px;border-radius:23px}
+}
