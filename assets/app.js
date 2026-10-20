@@ -300,7 +300,7 @@ function renderRecipeDetail(r){
           <strong>${money(mealTarget())}</strong>
           <small>${money(batchUsed)} used-cost target for ${count} meals</small>
         </div>
-        ${r.scaleFactor?`<div class="scale-explain"><span>OPTIMIZATION MULTIPLIER</span><strong>×${Number(r.scaleFactor).toFixed(2)}</strong><small>Source ingredient amounts are scaled toward the meal cap, with practical limits on seasonings and strong sauces.</small></div>`:''}
+        ${r.scaleFactor?`<div class="scale-explain"><span>OPTIMIZATION MULTIPLIER</span><strong>×${Number(r.scaleFactor).toFixed(2)}</strong><small>Every source ingredient is first scaled from the creator's serving count to this 7- or 14-meal batch — including salt, spices, oils and sauces — then the whole recipe is optimized toward the meal cap while preserving the original flavor ratios.</small></div>`:''}
         ${r.original?`<div class="source-compare">
           <div><span>SOURCE</span><strong>${esc(r.original.servings)} servings</strong><small>${r.original.portion?esc(r.original.portion):'original recipe'}</small></div>
           <div class="compare-arrow">→</div>
@@ -463,7 +463,7 @@ function renderSettings(){
       </div>
     </section>
     <button id="saveSettings" class="btn primary full save-settings">Save PrepFuel settings</button>
-    <section class="section"><div class="notice blue"><strong>Streamlined scaling:</strong> PrepFuel first prices the source recipe per serving, calculates the ratio between that cost and your meal cap, then uses that multiplier as the starting point for ingredient quantities. Main protein, carbs and vegetables follow the multiplier closely; potent seasonings, oils and sauces are adjusted sensibly so the food still tastes right.</div></section>`;
+    <section class="section"><div class="notice blue"><strong>Streamlined scaling:</strong> PrepFuel first normalizes every listed ingredient from the creator's original serving count to 7 or 14 meals — including salt, spices, seasoning packets, oils and sauces. Then it prices that normalized recipe per meal, calculates the ratio to your meal cap, and scales the full recipe toward that budget while preserving the original ingredient and flavor ratios.</div></section>`;
 }
 
 function render(){
