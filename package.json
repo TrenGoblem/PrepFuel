@@ -12,14 +12,14 @@
     "native:add:android": "npm run build && npx cap add android"
   },
   "dependencies": {
-    "@capacitor/core": "latest",
-    "@capacitor/app": "latest",
-    "@capacitor/status-bar": "latest",
-    "@capacitor/splash-screen": "latest"
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "latest",
-    "@capacitor/ios": "latest",
-    "@capacitor/android": "latest"
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@capacitor/android": "^8.0.0"
   }
 }
