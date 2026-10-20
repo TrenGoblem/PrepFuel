@@ -616,3 +616,37 @@ body[data-school="ucf"] .bottom-nav button.active .nav-icon{color:#ffc904!import
   .calendar-day{padding:5px 2px}.calendar-day strong{font-size:10px}.calendar-day span{font-size:7px}
   .calendar-help{grid-template-columns:1fr}
 }
+
+
+/* FUELR DETAILED APP NAVIGATION */
+.bottom-nav.detailed-nav{
+  grid-template-columns:repeat(7,minmax(0,1fr))!important;
+  max-width:820px;
+  padding-left:7px;
+  padding-right:7px;
+}
+.bottom-nav.detailed-nav button{min-width:0;padding-left:3px!important;padding-right:3px!important}
+.bottom-nav.detailed-nav small{font-size:7.25px!important;letter-spacing:-.01em}
+.bottom-nav.detailed-nav .nav-icon{width:22px;height:22px}
+.detailed-settings-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.settings-food-card,.settings-account-card{min-height:100%}
+.account-setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #edf0f3}
+.account-setting-row span{font-size:9px;color:#8f98a4;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.account-setting-row strong{font-size:11px;color:#303842;text-align:right}
+.settings-note{margin:12px 0;color:#8e97a2;font-size:9.5px;line-height:1.5}
+.settings-school-card{margin-bottom:12px}
+
+@media(max-width:720px){
+  .detailed-settings-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .bottom-nav.detailed-nav{
+    width:calc(100% - 12px)!important;
+    max-width:none!important;
+    gap:0!important;
+    padding:5px 4px calc(5px + env(safe-area-inset-bottom))!important;
+  }
+  .bottom-nav.detailed-nav button{padding:5px 0!important}
+  .bottom-nav.detailed-nav small{font-size:6.7px!important}
+  .bottom-nav.detailed-nav .nav-icon{width:19px;height:19px}
+}
