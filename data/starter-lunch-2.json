@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "category": "lunch",
+  "recipes": [
+    [
+      "beef-bean-burritos",
+      "Beef & Bean Burritos",
+      "burrito",
+      "Lean beef, beans, rice and cheese burrito",
+      [
+        810,
+        55,
+        90,
+        24
+      ],
+      [
+        [
+          "93% lean ground beef",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Black beans",
+          10.5,
+          "cups",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          5.25,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Large tortillas",
+          14,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Shredded cheese",
+          28,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Salsa",
+          28,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Bell peppers",
+          7,
+          "whole",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "turkey-taco-burrito-bowls",
+      "Turkey Taco Burrito Bowls",
+      "rice",
+      "Turkey, rice, black beans, corn and salsa",
+      [
+        740,
+        57,
+        92,
+        16
+      ],
+      [
+        [
+          "93% lean ground turkey",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Black beans",
+          7,
+          "cups",
+          "Protein"
+        ],
+        [
+          "Corn",
+          7,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Salsa",
+          28,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Shredded cheese",
+          14,
+          "oz",
+          "Dairy"
+        ]
+      ]
+    ],
+    [
+      "buffalo-chicken-burritos",
+      "Buffalo Chicken Burritos",
+      "burrito",
+      "Buffalo chicken, rice, cheese and crunchy vegetables",
+      [
+        760,
+        61,
+        82,
+        20
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          5.25,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Large tortillas",
+          14,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Shredded cheese",
+          28,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Buffalo sauce",
+          28,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Shredded cabbage",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Light ranch",
+          21,
+          "tbsp",
+          "Sauces"
+        ]
+      ]
+    ],
+    [
+      "bbq-chicken-mac-bowls",
+      "BBQ Chicken Mac Bowls",
+      "pasta",
+      "BBQ chicken, macaroni, corn and broccoli",
+      [
+        790,
+        61,
+        98,
+        17
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry macaroni",
+          7,
+          "lb",
+          "Grains"
+        ],
+        [
+          "BBQ sauce",
+          35,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Corn",
+          7,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Broccoli florets",
+          7,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Reduced-fat cheddar",
+          21,
+          "oz",
+          "Dairy"
+        ]
+      ]
+    ],
+    [
+      "teriyaki-chicken-rice-bowls",
+      "Teriyaki Chicken Rice Bowls",
+      "rice",
+      "Teriyaki chicken, rice and mixed vegetables",
+      [
+        730,
+        58,
+        99,
+        12
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry jasmine rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Broccoli florets",
+          5.25,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Carrots",
+          3.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Teriyaki sauce",
+          35,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Sesame seeds",
+          14,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ]
+  ]
+}
