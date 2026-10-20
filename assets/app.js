@@ -74,26 +74,77 @@ function recipeCard(r){
 
 function renderHome(){
   const r=selectedRecipe();
-  return `<section class="hero">
-    <div class="eyebrow">Built for the week</div>
-    <h1>14 meals. One prep. <span class="accent">No guesswork.</span></h1>
-    <p>Your athlete meal-prep hub: recipe, exact shopping list, cooking steps, macros and budget in one place.</p>
+  const pct = Math.min(100,(plannedYear()/state.settings.schoolYearBudget)*100);
+  return `<section class="hero hero-showcase">
+    <div class="hero-panel">
+      <div class="hero-copy-block">
+        <div class="eyebrow">Built for athletes</div>
+        <h1>Train hard. <span class="accent">Eat sharp.</span></h1>
+        <p>A clean weekly fuel system with bold visuals, simple moves, and zero guesswork. Pick the meal, shop fast, cook once, and coast all week.</p>
+        <div class="hero-actions">
+          ${r ? `<button class="btn primary" data-go="grocery">This week’s grocery run</button>` : `<button class="btn primary" data-go="recipes">Build my week</button>`}
+          <button class="btn ghost" data-go="recipes">Swipe meals</button>
+        </div>
+      </div>
+      <div class="hero-stage">
+        <div class="hero-orb"></div>
+        <div class="hero-stat-card primary">
+          <small>weekly target</small>
+          <strong>${money(weeklyTotal())}</strong>
+          <span>${state.settings.mealsPerWeek} meals + produce</span>
+        </div>
+        <div class="hero-stat-card secondary">
+          <small>default meal</small>
+          <strong>${money(state.settings.recipeCostPerMeal)}</strong>
+          <span>protein-first serving</span>
+        </div>
+        <div class="hero-pill">${state.settings.mealsPerWeek} meals / week</div>
+      </div>
+    </div>
   </section>
-  <div class="grid two">
-    <div class="metric blue"><div class="label">Meal target</div><div class="value">${money(state.settings.recipeCostPerMeal)}</div><div class="sub">per prepared meal</div></div>
-    <div class="metric"><div class="label">Produce add-on</div><div class="value">${money(weeklyProduce())}</div><div class="sub">fruit + veggies / week</div></div>
-    <div class="metric"><div class="label">Weekly total</div><div class="value">${money(weeklyTotal())}</div><div class="sub">14 meals + produce</div></div>
-    <div class="metric red"><div class="label">School year</div><div class="value">${money(state.settings.schoolYearBudget)}</div><div class="sub">${state.settings.academicWeeks} school weeks</div></div>
+
+  <section class="swipe-section">
+    <div class="section-head compact"><div><h2>Why it hits</h2><p>Made to feel fast and satisfying</p></div><span class="micro-copy">Swipe →</span></div>
+    <div class="swipe-rail">
+      <article class="swipe-card spotlight">
+        <div class="swipe-top">Locked in</div>
+        <h3>One Sunday prep. Full week covered.</h3>
+        <p>Choose one meal and auto-build the full ${state.settings.mealsPerWeek}-meal game plan.</p>
+      </article>
+      <article class="swipe-card">
+        <div class="swipe-top">Budget first</div>
+        <h3>${money(state.settings.schoolYearBudget)} school-year cap</h3>
+        <p>PrepFuel splits your recipe spend and produce allowance so the numbers stay clean.</p>
+      </article>
+      <article class="swipe-card">
+        <div class="swipe-top">Athlete mode</div>
+        <h3>Protein, carbs, and real volume.</h3>
+        <p>Meals are adjusted for serious appetite, training, and actual recovery—not tiny portions.</p>
+      </article>
+    </div>
+  </section>
+
+  <div class="grid two feature-metrics">
+    <div class="metric glass blue"><div class="label">Meal target</div><div class="value">${money(state.settings.recipeCostPerMeal)}</div><div class="sub">per prepared meal</div></div>
+    <div class="metric glass"><div class="label">Produce add-on</div><div class="value">${money(weeklyProduce())}</div><div class="sub">fruit + veggies / week</div></div>
+    <div class="metric glass"><div class="label">Weekly total</div><div class="value">${money(weeklyTotal())}</div><div class="sub">14 meals + produce</div></div>
+    <div class="metric glass red"><div class="label">School year</div><div class="value">${money(state.settings.schoolYearBudget)}</div><div class="sub">${state.settings.academicWeeks} school weeks</div></div>
   </div>
+
   <section class="section">
     <div class="section-head"><div><h2>This week</h2><p>One recipe × ${state.settings.mealsPerWeek} meals</p></div>${r?`<button class="link-btn" data-go="grocery">Open grocery →</button>`:''}</div>
-    ${r ? recipeCard(r) : `<div class="empty"><div class="icon">⚡</div><h3>No meal selected yet</h3><p>Once your first recipe is added, choose it from Meals and PrepFuel will build your 14-meal week.</p><div class="spacer"></div><button class="btn primary" data-go="recipes">Open Meals</button></div>`}
+    ${r ? recipeCard(r) : `<div class="empty stylish"><div class="icon">⚡</div><h3>No meal selected yet</h3><p>Once your first recipe is added, pick it in Meals and PrepFuel will turn it into your full weekly prep system.</p><div class="spacer"></div><button class="btn primary" data-go="recipes">Open Meals</button></div>`}
   </section>
-  <section class="section"><div class="section-head"><div><h2>Budget pace</h2><p>${state.settings.academicWeeks} weeks</p></div></div>
-    <div class="card"><div class="card-body">
+
+  <section class="section">
+    <div class="section-head"><div><h2>Budget pace</h2><p>${state.settings.academicWeeks} weeks</p></div></div>
+    <div class="card budget-feature"><div class="card-body">
       <div class="cost-box"><div><div class="kicker">Planned school-year spend</div><strong>${money(plannedYear())}</strong></div><div class="chip green">${buffer()>=0?money(buffer())+' BUFFER':'OVER'}</div></div>
-      <div class="progress" style="margin-top:14px"><span style="width:${Math.min(100,(plannedYear()/state.settings.schoolYearBudget)*100)}%"></span></div>
-      <p class="settings-note">Recipe budget: ${money(weeklyRecipe())}/week · Produce: ${money(weeklyProduce())}/week.</p>
+      <div class="progress fat" style="margin-top:14px"><span style="width:${pct}%"></span></div>
+      <div class="mini-split">
+        <div><span>Meals</span><strong>${money(weeklyRecipe())}/wk</strong></div>
+        <div><span>Fruit + veg</span><strong>${money(weeklyProduce())}/wk</strong></div>
+      </div>
     </div></div>
   </section>`;
 }
