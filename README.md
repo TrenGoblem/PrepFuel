@@ -15,6 +15,9 @@ Fuelr is a mobile-first installable PWA for personalized weekly meal planning.
 - The per-meal cap recalculates automatically when the user's weekly meal target changes
 - Combined grocery list
 - Weekly Prep board with meal-container completion tracking
+- Monday–Sunday meal calendar with Breakfast, Lunch, and Dinner slots
+- Breakfast recipes stay in Breakfast; Lunch/Dinner recipes can be moved between Lunch and Dinner
+- Automatic active-week reset when a new Monday begins, while past cloud weeks remain stored
 - Recipe library loaded from `data/recipes.json`
 
 ## Default setup
