@@ -1,0 +1,20 @@
+{
+  "appId": "com.fuelr.app",
+  "appName": "Fuelr",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 900,
+      "backgroundColor": "#F4F5F7",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#F4F5F7"
+    }
+  }
+}
