@@ -178,6 +178,7 @@
           client_source_id: clientSourceId,
           name: recipe.name,
           source_name: recipe.sourceName || "My recipe",
+          meal_type: recipe.mealType === "breakfast" ? "breakfast" : "main",
           source_servings: Number(recipe.original?.servings || 1),
           optimized_servings: Number(recipe.servings || 14),
           source_batch_cost: recipe.sourceBatchCost ?? null,
@@ -237,7 +238,7 @@
       if (!client || !this.user) return null;
       const { data, error } = await client
         .from("weekly_plans")
-        .select("*, weekly_plan_recipes(*), grocery_items(*), prep_checks(*)")
+        .select("*, weekly_plan_recipes(*), grocery_items(*), prep_checks(*), weekly_schedule_slots(*)")
         .eq("user_id", this.user.id)
         .eq("week_start", weekStart())
         .maybeSingle();
@@ -276,7 +277,7 @@
       );
       const planId = plan.id;
 
-      const tables = ["weekly_plan_recipes", "grocery_items", "prep_checks"];
+      const tables = ["weekly_plan_recipes", "grocery_items", "prep_checks", "weekly_schedule_slots"];
       for (const table of tables) {
         const { error } = await client.from(table).delete().eq("plan_id", planId);
         if (error) throw error;
@@ -338,6 +339,21 @@
         const { error } = await client
           .from("prep_checks")
           .insert(prepRows);
+        if (error) throw error;
+      }
+
+      const scheduleRows = (payload.schedule || []).map(item => ({
+        plan_id: planId,
+        day_index: Number(item.dayIndex),
+        slot_type: item.slotType,
+        recipe_id: item.cloudOwned && isUuid(item.recipeId) ? item.recipeId : null,
+        recipe_key: item.cloudOwned && isUuid(item.recipeId) ? null : String(item.recipeId || "")
+      }));
+
+      if (scheduleRows.length) {
+        const { error } = await client
+          .from("weekly_schedule_slots")
+          .insert(scheduleRows);
         if (error) throw error;
       }
 
