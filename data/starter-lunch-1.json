@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "category": "lunch",
+  "recipes": [
+    [
+      "buffalo-chicken-mac",
+      "Buffalo Chicken Mac & Cheese",
+      "pasta",
+      "High-protein buffalo chicken macaroni",
+      [
+        760,
+        62,
+        83,
+        20
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry high-protein pasta",
+          7,
+          "lb",
+          "Grains"
+        ],
+        [
+          "Reduced-fat cheddar",
+          28,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Nonfat Greek yogurt",
+          56,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Buffalo sauce",
+          28,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Broccoli florets",
+          7,
+          "lb",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "chicken-alfredo-broccoli-pasta",
+      "Chicken Alfredo Broccoli Pasta",
+      "pasta",
+      "Chicken Alfredo with broccoli",
+      [
+        790,
+        64,
+        88,
+        21
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry pasta",
+          7,
+          "lb",
+          "Grains"
+        ],
+        [
+          "Broccoli florets",
+          7,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Light Alfredo sauce",
+          56,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Parmesan cheese",
+          21,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Spinach",
+          14,
+          "cups",
+          "Produce"
+        ]
+      ]
+    ],
+    [
+      "chicken-bacon-ranch-wraps",
+      "Chicken Bacon Ranch Wraps",
+      "wrap",
+      "Chicken, turkey bacon, lettuce and ranch wraps",
+      [
+        700,
+        59,
+        62,
+        23
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Large tortillas",
+          28,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Turkey bacon",
+          56,
+          "slices",
+          "Protein"
+        ],
+        [
+          "Reduced-fat shredded cheese",
+          28,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Romaine lettuce",
+          14,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Tomatoes",
+          14,
+          "medium",
+          "Produce"
+        ],
+        [
+          "Light ranch",
+          28,
+          "tbsp",
+          "Sauces"
+        ]
+      ]
+    ],
+    [
+      "crispy-chicken-tender-rice-bowls",
+      "Crispy Chicken Tender Rice Bowls",
+      "rice",
+      "Crispy chicken, rice, corn and green beans",
+      [
+        780,
+        58,
+        101,
+        16
+      ],
+      [
+        [
+          "Chicken breast tenderloins",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Panko breadcrumbs",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Corn",
+          7,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Green beans",
+          7,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Greek-yogurt dipping sauce",
+          28,
+          "oz",
+          "Sauces"
+        ]
+      ]
+    ],
+    [
+      "chicken-quesadillas-salsa-corn",
+      "Chicken Quesadillas with Salsa Corn",
+      "quesadilla",
+      "Chicken and cheese quesadillas with corn",
+      [
+        740,
+        58,
+        72,
+        23
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          5.25,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Large tortillas",
+          28,
+          "whole",
+          "Grains"
+        ],
+        [
+          "Shredded Mexican cheese",
+          42,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Corn",
+          7,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Salsa",
+          42,
+          "oz",
+          "Sauces"
+        ],
+        [
+          "Black beans",
+          7,
+          "cups",
+          "Protein"
+        ]
+      ]
+    ]
+  ]
+}
