@@ -15,6 +15,7 @@ const state = {
   recipes: [],
   selections: Object.keys(storedSelections).length ? storedSelections : (legacySelected ? {[legacySelected]:14} : {}),
   checked: JSON.parse(localStorage.getItem('pf_checked') || '{}'),
+  prepChecks: JSON.parse(localStorage.getItem('pf_prep_checks') || '{}'),
   settings: {
     schoolYearBudget: Number(storedSettings.schoolYearBudget) || DEFAULTS.schoolYearBudget,
     academicWeeks: Number(storedSettings.academicWeeks) || DEFAULTS.academicWeeks,
@@ -45,6 +46,47 @@ const selectedEntries = () => Object.entries(state.selections)
 
 function saveSettings(){ localStorage.setItem('pf_settings', JSON.stringify(state.settings)); }
 function saveSelections(){ localStorage.setItem('pf_meal_selections', JSON.stringify(state.selections)); localStorage.removeItem('pf_selected_recipe'); }
+function savePrepChecks(){ localStorage.setItem('pf_prep_checks', JSON.stringify(state.prepChecks)); }
+function resetPrepChecks(){ state.prepChecks={}; savePrepChecks(); }
+function prepMealKey(id,index){ return id+':meal:'+index; }
+function prepStageKey(id,stage){ return id+':stage:'+stage; }
+function prepDoneFor(id,count){
+  let n=0;
+  for(let i=1;i<=count;i++) if(state.prepChecks[prepMealKey(id,i)]) n++;
+  return n;
+}
+function totalPrepDone(){ return selectedEntries().reduce((sum,x)=>sum+prepDoneFor(x.recipe.id,x.count),0); }
+function togglePrepMeal(id,index){
+  const key=prepMealKey(id,index);
+  state.prepChecks[key]=!state.prepChecks[key];
+  savePrepChecks(); render();
+}
+function togglePrepStage(id,stage){
+  const key=prepStageKey(id,stage);
+  state.prepChecks[key]=!state.prepChecks[key];
+  savePrepChecks(); render();
+}
+function markPrepBatch(id,count){
+  const allDone=prepDoneFor(id,count)===count;
+  for(let i=1;i<=count;i++) state.prepChecks[prepMealKey(id,i)]=!allDone;
+  ['cooked','portioned','stored'].forEach(stage=>state.prepChecks[prepStageKey(id,stage)]=!allDone);
+  savePrepChecks(); render();
+}
+function startNextWeek(){
+  if(!confirm('Start a new week? This clears the current meal plan, grocery checks, and prep progress.')) return;
+  state.selections={};
+  state.checked={};
+  state.prepChecks={};
+  saveSelections();
+  localStorage.setItem('pf_checked','{}');
+  savePrepChecks();
+  state.detailId='';
+  state.tab='recipes';
+  localStorage.setItem('pf_tab','recipes');
+  showToast('New week started — choose your meals');
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 function showToast(msg){ toast.textContent = msg; toast.classList.remove('hidden'); clearTimeout(showToast.t); showToast.t=setTimeout(()=>toast.classList.add('hidden'),2200); }
 function formatQty(n){
   const x=Number(n);
@@ -88,6 +130,7 @@ function setMealPlan(id,count){
   }
   state.checked={};
   localStorage.setItem('pf_checked','{}');
+  resetPrepChecks();
   saveSelections();
   const total=plannedMeals();
   showToast(total===14 ? '14 meals planned for the week' : '7 meals planned — choose another 7');
@@ -97,6 +140,7 @@ function clearMealPlan(id){
   delete state.selections[id];
   state.checked={};
   localStorage.setItem('pf_checked','{}');
+  resetPrepChecks();
   saveSelections();
   showToast('Meal removed from this week');
   render();
@@ -142,9 +186,9 @@ function recipeCard(r){
         ${r.macros?.calories ? `<span><b>${esc(r.macros.calories)}</b> cal</span>`:''}
         ${r.macros?.carbs ? `<span><b>${esc(r.macros.carbs)}g</b> carbs</span>`:''}
       </div>
-      <div class="meal-plan-toggle" aria-label="Choose meal count">
-        <button class="${count===7?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="7">7 meals</button>
-        <button class="${count===14?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="14">14 meals</button>
+      <div class="meal-count-actions" aria-label="Choose meal count">
+        <button class="${count===7?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="7"><b>7</b><span>meals</span></button>
+        <button class="${count===14?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="14"><b>14</b><span>meals</span></button>
       </div>
       <div class="meal-card-action"><span>${selected?count+' of 14 weekly meals':'Tap card for full recipe'}</span>${selected?`<button class="clear-plan" data-clear-plan="${esc(r.id)}">clear</button>`:`<span class="round-arrow">↗</span>`}</div>
     </div>
@@ -174,7 +218,7 @@ function renderHome(){
       <div class="prompt-head"><span class="prompt-dot"></span><span>WEEKLY FUEL</span><span class="prompt-status">${total}/14</span></div>
       <h3>${promptTitle}</h3>
       <p>${promptCopy}</p>
-      <button class="prompt-button" data-go="${total===14?'grocery':'recipes'}">${total===14?'View shopping list':'Choose meals'} <span>→</span></button>
+      <button class="prompt-button" data-go="${total===14?'prep':'recipes'}">${total===14?'Open prep board':'Choose meals'} <span>→</span></button>
     </div>
   </section>
 
@@ -210,7 +254,7 @@ function renderRecipes(){
   return `<section class="page-intro">
       <div class="eyebrow">Meal lineup</div>
       <h1>Pick 7 + 7, or <span class="accent">all 14.</span></h1>
-      <p>Use the toggle on every card. Two 7-meal choices give you different lunch and dinner preps; one 14-meal choice keeps the whole week the same.</p>
+      <p>Every recipe has two clear buttons: make 7 meals or make 14. Two 7-meal choices give you different lunch and dinner preps; one 14-meal choice keeps the whole week the same.</p>
       <div class="meals-meta"><span>${state.recipes.length} recipes</span><span>•</span><span>${total}/14 planned</span><span>•</span><span>${money(mealTarget())} cap / meal</span></div>
     </section>
     <section class="plan-status-bar">
@@ -220,7 +264,7 @@ function renderRecipes(){
     </section>
     <section class="floating-meal-stage large-stage">
       <div class="meal-swipe-rail">${cards}</div>
-      <div class="swipe-hint"><span>←</span> swipe meals · use the 7 / 14 toggle <span>→</span></div>
+      <div class="swipe-hint"><span>←</span> swipe meals · choose 7 or 14 <span>→</span></div>
     </section>
     <div class="sync-strip light-sync"><span class="status-dot"></span><span>Recipe library online</span><span class="sync-spacer"></span><span>${state.lastSync?'Synced '+new Date(state.lastSync).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Ready'}</span></div>
     <section class="meal-info-row">
@@ -247,9 +291,9 @@ function renderRecipeDetail(r){
         <div class="eyebrow">PrepFuel optimized</div>
         <h1>${esc(r.name)}</h1>
         <p>${r.optimizationNote?esc(r.optimizationNote):'Optimized toward the current meal cap while protecting quality, protein, carbs and useful food volume.'}</p>
-        <div class="meal-plan-toggle detail-toggle" aria-label="Choose meal count">
-          <button class="${count===7?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="7">7 meals</button>
-          <button class="${count===14?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="14">14 meals</button>
+        <div class="meal-count-actions detail-count-actions" aria-label="Choose meal count">
+          <button class="${count===7?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="7"><b>7</b><span>meals</span></button>
+          <button class="${count===14?'active':''}" data-plan-id="${esc(r.id)}" data-plan-count="14"><b>14</b><span>meals</span></button>
         </div>
         <div class="optimize-strip">
           <span>MEAL CAP</span>
@@ -308,6 +352,72 @@ function renderGrocery(){
     </section>`).join(''):`<div class="empty clean-empty"><div class="empty-orb light">✓</div><div class="eyebrow">Nothing to shop yet</div><h3>Choose 7 + 7 or one 14.</h3><p>Your combined grocery list will build itself here.</p><button class="btn primary" data-go="recipes">Choose meals</button></div>`}`;
 }
 
+function prepBatchCard(entry,index){
+  const r=entry.recipe;
+  const count=entry.count;
+  const done=prepDoneFor(r.id,count);
+  const pct=Math.round((done/count)*100);
+  const photo=r.photo?esc(r.photo):'assets/meal-placeholder.svg';
+  const stages=['cooked','portioned','stored'];
+  const stageLabels={cooked:'Cooked',portioned:'Portioned',stored:'Stored'};
+  const meals=Array.from({length:count},(_,i)=>{
+    const n=i+1;
+    const checked=!!state.prepChecks[prepMealKey(r.id,n)];
+    return `<button class="prep-meal-check ${checked?'done':''}" data-prep-meal-id="${esc(r.id)}" data-prep-meal-index="${n}" aria-label="Meal ${n} ${checked?'ready':'not ready'}"><span>${checked?'✓':n}</span></button>`;
+  }).join('');
+  return `<article class="prep-batch-card">
+    <div class="prep-batch-head">
+      <img src="${photo}" alt="${esc(r.name)}" onerror="this.src='assets/meal-placeholder.svg'">
+      <div class="prep-batch-copy"><span class="prep-batch-label">PREP ${String.fromCharCode(65+index)} · ${count} MEALS</span><h3>${esc(r.name)}</h3><p>${done}/${count} containers ready</p></div>
+      <div class="prep-mini-ring" style="--prep-angle:${pct*3.6}deg"><div><strong>${pct}%</strong></div></div>
+    </div>
+    <div class="prep-stage-row">
+      ${stages.map(stage=>`<button class="${state.prepChecks[prepStageKey(r.id,stage)]?'done':''}" data-prep-stage-id="${esc(r.id)}" data-prep-stage="${stage}"><span>${state.prepChecks[prepStageKey(r.id,stage)]?'✓':'○'}</span>${stageLabels[stage]}</button>`).join('')}
+    </div>
+    <div class="prep-meal-title"><span>Meal containers</span><small>Tap each one as it is filled and ready</small></div>
+    <div class="prep-meal-grid count-${count}">${meals}</div>
+    <button class="prep-all-btn ${done===count?'complete':''}" data-prep-all-id="${esc(r.id)}" data-prep-all-count="${count}">${done===count?'Reset this batch':'Mark all '+count+' ready'}</button>
+  </article>`;
+}
+
+function renderPrep(){
+  const entries=selectedEntries();
+  const total=plannedMeals();
+  const done=totalPrepDone();
+  const pct=total===14?Math.round(done/14*100):0;
+  if(total!==14){
+    return `<section class="page-intro">
+      <div class="eyebrow">Weekly prep board</div>
+      <h1>Finish the plan, then <span class="accent">cook it.</span></h1>
+      <p>The Prep page unlocks when your week reaches 14 meals — either one 14-meal recipe or two different 7-meal recipes.</p>
+    </section>
+    <section class="prep-lock-card">
+      <div class="prep-lock-number">${total}/14</div>
+      <h3>${total===7?'Halfway there.':'Choose your meals first.'}</h3>
+      <p>${total===7?'Pick one more 7-meal recipe, or change your current recipe to 14.':'Your prep checklist will appear here once the weekly plan is complete.'}</p>
+      <div class="progress prep-progress"><span style="width:${Math.min(100,total/14*100)}%"></span></div>
+      <button class="btn primary full" data-go="recipes">${total===7?'Choose the other 7':'Build this week'}</button>
+    </section>`;
+  }
+
+  return `<section class="page-intro prep-intro">
+      <div class="eyebrow">Weekly prep board</div>
+      <h1>Cook it. Portion it. <span class="accent">Done.</span></h1>
+      <p>Check off each container as you fill it. When all 14 are ready, PrepFuel is ready to roll into the next week.</p>
+    </section>
+    <section class="prep-overview">
+      <div class="prep-overview-copy"><span>WEEK READY</span><strong>${done}/14</strong><small>${done===14?'All meals prepared':'Keep going — '+(14-done)+' left'}</small></div>
+      <div class="prep-overview-bar"><div style="width:${pct}%"></div></div>
+      <span class="prep-overview-pct">${pct}%</span>
+    </section>
+    <section class="prep-batches">${entries.map((entry,index)=>prepBatchCard(entry,index)).join('')}</section>
+    ${done===14?`<section class="week-complete-card">
+      <div class="week-complete-icon">✓</div>
+      <div><span>WEEK COMPLETE</span><h3>All 14 meals are cooked and ready.</h3><p>When you are ready, clear this week and choose the next recipe lineup.</p></div>
+      <button class="btn primary" data-next-week="1">Start next week</button>
+    </section>`:''}`;
+}
+
 function renderBudget(){
   const target=mealTarget();
   const weekly=weeklyBudget();
@@ -360,6 +470,7 @@ function render(){
   nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.tab===state.tab && !state.detailId));
   if(state.detailId){ const r=state.recipes.find(x=>x.id===state.detailId); app.innerHTML=r?renderRecipeDetail(r):renderRecipes(); }
   else if(state.tab==='recipes') app.innerHTML=renderRecipes();
+  else if(state.tab==='prep') app.innerHTML=renderPrep();
   else if(state.tab==='grocery') app.innerHTML=renderGrocery();
   else if(state.tab==='budget') app.innerHTML=renderBudget();
   else if(state.tab==='settings') app.innerHTML=renderSettings();
@@ -373,6 +484,10 @@ function bindDynamic(){
   app.querySelectorAll('[data-plan-id]').forEach(el=>el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setMealPlan(el.dataset.planId,Number(el.dataset.planCount));}));
   app.querySelectorAll('[data-clear-plan]').forEach(el=>el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();clearMealPlan(el.dataset.clearPlan);}));
   app.querySelectorAll('[data-check]').forEach(el=>el.addEventListener('change',()=>{state.checked[el.dataset.check]=el.checked;localStorage.setItem('pf_checked',JSON.stringify(state.checked));render();}));
+  app.querySelectorAll('[data-prep-meal-id]').forEach(el=>el.addEventListener('click',()=>togglePrepMeal(el.dataset.prepMealId,Number(el.dataset.prepMealIndex))));
+  app.querySelectorAll('[data-prep-stage-id]').forEach(el=>el.addEventListener('click',()=>togglePrepStage(el.dataset.prepStageId,el.dataset.prepStage)));
+  app.querySelectorAll('[data-prep-all-id]').forEach(el=>el.addEventListener('click',()=>markPrepBatch(el.dataset.prepAllId,Number(el.dataset.prepAllCount))));
+  app.querySelectorAll('[data-next-week]').forEach(el=>el.addEventListener('click',()=>startNextWeek()));
   const save=document.getElementById('saveSettings');
   if(save) save.addEventListener('click',()=>{
     state.settings.schoolYearBudget=Number(document.getElementById('sBudget').value)||DEFAULTS.schoolYearBudget;
