@@ -243,3 +243,34 @@ for all using (exists (
 )) with check (exists (
   select 1 from public.weekly_plans p where p.id = plan_id and p.user_id = auth.uid()
 ));
+
+
+-- Fuelr live hardening additions
+-- These statements mirror production migrations applied after the initial schema.
+
+alter table public.weekly_plan_recipes alter column recipe_id drop not null;
+alter table public.weekly_plan_recipes add column if not exists recipe_key text;
+alter table public.weekly_plan_recipes add column if not exists recipe_name text;
+alter table public.grocery_items add column if not exists recipe_key text;
+alter table public.grocery_items add column if not exists item_key text;
+alter table public.prep_checks add column if not exists recipe_key text;
+alter table public.recipes add column if not exists client_source_id text;
+alter table public.profiles add column if not exists dietary_preferences text[] not null default '{}';
+alter table public.profiles add column if not exists allergies text[] not null default '{}';
+alter table public.profiles add column if not exists goal text not null default 'balanced';
+
+create unique index if not exists uq_recipes_owner_client_source
+on public.recipes(owner_id, client_source_id)
+where client_source_id is not null;
+
+create index if not exists idx_profiles_school_id on public.profiles(school_id);
+create index if not exists idx_recipes_owner_id on public.recipes(owner_id);
+create index if not exists idx_recipe_ingredients_recipe_id on public.recipe_ingredients(recipe_id);
+create index if not exists idx_weekly_plans_user_start on public.weekly_plans(user_id, week_start);
+create index if not exists idx_weekly_plan_recipes_plan_id on public.weekly_plan_recipes(plan_id);
+create index if not exists idx_weekly_plan_recipes_recipe_id on public.weekly_plan_recipes(recipe_id);
+create index if not exists idx_grocery_items_plan_id on public.grocery_items(plan_id);
+create index if not exists idx_grocery_items_recipe_id on public.grocery_items(recipe_id);
+create index if not exists idx_prep_checks_plan_id on public.prep_checks(plan_id);
+create index if not exists idx_prep_checks_recipe_id on public.prep_checks(recipe_id);
+create index if not exists idx_grocery_items_item_key on public.grocery_items(plan_id, item_key);
