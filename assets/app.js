@@ -51,7 +51,8 @@ const state = {
   onboardingStep: 0,
   addRecipeMode: false,
   lastSync: localStorage.getItem('pf_last_sync') || '',
-  detailId: ''
+  detailId: '',
+  cloud: { ready:false, session:null, user:null, mode:'signin', error:'', message:'' }
 };
 
 const app = document.getElementById('app');
@@ -87,6 +88,7 @@ function chooseSchool(id){
   state.profile.schoolId=id;
   saveProfile();
   applySchoolTheme();
+  if(state.onboardingComplete) persistProfileToCloud();
   render();
 }
 function setWeekView(view){
@@ -101,6 +103,203 @@ function setWeekView(view){
 function beginSchoolChange(){
   state.onboardingComplete=false;
   state.onboardingStep=1;
+  render();
+}
+
+const cloudEnabled = () => Boolean(window.FuelrCloud?.configured);
+const cloudSignedIn = () => Boolean(state.cloud.session?.user);
+
+function mapCloudRecipe(row){
+  const ing=(row.recipe_ingredients||[]).slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const ingredients=ing.map(i=>({
+    item:i.item,
+    quantity:i.optimized_quantity ?? i.source_quantity ?? '',
+    unit:i.optimized_unit || i.source_unit || '',
+    usedCost:i.used_cost,
+    category:i.category || 'My recipe',
+    note:i.note || ''
+  }));
+  const sourceIngredients=ing.map(i=>({
+    item:i.item,
+    quantity:i.source_quantity ?? i.optimized_quantity ?? '',
+    unit:i.source_unit || i.optimized_unit || '',
+    category:i.category || 'My recipe',
+    note:i.note || ''
+  }));
+  return {
+    id:row.id,
+    name:row.name,
+    sourceName:row.source_name || 'My recipe',
+    photo:row.photo_url || 'assets/meal-placeholder.svg',
+    servings:Number(row.optimized_servings||14),
+    portion:'Fuelr cloud recipe',
+    costPerMeal:row.optimized_cost_per_meal != null ? Number(row.optimized_cost_per_meal) : mealTarget(),
+    priceStatus:row.source_batch_cost != null ? 'based on your source cost' : 'price estimate needed',
+    macros:{
+      calories:row.calories != null ? Number(row.calories) : null,
+      protein:row.protein_g != null ? Number(row.protein_g) : null,
+      carbs:row.carbs_g != null ? Number(row.carbs_g) : null,
+      fat:row.fat_g != null ? Number(row.fat_g) : null
+    },
+    userOwned:true,
+    optimizationNote:row.optimization_note || 'Saved to your Fuelr account.',
+    original:{
+      servings:Number(row.source_servings||1),
+      portion:'source serving',
+      sourceIngredients,
+      ingredients:sourceIngredients.map(i=>`${i.quantity} ${i.unit} ${i.item}`)
+    },
+    ingredients,
+    shopping:ingredients.map(i=>({
+      item:i.item,
+      category:i.category||'My recipe',
+      buyQuantity:i.quantity,
+      unit:i.unit,
+      preferredStore:state.settings.preferredStore,
+      altStore:state.settings.altStore,
+      priceStatus:'price needed'
+    })),
+    instructions:Array.isArray(row.instructions)?row.instructions:[],
+    cloudOwned:true
+  };
+}
+
+async function loadCloudUserData(){
+  if(!cloudSignedIn()) return;
+  try{
+    const profile=await window.FuelrCloud.getProfile();
+    if(profile){
+      state.profile.schoolId=profile.school_id || 'fuelr';
+      state.profile.prepStyle=profile.prep_style || 'split';
+      state.profile.portionMode=profile.portion_mode || 'athlete';
+      state.settings.schoolYearBudget=Number(profile.school_year_budget)||DEFAULTS.schoolYearBudget;
+      state.settings.academicWeeks=Number(profile.academic_weeks)||DEFAULTS.academicWeeks;
+      state.settings.mealsPerWeek=14;
+      state.settings.preferredStore=profile.preferred_store||'Aldi';
+      state.settings.altStore=profile.alt_store||'Walmart';
+      state.onboardingComplete=Boolean(profile.onboarding_complete);
+      saveProfile(); saveSettings();
+      localStorage.setItem('fuelr_onboarding_done',state.onboardingComplete?'1':'0');
+      applySchoolTheme();
+    }else{
+      state.onboardingComplete=false;
+      state.onboardingStep=0;
+    }
+    const rows=await window.FuelrCloud.listRecipes();
+    state.userRecipes=(rows||[]).map(mapCloudRecipe);
+    state.recipes=[...state.catalogRecipes,...state.userRecipes];
+  }catch(err){
+    console.warn('Fuelr cloud load:',err);
+    state.cloud.error='Could not load your cloud data.';
+  }
+}
+
+async function persistProfileToCloud(){
+  if(!cloudSignedIn()) return;
+  try{
+    await window.FuelrCloud.saveProfile({
+      schoolId:state.profile.schoolId || 'fuelr',
+      schoolYearBudget:state.settings.schoolYearBudget,
+      academicWeeks:state.settings.academicWeeks,
+      preferredStore:state.settings.preferredStore,
+      altStore:state.settings.altStore,
+      prepStyle:state.profile.prepStyle,
+      portionMode:state.profile.portionMode,
+      onboardingComplete:state.onboardingComplete
+    });
+  }catch(err){
+    console.warn('Fuelr cloud profile save:',err);
+    showToast('Saved on device — cloud sync needs attention');
+  }
+}
+
+async function initCloud(){
+  if(!cloudEnabled()){
+    state.cloud.ready=true;
+    render();
+    return;
+  }
+  try{
+    const result=await window.FuelrCloud.init();
+    state.cloud.ready=true;
+    state.cloud.session=result.session||null;
+    state.cloud.user=result.user||null;
+    if(state.cloud.session) await loadCloudUserData();
+  }catch(err){
+    state.cloud.ready=true;
+    state.cloud.error='Cloud connection failed. Refresh and try again.';
+  }
+  if(!window.__fuelrAuthListener){
+    window.__fuelrAuthListener=true;
+    window.addEventListener('fuelr-auth-change',async e=>{
+      state.cloud.session=e.detail?.session||null;
+      state.cloud.user=e.detail?.user||null;
+      state.cloud.error='';
+      state.cloud.message='';
+      if(state.cloud.session) await loadCloudUserData();
+      render();
+    });
+  }
+  render();
+}
+
+function renderAuthGate(){
+  const signup=state.cloud.mode==='signup';
+  return `<div class="auth-shell">
+    <div class="auth-mark">FR</div>
+    <div class="eyebrow">Fuelr account</div>
+    <h1>${signup?'Create your':'Welcome'} <span class="accent">Fuelr.</span></h1>
+    <p>${signup?'Your recipes, school theme, weekly plan and prep progress will follow you across devices.':'Sign in to your personal food system.'}</p>
+    <div class="auth-card">
+      <div class="auth-switch">
+        <button class="${!signup?'active':''}" data-auth-mode="signin">Sign in</button>
+        <button class="${signup?'active':''}" data-auth-mode="signup">Create account</button>
+      </div>
+      <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+      <div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="${signup?'new-password':'current-password'}" placeholder="At least 6 characters"></div>
+      ${state.cloud.error?`<div class="auth-message error">${esc(state.cloud.error)}</div>`:''}
+      ${state.cloud.message?`<div class="auth-message">${esc(state.cloud.message)}</div>`:''}
+      <button class="btn primary full auth-submit" id="authSubmit">${signup?'Create my Fuelr':'Sign in'}</button>
+      <small class="auth-footnote">Fuelr uses secure account authentication. Your private recipes remain tied to your account.</small>
+    </div>
+  </div>`;
+}
+
+async function submitAuth(){
+  const email=document.getElementById('authEmail')?.value.trim();
+  const password=document.getElementById('authPassword')?.value||'';
+  if(!email || password.length<6){
+    state.cloud.error='Enter a valid email and a password with at least 6 characters.';
+    render(); return;
+  }
+  state.cloud.error=''; state.cloud.message='';
+  try{
+    const result=state.cloud.mode==='signup'
+      ? await window.FuelrCloud.signUp(email,password)
+      : await window.FuelrCloud.signIn(email,password);
+    if(result?.error) throw result.error;
+    const session=result?.data?.session||null;
+    if(session){
+      state.cloud.session=session;
+      state.cloud.user=session.user;
+      await loadCloudUserData();
+      render();
+    }else if(state.cloud.mode==='signup'){
+      state.cloud.message='Account created. Check your email if confirmation is required, then sign in.';
+      state.cloud.mode='signin';
+      render();
+    }
+  }catch(err){
+    state.cloud.error=err?.message||'Could not sign in.';
+    render();
+  }
+}
+
+async function signOutCloud(){
+  try{ await window.FuelrCloud.signOut(); }
+  catch(err){ state.cloud.error=err?.message||'Could not sign out.'; }
+  state.cloud.session=null;
+  state.cloud.user=null;
   render();
 }
 
@@ -388,7 +587,7 @@ function parseUserIngredients(text){
   }).filter(Boolean);
 }
 
-function saveNewUserRecipe(){
+async function saveNewUserRecipe(){
   const name=document.getElementById('urName')?.value.trim();
   const sourceServings=Number(document.getElementById('urServings')?.value);
   const batchCost=Number(document.getElementById('urBatchCost')?.value);
@@ -421,22 +620,37 @@ function saveNewUserRecipe(){
     macrosStatus:'Fuelr estimate from your source serving',
     userOwned:true,
     optimizationNote:`Your source makes ${sourceServings} servings. Fuelr first normalizes every ingredient to the selected 7- or 14-meal batch, then applies a ${budgetMultiplier.toFixed(2)}× budget multiplier toward your current meal cap.`,
+    sourceBatchCost:batchCost>0?batchCost:null,
     original:{
       servings:sourceServings,
       portion:'source serving',
       macros:sourceMacros,
+      sourceIngredients,
       ingredients:sourceIngredients.map(i=>`${i.quantity} ${i.unit} ${i.item}`)
     },
     ingredients,
     shopping:ingredients.map(i=>({item:i.item,category:'My recipe',buyQuantity:i.quantity,unit:i.unit,preferredStore:state.settings.preferredStore,altStore:state.settings.altStore,priceStatus:'price needed'})),
     instructions:directions
   };
+  if(cloudSignedIn()){
+    try{
+      const saved=await window.FuelrCloud.createRecipe(recipe);
+      recipe.id=saved.id;
+      recipe.cloudOwned=true;
+    }catch(err){
+      state.cloud.error=err?.message||'Could not save recipe to your account.';
+      showToast('Recipe was not saved — try again');
+      return;
+    }
+  }else{
+    saveUserRecipes();
+  }
   state.userRecipes.push(recipe);
-  saveUserRecipes();
+  if(!cloudSignedIn()) saveUserRecipes();
   state.recipes=[...state.catalogRecipes,...state.userRecipes];
   state.addRecipeMode=false;
-  state.detailId=id;
-  showToast('Recipe added to your Fuelr');
+  state.detailId=recipe.id;
+  showToast(cloudSignedIn()?'Recipe saved to your account':'Recipe saved on this device');
   render();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -491,7 +705,7 @@ function renderYou(){
       <div class="derived-cap"><span>Calculated meal cap</span><strong>${money(mealTarget())}</strong><small>${money(state.settings.schoolYearBudget)} ÷ ${state.settings.academicWeeks} weeks ÷ 14 meals</small></div>
       <button id="saveSettings" class="btn primary full save-settings">Save my Fuelr</button>
     </section>
-    <section class="cloud-ready-card"><div class="cloud-dot"></div><div><span>ACCOUNT + CLOUD</span><strong>Cloud foundation is next.</strong><p>Your current setup is stored on this device. The Supabase connection will move profiles, recipes, weeks and prep history into user accounts.</p></div></section>`;
+    ${cloudEnabled() && cloudSignedIn()?`<section class="cloud-ready-card cloud-live"><div class="cloud-dot"></div><div><span>ACCOUNT + CLOUD</span><strong>${esc(state.cloud.user?.email||'Signed in')}</strong><p>Your profile and personal recipes are connected to your Fuelr account.</p></div><button class="mini-action" data-sign-out="1">Sign out</button></section>`:`<section class="cloud-ready-card"><div class="cloud-dot"></div><div><span>ACCOUNT + CLOUD</span><strong>${cloudEnabled()?'Sign in to sync':'Cloud setup pending'}</strong><p>${cloudEnabled()?'Your account keeps Fuelr available across devices.':'Fuelr is currently using on-device storage until the cloud project is activated.'}</p></div></section>`}`;
 }
 
 function renderOnboarding(){
@@ -711,6 +925,19 @@ function renderSettings(){
 
 function render(){
   const topbar=document.querySelector('.topbar');
+  if(cloudEnabled() && !state.cloud.ready){
+    nav.classList.add('hidden');
+    topbar?.classList.add('onboarding-mode');
+    app.innerHTML='<div class="cloud-loading"><div class="auth-mark">FR</div><strong>Connecting Fuelr…</strong></div>';
+    return;
+  }
+  if(cloudEnabled() && !cloudSignedIn()){
+    nav.classList.add('hidden');
+    topbar?.classList.add('onboarding-mode');
+    app.innerHTML=renderAuthGate();
+    bindDynamic();
+    return;
+  }
   const onboarding=!state.onboardingComplete;
   nav.classList.toggle('hidden',onboarding);
   topbar?.classList.toggle('onboarding-mode',onboarding);
@@ -729,6 +956,9 @@ function render(){
 }
 
 function bindDynamic(){
+  app.querySelectorAll('[data-auth-mode]').forEach(el=>el.addEventListener('click',()=>{state.cloud.mode=el.dataset.authMode;state.cloud.error='';state.cloud.message='';render();}));
+  document.getElementById('authSubmit')?.addEventListener('click',submitAuth);
+  app.querySelectorAll('[data-sign-out]').forEach(el=>el.addEventListener('click',signOutCloud));
   app.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>setTab(el.dataset.go)));
   app.querySelectorAll('[data-recipe]').forEach(el=>el.addEventListener('click',e=>{ if(e.target.closest('[data-plan-id],[data-clear-plan]')) return; state.detailId=el.dataset.recipe;render();window.scrollTo({top:0,behavior:'smooth'});}));
   app.querySelectorAll('[data-plan-id]').forEach(el=>el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setMealPlan(el.dataset.planId,Number(el.dataset.planCount));}));
@@ -765,6 +995,7 @@ function bindDynamic(){
     state.onboardingComplete=true;
     localStorage.setItem('fuelr_onboarding_done','1');
     saveProfile(); saveSettings(); applySchoolTheme();
+    persistProfileToCloud();
     state.tab='home'; localStorage.setItem('pf_tab','home');
     showToast('Fuelr is ready');
     render(); window.scrollTo({top:0,behavior:'smooth'});
@@ -777,7 +1008,7 @@ function bindDynamic(){
     state.settings.mealsPerWeek=14;
     state.settings.preferredStore=document.getElementById('sStore').value||'Aldi';
     state.settings.altStore=document.getElementById('sAlt').value||'Walmart';
-    saveSettings();showToast('Your Fuelr was updated');render();
+    saveSettings();persistProfileToCloud();showToast('Your Fuelr was updated');render();
   });
 }
 
@@ -786,4 +1017,7 @@ document.querySelectorAll('.brand-button').forEach(b=>b.addEventListener('click'
 syncBtn.addEventListener('click',()=>syncRecipes(false));
 applySchoolTheme();
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-syncRecipes(true);
+(async()=>{
+  await syncRecipes(true);
+  await initCloud();
+})();
