@@ -579,12 +579,11 @@ function reconcileSchedule(autoFill=true){
       let need=count-calendarAssignedCount(recipe.id);
       if(need<=0) return;
       const slots=[];
-      for(let day=0;day<7;day++){
-        if(recipeMealType(recipe)==='breakfast') slots.push(calendarSlotKey(day,'breakfast'));
-        else {
-          slots.push(calendarSlotKey(day,'lunch'));
-          slots.push(calendarSlotKey(day,'dinner'));
-        }
+      if(recipeMealType(recipe)==='breakfast'){
+        for(let day=0;day<7;day++) slots.push(calendarSlotKey(day,'breakfast'));
+      }else{
+        for(let day=0;day<7;day++) slots.push(calendarSlotKey(day,'lunch'));
+        for(let day=0;day<7;day++) slots.push(calendarSlotKey(day,'dinner'));
       }
       for(const key of slots){
         if(need<=0) break;
@@ -1513,6 +1512,7 @@ function renderSettings(){
 }
 
 function render(){
+  ensureLocalWeekRollover();
   const topbar=document.querySelector('.topbar');
   if(cloudEnabled() && !state.cloud.ready){
     nav.classList.add('hidden');
