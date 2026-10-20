@@ -1,0 +1,310 @@
+{
+  "version": 1,
+  "category": "dinner",
+  "recipes": [
+    [
+      "cajun-chicken-rice-green-beans",
+      "Cajun Chicken Rice & Green Beans",
+      "plate",
+      "Cajun chicken, rice and green beans",
+      [
+        720,
+        60,
+        88,
+        14
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Green beans",
+          10.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Olive oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Cajun seasoning",
+          14,
+          "tbsp",
+          "Seasoning"
+        ]
+      ]
+    ],
+    [
+      "turkey-chili-rice-bowls",
+      "Turkey Chili Rice Bowls",
+      "stew",
+      "Turkey chili over rice",
+      [
+        760,
+        57,
+        99,
+        15
+      ],
+      [
+        [
+          "93% lean ground turkey",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry rice",
+          5.25,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Kidney beans",
+          10.5,
+          "cups",
+          "Protein"
+        ],
+        [
+          "Black beans",
+          7,
+          "cups",
+          "Protein"
+        ],
+        [
+          "Crushed tomatoes",
+          84,
+          "oz",
+          "Produce"
+        ],
+        [
+          "Bell peppers",
+          14,
+          "whole",
+          "Produce"
+        ],
+        [
+          "Onions",
+          7,
+          "large",
+          "Produce"
+        ],
+        [
+          "Chili seasoning",
+          14,
+          "tbsp",
+          "Seasoning"
+        ]
+      ]
+    ],
+    [
+      "beef-bulgogi-rice-bowl",
+      "Beef Bulgogi Rice Bowl",
+      "rice",
+      "Lean bulgogi-style beef, jasmine rice, broccoli and carrots",
+      [
+        780,
+        58,
+        92,
+        20
+      ],
+      [
+        [
+          "Lean sirloin strips",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry jasmine rice",
+          7,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Broccoli florets",
+          7,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Carrots",
+          3.5,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Green onions",
+          7,
+          "bunches",
+          "Produce"
+        ],
+        [
+          "Low-sodium soy sauce",
+          28,
+          "tbsp",
+          "Sauces"
+        ],
+        [
+          "Honey or brown sugar",
+          14,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Sesame oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ],
+        [
+          "Garlic",
+          28,
+          "cloves",
+          "Produce"
+        ],
+        [
+          "Fresh ginger",
+          14,
+          "tbsp",
+          "Produce"
+        ],
+        [
+          "Sesame seeds",
+          14,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "garlic-parmesan-chicken-orzo-spinach",
+      "Garlic Parmesan Chicken Orzo & Spinach",
+      "pasta",
+      "Chicken, orzo, spinach and parmesan",
+      [
+        760,
+        61,
+        82,
+        20
+      ],
+      [
+        [
+          "Boneless skinless chicken breast",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Dry orzo",
+          7,
+          "lb",
+          "Grains"
+        ],
+        [
+          "Spinach",
+          42,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Parmesan cheese",
+          28,
+          "oz",
+          "Dairy"
+        ],
+        [
+          "Chicken broth",
+          14,
+          "cups",
+          "Pantry"
+        ],
+        [
+          "Garlic",
+          28,
+          "cloves",
+          "Produce"
+        ],
+        [
+          "Olive oil",
+          14,
+          "tbsp",
+          "Pantry"
+        ]
+      ]
+    ],
+    [
+      "lean-beef-meatballs-mashed-potatoes-peas",
+      "Lean Beef Meatballs Mashed Potatoes & Peas",
+      "plate",
+      "Beef meatballs, mashed potatoes and peas",
+      [
+        790,
+        55,
+        80,
+        25
+      ],
+      [
+        [
+          "93% lean ground beef",
+          6.125,
+          "lb",
+          "Protein"
+        ],
+        [
+          "Gold potatoes",
+          12.25,
+          "lb",
+          "Produce"
+        ],
+        [
+          "Frozen peas",
+          10.5,
+          "cups",
+          "Produce"
+        ],
+        [
+          "Eggs",
+          14,
+          "large",
+          "Protein"
+        ],
+        [
+          "Breadcrumbs",
+          3.5,
+          "cups",
+          "Grains"
+        ],
+        [
+          "Milk",
+          7,
+          "cups",
+          "Dairy"
+        ],
+        [
+          "Parmesan cheese",
+          14,
+          "oz",
+          "Dairy"
+        ]
+      ]
+    ]
+  ]
+}
