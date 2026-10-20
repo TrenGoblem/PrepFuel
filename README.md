@@ -77,3 +77,23 @@ The Calendar is an addition to the detailed workflow, not a replacement for Prep
 ## Native app
 
 This repository is configured for Capacitor so the same Fuelr product can become an iOS and Android app while continuing to use Supabase for accounts and personalized data. See `NATIVE_APP.md`.
+
+
+## Campus themes and appearance
+
+Fuelr now includes an optional college-theme selector during onboarding and in Settings. The initial expanded catalog contains about 50 schools, beginning with the SEC, Big Ten, major Florida universities, and other widely followed programs.
+
+- Standard Fuelr theme remains available.
+- Light mode is the default.
+- Dark mode can be enabled in Settings without changing the layout.
+- Fuelr uses school names, abbreviations, and color themes; official university/athletics logos are not bundled without licensing approval.
+
+## Fast recipe entry
+
+Users can add recipes in three ways:
+
+1. Import a recipe URL. Fuelr uses an authenticated Supabase Edge Function to read standard Recipe structured data and fill the editor.
+2. Paste recipe text. Fuelr detects common serving, ingredient, macro, and direction patterns.
+3. Enter the recipe manually.
+
+Imported recipes are always shown in the same detailed editor before saving so the user can review servings, ingredients, directions, meal type, cost, macros, and photo.
