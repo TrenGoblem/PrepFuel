@@ -40,7 +40,7 @@ window.FUELR_SCHOOLS = [
   {id:'ucf',group:'Florida + Popular',name:'University of Central Florida',abbr:'UCF',primary:'#EDB80D',secondary:'#000000',accent:'#000000',onPrimary:'#111111'},
   {id:'usf',group:'Florida + Popular',name:'University of South Florida',abbr:'USF',primary:'#006747',secondary:'#CFC493',accent:'#CFC493',onPrimary:'#FFFFFF'},
   {id:'fau',group:'Florida + Popular',name:'Florida Atlantic University',abbr:'FAU',primary:'#003366',secondary:'#CC0000',accent:'#CC0000',onPrimary:'#FFFFFF'},
-  {id:'fiu',group:'Florida + Popular',name:'Florida International University',abbr:'FIU',primary:'#081E3F',secondary:'#B6862C',accent:'#B6862C',onPrimary:'#FFFFFF'},
+  {id:'fiu',group:'Florida + Popular',name:'Florida International University',abbr:'FIU',primary:'#081E3F',secondary:'#D1A644',accent:'#D1A644',onPrimary:'#FFFFFF'},
   {id:'fsu',group:'Florida + Popular',name:'Florida State University',abbr:'FSU',primary:'#782F40',secondary:'#CEB888',accent:'#CEB888',onPrimary:'#FFFFFF'},
   {id:'miami',group:'Florida + Popular',name:'University of Miami',abbr:'UM',primary:'#F47321',secondary:'#005030',accent:'#005030',onPrimary:'#111111'},
   {id:'clemson',group:'Florida + Popular',name:'Clemson University',abbr:'CLEM',primary:'#F56600',secondary:'#522D80',accent:'#522D80',onPrimary:'#111111'},
