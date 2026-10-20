@@ -928,34 +928,14 @@ function hydrateStarterRecipe(row,category){
 async function syncRecipes(silent=false){
   syncBtn.classList.add('syncing');
   try{
-    const baseRequest=fetch('data/recipes.json?v=' + Date.now(), {cache:'no-store'});
-    const starterRequests=STARTER_COOKBOOK_FILES.map(path=>fetch(path+'?v='+Date.now(),{cache:'no-store'}));
-    const [baseRes,...starterRes]=await Promise.all([baseRequest,...starterRequests]);
-    if(!baseRes.ok) throw new Error('Recipe catalog unavailable');
-    const base=await baseRes.json();
-
-    const starter=[];
-    for(let i=0;i<starterRes.length;i++){
-      const res=starterRes[i];
-      if(!res.ok) throw new Error('Starter cookbook unavailable');
-      const payload=await res.json();
-      const category=payload.category==='mixed'?'breakfast':payload.category;
-      (payload.recipes||[]).forEach(row=>{
-        // starter-breakfast.json contains the 20 breakfast recipes; chunk files supply lunch/dinner.
-        starter.push(hydrateStarterRecipe(row,category));
-      });
-    }
-
-    const seen=new Set();
-    const starterUnique=starter.filter(r=>r?.id && !seen.has(r.id) && seen.add(r.id));
-    const featured=(Array.isArray(base.recipes)?base.recipes:[]).map(r=>({
+    const res=await fetch('data/recipes.json?v='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('Recipe catalog unavailable');
+    const data=await res.json();
+    state.catalogRecipes=(Array.isArray(data.recipes)?data.recipes:[]).map(r=>({
       ...r,
-      catalogCategory:r.catalogCategory||'featured',
-      photo:r.id==='hot-honey-steak-hash-brown-burritos'?'images/featured-steak-burrito.svg':
-        r.id==='buffalo-chicken-subs'?'images/featured-buffalo-subs.svg':
-        (r.photo||'assets/meal-placeholder.svg')
+      catalogCategory:r.catalogCategory || (r.sourceName==='Fuelr Original' ? (r.mealType==='breakfast'?'breakfast':'lunch') : 'featured'),
+      photo:r.photo || 'assets/meal-placeholder.svg'
     }));
-    state.catalogRecipes=[...starterUnique,...featured];
     state.recipes=[...state.catalogRecipes,...state.userRecipes];
     state.lastSync=new Date().toISOString();
     localStorage.setItem('pf_last_sync',state.lastSync);
