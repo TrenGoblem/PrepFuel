@@ -1,7 +1,7 @@
 const STORAGE_KEY='flipledger_v2';
-const DEFAULT_STATE={projects:[],transactions:[],settings:{businessName:'FlipLedger',openingProfit:0,demoOnEmpty:true}};
+const DEFAULT_STATE={projects:[],transactions:[],settings:{businessName:'FlipLedger',openingProfit:0}};
 let state=loadState();
-let currentType='purchase';
+let currentType=null;
 let inventoryStatus='active';
 
 function uid(prefix='id'){return prefix+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -50,30 +50,21 @@ function businessStats(){
   const freeProfit=Number(state.settings.openingProfit||0)+realized-tied;
   return {realized,tied,sales,avgRoi,monthProfit,freeProfit,soldCount:sold.length,activeCount:active.length}
 }
-function seedDemo(){
-  if(state.projects.length||state.transactions.length)return;
-  const f={id:uid('p'),name:'1995 Ford F-150',category:'Truck',year:'1995',make:'Ford',model:'F-150',engine:'4.9L I6',status:'sold',purchaseDate:'2026-08-02',source:'Private seller',notes:'Demo flip'};
-  const m={id:uid('p'),name:'2000 Suzuki Intruder 1400',category:'Motorcycle',year:'2000',make:'Suzuki',model:'Intruder 1400',engine:'1400cc',status:'sold',purchaseDate:'2026-09-06',source:'Marketplace',notes:'Demo flip'};
-  const a={id:uid('p'),name:'Kawasaki Bayou 350',category:'ATV',year:'',make:'Kawasaki',model:'Bayou 350',engine:'350cc',status:'repairing',purchaseDate:'2026-10-18',source:'Marketplace',notes:'Demo active inventory'};
-  state.projects.push(f,m,a);
-  state.transactions.push(
-    {id:uid('t'),projectId:f.id,type:'purchase',category:'Vehicle purchase',date:'2026-08-02',amount:1200,details:'Bought truck',vendor:'Private seller'},
-    {id:uid('t'),projectId:f.id,type:'expense',category:'Parts & repairs',date:'2026-08-20',amount:1000,details:'Parts, fluids, repair supplies',vendor:'Various'},
-    {id:uid('t'),projectId:f.id,type:'sale',category:'Vehicle sale',date:'2026-09-15',amount:6500,details:'Sold truck',vendor:'Buyer'},
-    {id:uid('t'),projectId:m.id,type:'purchase',category:'Vehicle purchase',date:'2026-09-06',amount:900,details:'Bought bike',vendor:'Marketplace'},
-    {id:uid('t'),projectId:m.id,type:'expense',category:'Parts & repairs',date:'2026-09-10',amount:260,details:'Plugs, carb supplies, fluids',vendor:'Various'},
-    {id:uid('t'),projectId:m.id,type:'sale',category:'Vehicle sale',date:'2026-10-02',amount:2100,details:'Sold motorcycle',vendor:'Buyer'},
-    {id:uid('t'),projectId:a.id,type:'purchase',category:'Vehicle purchase',date:'2026-10-18',amount:700,details:'Bought ATV',vendor:'Marketplace'},
-    {id:uid('t'),projectId:a.id,type:'expense',category:'Parts & repairs',date:'2026-10-22',amount:180,details:'Battery and service parts',vendor:'Parts store'}
-  );
-  save()
+function clearLegacyDemoOnce(){
+  const key='flipledger_demo_cleanup_v1';
+  if(localStorage.getItem(key))return;
+  const demoNames=['1995 Ford F-150','2000 Suzuki Intruder 1400','Kawasaki Bayou 350'];
+  const exactDemo=state.projects.length===3&&state.transactions.length===8&&state.projects.every(p=>demoNames.includes(p.name))&&state.projects.every(p=>p.notes==='Demo flip'||p.notes==='Demo active inventory');
+  if(exactDemo){state.projects=[];state.transactions=[];state.settings.openingProfit=0;save()}
+  delete state.settings.demoOnEmpty;
+  localStorage.setItem(key,'1');
 }
-if(state.settings.demoOnEmpty && !state.projects.length && !state.transactions.length) seedDemo();
+clearLegacyDemoOnce();
 
 function setView(view){
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.dataset.view===view));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.nav===view));
-  if(view==='add')renderTransactionForm(currentType);
+  if(view==='add')renderAdd();
   if(view==='ledger')renderLedger();
   if(view==='inventory')renderInventory();
   if(view==='analytics')renderAnalytics();
@@ -83,9 +74,12 @@ function setView(view){
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1800)}
 document.addEventListener('click',e=>{
   const nav=e.target.closest('[data-nav]');
-  if(nav){if(nav.dataset.addType){currentType=nav.dataset.addType}setView(nav.dataset.nav)}
-  const seg=e.target.closest('#transactionType .seg');
-  if(seg){currentType=seg.dataset.type;document.querySelectorAll('#transactionType .seg').forEach(x=>x.classList.toggle('active',x===seg));renderTransactionForm(currentType)}
+  if(nav){
+    if(nav.dataset.nav==='add') currentType=nav.dataset.addType||null;
+    setView(nav.dataset.nav)
+  }
+  const choice=e.target.closest('.add-choice');
+  if(choice){currentType=choice.dataset.type;renderAdd()}
   const inv=e.target.closest('#inventoryFilter .seg');
   if(inv){inventoryStatus=inv.dataset.status;document.querySelectorAll('#inventoryFilter .seg').forEach(x=>x.classList.toggle('active',x===inv));renderInventory()}
   const card=e.target.closest('[data-project-id]');
@@ -97,6 +91,7 @@ document.addEventListener('click',e=>{
   const quick=e.target.closest('[data-quick-action]');
   if(quick){document.getElementById('projectDialog').close();currentType=quick.dataset.quickAction;setView('add');setTimeout(()=>{const sel=document.querySelector('[name=projectId]');if(sel)sel.value=quick.dataset.projectId},0)}
 });
+document.getElementById('addBackBtn').onclick=()=>{currentType=null;renderAdd()};
 document.getElementById('settingsBtn').onclick=()=>{syncSettingsUI();document.getElementById('settingsDialog').showModal()};
 document.getElementById('ledgerSearch').oninput=renderLedger;
 document.getElementById('ledgerTypeFilter').onchange=renderLedger;
@@ -131,12 +126,21 @@ function activityRow(t){
   return '<div class="activity-row"><div class="activity-icon">'+icon+'</div><div><strong>'+esc(p?.name||'Business')+' · '+esc(labelType(t.type))+'</strong><small>'+esc(t.details||t.category||'')+' · '+esc(t.date)+'</small></div><strong class="'+(incoming?'money-in':'money-out')+'">'+(incoming?'+':'−')+money(Math.abs(t.amount))+'</strong></div>'
 }
 function labelType(t){return ({purchase:'Purchase',expense:'Expense',sale:'Sale',adjustment:'Adjustment'})[t]||t}
+function renderAdd(){
+  const chooser=document.getElementById('addChooser');
+  const wrap=document.getElementById('addFormWrap');
+  if(!currentType){
+    chooser.hidden=false;wrap.hidden=true;document.getElementById('transactionForm').innerHTML='';return
+  }
+  chooser.hidden=true;wrap.hidden=false;
+  document.getElementById('addFormTitle').textContent=({purchase:'Buy a vehicle',expense:'Add an expense',sale:'Record a sale',adjustment:'Other money'})[currentType]||'Add';
+  renderTransactionForm(currentType)
+}
 function projectOptions(includeBlank=true){
   const opts=state.projects.filter(p=>!projectStats(p.id).sold).map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');
   return (includeBlank?'<option value="">Choose project…</option>':'')+opts
 }
 function renderTransactionForm(type){
-  document.querySelectorAll('#transactionType .seg').forEach(x=>x.classList.toggle('active',x.dataset.type===type));
   const f=document.getElementById('transactionForm');
   if(type==='purchase'){
     f.innerHTML='<div class="field"><label>Vehicle / project name</label><input name="name" required placeholder="2012 Kawasaki Ninja 250R"></div>'+
@@ -195,7 +199,8 @@ function submitTransaction(e){
       const fees=Number(d.fees||0);if(fees>0)state.transactions.push({id:uid('t'),projectId:d.projectId,type:'expense',category:'Selling fees',date:d.date||today(),amount:fees,vendor:d.vendor||'',details:'Selling fees'});
     }
   }
-  save();renderAll();e.currentTarget.reset();renderTransactionForm(currentType);toast(currentType==='sale'?'Sale recorded — profit updated':'Saved')
+  const savedType=currentType;
+  save();renderAll();e.currentTarget.reset();currentType=null;renderAdd();toast(savedType==='sale'?'Sale recorded — profit updated':'Saved')
 }
 function renderLedger(){
   const q=document.getElementById('ledgerSearch').value.toLowerCase().trim();const ft=document.getElementById('ledgerTypeFilter').value;
@@ -256,13 +261,12 @@ function exportCsv(){
   const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');downloadBlob(csv,'flipledger-ledger.csv','text/csv');toast('CSV exported')
 }
 function downloadBlob(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function syncSettingsUI(){document.getElementById('businessNameInput').value=state.settings.businessName||'FlipLedger';document.getElementById('openingProfitInput').value=state.settings.openingProfit||0;document.getElementById('demoToggle').checked=!!state.settings.demoOnEmpty}
+function syncSettingsUI(){document.getElementById('businessNameInput').value=state.settings.businessName||'FlipLedger';document.getElementById('openingProfitInput').value=state.settings.openingProfit||0}
 document.getElementById('businessNameInput').onchange=e=>{state.settings.businessName=e.target.value||'FlipLedger';save();renderAll()}
 document.getElementById('openingProfitInput').onchange=e=>{state.settings.openingProfit=Number(e.target.value||0);save();renderAll()}
-document.getElementById('demoToggle').onchange=e=>{state.settings.demoOnEmpty=e.target.checked;save()}
 document.getElementById('backupBtn').onclick=()=>downloadBlob(JSON.stringify(state,null,2),'flipledger-backup-'+today()+'.json','application/json');
 document.getElementById('restoreInput').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data.projects||!data.transactions)throw Error();state={...DEFAULT_STATE,...data};save();renderAll();document.getElementById('settingsDialog').close();toast('Backup restored')}catch{alert('That backup file is not valid.')}e.target.value=''}
 document.getElementById('clearDataBtn').onclick=()=>{if(!confirm('Clear every project and ledger entry? This cannot be undone unless you have a backup.'))return;state=structuredClone(DEFAULT_STATE);state.settings.demoOnEmpty=false;save();renderAll();document.getElementById('settingsDialog').close();toast('All data cleared')}
 function renderAll(){renderHome();renderLedger();renderInventory();renderAnalytics()}
-renderTransactionForm(currentType);renderAll();
+renderAdd();renderAll();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
