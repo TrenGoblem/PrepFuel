@@ -48,3 +48,22 @@ input,select,textarea{width:100%;border:1px solid #2c382f;background:#0c110e;col
   .hero-card{align-items:flex-start;flex-direction:column}.hero-value{font-size:37px}.metric-grid{grid-template-columns:1fr 1fr}.inventory-grid{grid-template-columns:1fr}.form-card{grid-template-columns:1fr}.field.full{grid-column:auto}.filters-row,.inventory-toolbar{flex-direction:column}.filters-row select{width:100%}.compact{width:100%}.project-strip{grid-auto-columns:82vw}.detail-metrics{grid-template-columns:1fr 1fr}.topbar{padding-top:calc(15px + env(safe-area-inset-top))}.main-content{padding-inline:12px}
 }
 @media(min-width:761px){.bottom-nav{border-radius:18px 18px 0 0}.main-content{padding-inline:22px}}
+
+/* Clean quick-entry screen */
+.add-hero{padding:18px 4px 14px}
+.add-hero h2,.add-form-head h2{margin:3px 0 0;font-size:27px;letter-spacing:-.045em}
+.add-hero p{margin:7px 0 0;color:var(--muted);font-size:13px;max-width:520px;line-height:1.45}
+.add-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.add-choice{min-height:142px;text-align:left;border:1px solid var(--line);background:linear-gradient(145deg,#151d18,#101511);color:var(--text);border-radius:20px;padding:17px;display:flex;flex-direction:column;align-items:flex-start;gap:5px;transition:.16s transform,.16s border-color}
+.add-choice:active{transform:scale(.985)}
+.add-choice:hover{border-color:#425346}
+.add-choice-icon{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#202b23;color:var(--accent);font-size:22px;font-weight:900;margin-bottom:6px}
+.add-choice strong{font-size:16px;letter-spacing:-.02em}
+.add-choice small{color:var(--muted);font-size:11px;line-height:1.35}
+.add-choice.sell .add-choice-icon{background:rgba(141,242,53,.12);color:var(--accent2)}
+.add-choice.expense .add-choice-icon{background:rgba(255,107,107,.10);color:#ffadad}
+.add-choice.other .add-choice-icon{background:rgba(114,167,255,.10);color:#9fc1ff}
+.add-form-head{display:flex;align-items:center;gap:10px;margin:15px 2px 12px}
+.back-btn{width:42px;height:42px;border-radius:13px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:30px;line-height:1}
+#addFormWrap[hidden],#addChooser[hidden]{display:none!important}
+@media(max-width:760px){.add-choice-grid{grid-template-columns:1fr}.add-choice{min-height:112px}.add-hero{padding-top:8px}}
