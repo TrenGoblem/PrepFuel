@@ -49,14 +49,26 @@
     </section>
 
     <section class="view" data-view="add">
-      <div class="section-head"><div><div class="eyebrow">FAST ENTRY</div><h2>Add transaction</h2></div></div>
-      <div class="segmented" id="transactionType">
-        <button class="seg active" data-type="purchase">Buy</button>
-        <button class="seg" data-type="expense">Expense</button>
-        <button class="seg" data-type="sale">Sell</button>
-        <button class="seg" data-type="adjustment">Other</button>
+      <div id="addChooser">
+        <div class="add-hero">
+          <div class="eyebrow">QUICK ENTRY</div>
+          <h2>What are you adding?</h2>
+          <p>Pick one action, enter it, save it, and this screen clears again.</p>
+        </div>
+        <div class="add-choice-grid">
+          <button class="add-choice buy" data-type="purchase"><span class="add-choice-icon">＋</span><strong>Buy a vehicle</strong><small>Start a new motorcycle, ATV, truck, car, or other flip</small></button>
+          <button class="add-choice expense" data-type="expense"><span class="add-choice-icon">−</span><strong>Add an expense</strong><small>Parts, fluids, title fees, towing, fuel, repairs, or supplies</small></button>
+          <button class="add-choice sell" data-type="sale"><span class="add-choice-icon">$</span><strong>Record a sale</strong><small>Close a project and calculate the real net profit automatically</small></button>
+          <button class="add-choice other" data-type="adjustment"><span class="add-choice-icon">±</span><strong>Other money</strong><small>Refunds, owner withdrawals, or business-level adjustments</small></button>
+        </div>
       </div>
-      <form id="transactionForm" class="form-card"></form>
+      <div id="addFormWrap" hidden>
+        <div class="add-form-head">
+          <button id="addBackBtn" class="back-btn" type="button">‹</button>
+          <div><div class="eyebrow">NEW ENTRY</div><h2 id="addFormTitle">Add</h2></div>
+        </div>
+        <form id="transactionForm" class="form-card"></form>
+      </div>
     </section>
 
     <section class="view" data-view="ledger">
@@ -146,7 +158,6 @@
     <label>Business name<input id="businessNameInput" type="text" placeholder="FlipLedger" /></label>
     <label>Opening profit reserve<input id="openingProfitInput" type="number" step="0.01" inputmode="decimal" /></label>
     <p class="help">Only use this if you already had business profit saved before you started tracking in this app.</p>
-    <label class="check-row"><input id="demoToggle" type="checkbox" /> Load demo data when completely empty</label>
     <div class="settings-actions">
       <button id="backupBtn" class="outline-btn">Download backup</button>
       <label class="outline-btn file-label">Import backup<input id="restoreInput" type="file" accept="application/json" hidden /></label>
