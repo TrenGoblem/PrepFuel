@@ -143,16 +143,11 @@ function projectOptions(includeBlank=true){
 function renderTransactionForm(type){
   const f=document.getElementById('transactionForm');
   if(type==='purchase'){
-    f.innerHTML='<div class="field"><label>Vehicle / project name</label><input name="name" required placeholder="2012 Kawasaki Ninja 250R"></div>'+
+    f.innerHTML='<div class="field full"><label>Title</label><input name="name" required placeholder="1995 Ford F-150"></div>'+
       '<div class="field"><label>Category</label><select name="vehicleCategory"><option>Motorcycle</option><option>ATV</option><option>Dirt Bike</option><option>Minibike</option><option>Go-Kart</option><option>UTV</option><option>Truck</option><option>Car</option><option>Other</option></select></div>'+
       '<div class="field"><label>Purchase price</label><input name="amount" required type="number" step=".01" inputmode="decimal" placeholder="1200"></div>'+
       '<div class="field"><label>Purchase date</label><input name="date" type="date" value="'+today()+'"></div>'+
-      '<div class="field"><label>Source / seller</label><input name="vendor" placeholder="Facebook Marketplace"></div>'+
       '<div class="field"><label>Expected sale price</label><input name="expectedSale" type="number" step=".01" inputmode="decimal" placeholder="6500"></div>'+
-      '<div class="field"><label>Year</label><input name="year" inputmode="numeric" placeholder="1995"></div>'+
-      '<div class="field"><label>Make</label><input name="make" placeholder="Ford"></div>'+
-      '<div class="field"><label>Model</label><input name="model" placeholder="F-150"></div>'+
-      '<div class="field"><label>Engine / CC</label><input name="engine" placeholder="4.9L I6 or 750cc"></div>'+
       '<div class="field full"><label>Notes</label><textarea name="details" placeholder="Condition, title status, what it needs…"></textarea></div>'+
       '<div class="form-actions"><button class="primary-btn" type="submit">Add project + purchase</button></div>';
   }else if(type==='expense'){
@@ -188,9 +183,9 @@ function submitTransaction(e){
   e.preventDefault();const fd=new FormData(e.currentTarget);const d=Object.fromEntries(fd.entries());
   const amount=Number(d.amount||0);if(!(amount>0))return toast('Enter an amount');
   if(currentType==='purchase'){
-    const p={id:uid('p'),name:d.name.trim(),category:d.vehicleCategory,year:d.year,make:d.make,model:d.model,engine:d.engine,expectedSale:Number(d.expectedSale||0),status:'active',purchaseDate:d.date||today(),source:d.vendor,notes:d.details};
+    const p={id:uid('p'),name:d.name.trim(),category:d.vehicleCategory,expectedSale:Number(d.expectedSale||0),status:'active',purchaseDate:d.date||today(),notes:d.details};
     state.projects.push(p);
-    state.transactions.push({id:uid('t'),projectId:p.id,type:'purchase',category:'Vehicle purchase',date:d.date||today(),amount,vendor:d.vendor,details:d.details||'Initial purchase'});
+    state.transactions.push({id:uid('t'),projectId:p.id,type:'purchase',category:'Vehicle purchase',date:d.date||today(),amount,vendor:'',details:d.details||'Initial purchase'});
   }else{
     if((currentType==='expense'||currentType==='sale')&&!d.projectId)return toast('Choose a project');
     state.transactions.push({id:uid('t'),projectId:d.projectId||'',type:currentType,category:d.category||(currentType==='sale'?'Vehicle sale':'Adjustment'),date:d.date||today(),amount,vendor:d.vendor||'',details:d.details||'',direction:d.direction||''});
@@ -230,13 +225,13 @@ function renderInventory(){
   document.getElementById('inventoryGrid').innerHTML=list.length?list.map(p=>{
     const s=projectStats(p.id);const expected=Number(p.expectedSale||0);const result=s.sold?s.net:(expected?expected-s.invested:null);
     const icon=({Motorcycle:'🏍',ATV:'▰','Dirt Bike':'🏍',Minibike:'⚙','Go-Kart':'◫',UTV:'▣',Truck:'▰',Car:'▱'})[p.category]||'⚙';
-    return '<article class="inventory-card" data-project-id="'+p.id+'"><div class="vehicle-visual">'+icon+'<span class="pill '+(s.sold?'sold':'')+'" style="margin-left:auto">'+(s.sold?'Sold':esc(p.status||'Active'))+'</span></div><div class="inventory-body"><h3>'+esc(p.name)+'</h3><p>'+esc([p.category,p.engine].filter(Boolean).join(' · '))+'</p><div class="inventory-stats"><div><span>Invested</span><strong>'+money(s.invested)+'</strong></div><div><span>'+(s.sold?'Profit':'Projected')+'</span><strong class="'+((result||0)<0?'loss':'')+'">'+(result===null?'—':money(result))+'</strong></div><div><span>ROI</span><strong>'+(s.sold?pct(s.roi):(result!==null&&s.invested?pct(result/s.invested*100):'—'))+'</strong></div></div></div></article>'
+    return '<article class="inventory-card" data-project-id="'+p.id+'"><div class="vehicle-visual">'+icon+'<span class="pill '+(s.sold?'sold':'')+'" style="margin-left:auto">'+(s.sold?'Sold':esc(p.status||'Active'))+'</span></div><div class="inventory-body"><h3>'+esc(p.name)+'</h3><p>'+esc(p.category||'Other')+'</p><div class="inventory-stats"><div><span>Invested</span><strong>'+money(s.invested)+'</strong></div><div><span>'+(s.sold?'Profit':'Projected')+'</span><strong class="'+((result||0)<0?'loss':'')+'">'+(result===null?'—':money(result))+'</strong></div><div><span>ROI</span><strong>'+(s.sold?pct(s.roi):(result!==null&&s.invested?pct(result/s.invested*100):'—'))+'</strong></div></div></div></article>'
   }).join(''):'<div class="empty"><strong>Nothing here</strong>Try another filter or add a purchase.</div>'
 }
 function openProject(id){
   const p=state.projects.find(p=>p.id===id);if(!p)return;const s=projectStats(id);const tx=[...projectTx(id)].sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));const expected=Number(p.expectedSale||0);const projected=expected?expected-s.invested:null;
   document.getElementById('projectDialogContent').innerHTML='<div class="dialog-head"><div><div class="eyebrow">'+esc(p.category||'PROJECT')+'</div><h2>'+esc(p.name)+'</h2></div><button class="icon-btn" onclick="document.getElementById(\'projectDialog\').close()">✕</button></div>'+
-    '<div class="project-detail-hero"><span class="pill '+(s.sold?'sold':'')+'">'+(s.sold?'Sold':esc(p.status||'Active'))+'</span><p>'+esc([p.year,p.make,p.model,p.engine].filter(Boolean).join(' · '))+'</p><div class="detail-metrics"><div><span>Purchase</span><strong>'+money(s.purchase)+'</strong></div><div><span>Expenses</span><strong>'+money(s.expenses)+'</strong></div><div><span>Total invested</span><strong>'+money(s.invested)+'</strong></div><div><span>'+(s.sold?'Real profit':'Projected')+'</span><strong class="'+((s.sold?s.net:(projected||0))<0?'loss':'')+'">'+(s.sold?money(s.net):(projected!==null?money(projected):'—'))+'</strong></div></div><div class="project-actions">'+(!s.sold?'<button class="primary-small" data-quick-action="expense" data-project-id="'+p.id+'">+ Expense</button><button class="outline-btn" data-quick-action="sale" data-project-id="'+p.id+'">Mark sold</button>':'')+'<button class="outline-btn" onclick="editExpectedSale(\''+p.id+'\')">Expected sale</button><button class="danger-btn" onclick="deleteProject(\''+p.id+'\')">Delete project</button></div></div>'+
+    '<div class="project-detail-hero"><span class="pill '+(s.sold?'sold':'')+'">'+(s.sold?'Sold':esc(p.status||'Active'))+'</span><p>'+esc(p.category||'Project')+'</p><div class="detail-metrics"><div><span>Purchase</span><strong>'+money(s.purchase)+'</strong></div><div><span>Expenses</span><strong>'+money(s.expenses)+'</strong></div><div><span>Total invested</span><strong>'+money(s.invested)+'</strong></div><div><span>'+(s.sold?'Real profit':'Projected')+'</span><strong class="'+((s.sold?s.net:(projected||0))<0?'loss':'')+'">'+(s.sold?money(s.net):(projected!==null?money(projected):'—'))+'</strong></div></div><div class="project-actions">'+(!s.sold?'<button class="primary-small" data-quick-action="expense" data-project-id="'+p.id+'">+ Expense</button><button class="outline-btn" data-quick-action="sale" data-project-id="'+p.id+'">Mark sold</button>':'')+'<button class="outline-btn" onclick="editExpectedSale(\''+p.id+'\')">Expected sale</button><button class="danger-btn" onclick="deleteProject(\''+p.id+'\')">Delete project</button></div></div>'+
     '<div class="dialog-body"><h3 style="margin-top:0">Project ledger</h3><div class="project-ledger">'+(tx.length?tx.map(t=>{const incoming=t.type==='sale'||(t.type==='adjustment'&&t.direction==='in');return '<div class="project-entry"><span>'+labelType(t.type)+'</span><div><strong>'+esc(t.details||t.category||'')+'</strong><small>'+esc(t.date)+' · '+esc(t.vendor||'')+'</small></div><strong class="'+(incoming?'money-in':'money-out')+'">'+(incoming?'+':'−')+money2(Math.abs(t.amount))+'</strong></div>'}).join(''):'<div class="empty">No entries.</div>')+'</div></div>';
   document.getElementById('projectDialog').showModal()
 }
