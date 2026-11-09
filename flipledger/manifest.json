@@ -1,0 +1,18 @@
+{
+  "name": "FlipLedger — Vehicle Flip Business Tracker",
+  "short_name": "FlipLedger",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090c0a",
+  "theme_color": "#0a0d0b",
+  "description": "Track vehicle purchases, expenses, sales and real profit.",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
