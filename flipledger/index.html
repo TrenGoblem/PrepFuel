@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0d0b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FlipLedger" />
+  <title>FlipLedger</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">VEHICLE FLIP BUSINESS</div>
+      <h1 id="appTitle">FlipLedger</h1>
+    </div>
+    <button id="settingsBtn" class="icon-btn" aria-label="Settings">⚙</button>
+  </header>
+
+  <main class="main-content">
+    <section class="view active" data-view="home">
+      <article class="hero-card">
+        <div>
+          <span class="label">Profit available to reinvest</span>
+          <strong id="profitPool" class="hero-value">$0</strong>
+          <div class="hero-sub">Realized profit minus money currently tied up in active flips</div>
+        </div>
+        <span id="monthProfitPill" class="profit-pill">+$0 this month</span>
+      </article>
+
+      <div class="metric-grid">
+        <article class="metric-card"><span>Realized Profit</span><strong id="realizedProfit">$0</strong><small>Sold projects only</small></article>
+        <article class="metric-card"><span>Cash Tied Up</span><strong id="cashTied">$0</strong><small>Active inventory</small></article>
+        <article class="metric-card"><span>Sales Revenue</span><strong id="salesRevenue">$0</strong><small>Revenue ≠ profit</small></article>
+        <article class="metric-card"><span>Average ROI</span><strong id="avgRoi">0%</strong><small>Closed flips</small></article>
+      </div>
+
+      <div class="section-head"><div><div class="eyebrow">IN PROGRESS</div><h2>Active flips</h2></div><button class="text-btn" data-nav="inventory">See all</button></div>
+      <div id="activeProjects" class="project-strip"></div>
+
+      <div class="section-head"><div><div class="eyebrow">LATEST</div><h2>Recent activity</h2></div><button class="text-btn" data-nav="ledger">Open ledger</button></div>
+      <div id="recentActivity" class="activity-list"></div>
+    </section>
+
+    <section class="view" data-view="add">
+      <div class="section-head"><div><div class="eyebrow">FAST ENTRY</div><h2>Add transaction</h2></div></div>
+      <div class="segmented" id="transactionType">
+        <button class="seg active" data-type="purchase">Buy</button>
+        <button class="seg" data-type="expense">Expense</button>
+        <button class="seg" data-type="sale">Sell</button>
+        <button class="seg" data-type="adjustment">Other</button>
+      </div>
+      <form id="transactionForm" class="form-card"></form>
+    </section>
+
+    <section class="view" data-view="ledger">
+      <div class="section-head ledger-head">
+        <div><div class="eyebrow">SPREADSHEET VIEW</div><h2>Business ledger</h2></div>
+        <button id="exportCsvBtn" class="outline-btn">Export CSV</button>
+      </div>
+      <div class="filters-row">
+        <input id="ledgerSearch" type="search" placeholder="Search project, vendor, note…" />
+        <select id="ledgerTypeFilter">
+          <option value="all">All entries</option>
+          <option value="purchase">Purchases</option>
+          <option value="expense">Expenses</option>
+          <option value="sale">Sales</option>
+          <option value="adjustment">Other</option>
+        </select>
+      </div>
+      <div id="ledgerSummary" class="ledger-summary"></div>
+      <div class="table-wrap">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Project</th>
+              <th>Type</th>
+              <th>Category</th>
+              <th>Details</th>
+              <th class="num">Cash Out</th>
+              <th class="num">Cash In</th>
+              <th class="num">Project P/L</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ledgerBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="view" data-view="inventory">
+      <div class="section-head">
+        <div><div class="eyebrow">PROJECT CATALOG</div><h2>Inventory</h2></div>
+        <button class="primary-small" data-nav="add" data-add-type="purchase">+ New project</button>
+      </div>
+      <div class="inventory-toolbar">
+        <div class="segmented compact" id="inventoryFilter">
+          <button class="seg active" data-status="active">Active</button>
+          <button class="seg" data-status="sold">Sold</button>
+          <button class="seg" data-status="all">All</button>
+        </div>
+        <input id="inventorySearch" type="search" placeholder="Search inventory…" />
+      </div>
+      <div id="inventoryGrid" class="inventory-grid"></div>
+    </section>
+
+    <section class="view" data-view="analytics">
+      <div class="section-head"><div><div class="eyebrow">PERFORMANCE</div><h2>Analytics</h2></div></div>
+      <div id="analyticsCards" class="metric-grid analytics"></div>
+      <article class="chart-card">
+        <div class="chart-head"><h3>Net profit by month</h3><span>Last 6 months</span></div>
+        <div id="monthlyChart" class="bar-chart"></div>
+      </article>
+      <article class="chart-card">
+        <div class="chart-head"><h3>Profit by category</h3><span>Sold flips</span></div>
+        <div id="categoryChart" class="category-chart"></div>
+      </article>
+      <article class="chart-card">
+        <div class="chart-head"><h3>Flip ranking</h3><span>Highest profit first</span></div>
+        <div id="flipRanking" class="ranking-list"></div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-nav="home"><span>⌂</span><small>Home</small></button>
+    <button class="nav-btn" data-nav="ledger"><span>▦</span><small>Ledger</small></button>
+    <button class="nav-btn add-nav" data-nav="add"><span>＋</span><small>Add</small></button>
+    <button class="nav-btn" data-nav="inventory"><span>▤</span><small>Inventory</small></button>
+    <button class="nav-btn" data-nav="analytics"><span>⌁</span><small>Analytics</small></button>
+  </nav>
+</div>
+
+<dialog id="projectDialog" class="sheet-dialog"><div id="projectDialogContent"></div></dialog>
+
+<dialog id="settingsDialog" class="sheet-dialog settings-sheet">
+  <div class="dialog-head"><div><div class="eyebrow">BUSINESS SETTINGS</div><h2>Settings</h2></div><button class="icon-btn" data-close-dialog="settingsDialog">✕</button></div>
+  <div class="settings-grid">
+    <label>Business name<input id="businessNameInput" type="text" placeholder="FlipLedger" /></label>
+    <label>Opening profit reserve<input id="openingProfitInput" type="number" step="0.01" inputmode="decimal" /></label>
+    <p class="help">Only use this if you already had business profit saved before you started tracking in this app.</p>
+    <label class="check-row"><input id="demoToggle" type="checkbox" /> Load demo data when completely empty</label>
+    <div class="settings-actions">
+      <button id="backupBtn" class="outline-btn">Download backup</button>
+      <label class="outline-btn file-label">Import backup<input id="restoreInput" type="file" accept="application/json" hidden /></label>
+      <button id="clearDataBtn" class="danger-btn">Clear all data</button>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast" class="toast"></div>
+<script src="./app.js"></script>
+</body>
+</html>
