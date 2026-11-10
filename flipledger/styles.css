@@ -67,3 +67,25 @@ input,select,textarea{width:100%;border:1px solid #2c382f;background:#0c110e;col
 .back-btn{width:42px;height:42px;border-radius:13px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:30px;line-height:1}
 #addFormWrap[hidden],#addChooser[hidden]{display:none!important}
 @media(max-width:760px){.add-choice-grid{grid-template-columns:1fr}.add-choice{min-height:112px}.add-hero{padding-top:8px}}
+
+/* Account + cloud sync */
+.top-actions{display:flex;align-items:center;gap:7px}
+.cloud-status{border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:8px 11px;font-size:10px;font-weight:900;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cloud-status.online{border-color:rgba(141,242,53,.35);color:var(--accent2);background:rgba(141,242,53,.07)}
+.cloud-status.syncing{color:var(--warn)}
+.account-section{grid-column:1/-1}
+.account-card{border:1px solid var(--line);background:linear-gradient(145deg,#151e18,#0e1410);border-radius:17px;padding:14px}
+.account-card.signed-in{border-color:rgba(141,242,53,.28)}
+.account-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.account-head strong{display:block;font-size:14px}
+.account-head small{display:block;color:var(--muted);margin-top:3px;line-height:1.35}
+.account-state{display:inline-flex;align-items:center;gap:5px;color:var(--accent2);font-size:10px;font-weight:900}
+.account-state:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.auth-form{display:grid;gap:9px;margin-top:13px}
+.auth-form .auth-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.auth-form input{text-transform:none}
+.auth-actions{display:flex;gap:7px;flex-wrap:wrap}
+.auth-note{font-size:10px;color:var(--muted);line-height:1.4;margin-top:8px}
+.sync-line{display:flex;justify-content:space-between;gap:10px;margin-top:11px;padding-top:10px;border-top:1px solid #202a22;font-size:10px;color:var(--muted)}
+.sync-line strong{color:#c8d3cc}
+@media(max-width:520px){.auth-form .auth-row{grid-template-columns:1fr}.cloud-status{max-width:92px}}
