@@ -1,5 +1,5 @@
-const CACHE='flipledger-v3';
-const ASSETS=['./','./index.html','./styles.css','./app.js','./manifest.json','./icon.svg'];
+const CACHE='flipledger-v4-cloud';
+const ASSETS=['./','./index.html','./styles.css','./app.js','./cloud.js','../assets/cloud-config.js','./manifest.json','./icon.svg'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(
   caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('flipledger-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())
