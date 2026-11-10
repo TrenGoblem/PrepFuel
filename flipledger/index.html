@@ -20,7 +20,10 @@
       <div class="eyebrow">VEHICLE FLIP BUSINESS</div>
       <h1 id="appTitle">FlipLedger</h1>
     </div>
-    <button id="settingsBtn" class="icon-btn" aria-label="Settings">⚙</button>
+    <div class="top-actions">
+      <button id="cloudStatusBtn" class="cloud-status" aria-label="Account status" title="Account">Local</button>
+      <button id="settingsBtn" class="icon-btn" aria-label="Settings">⚙</button>
+    </div>
   </header>
 
   <main class="main-content">
@@ -155,6 +158,7 @@
 <dialog id="settingsDialog" class="sheet-dialog settings-sheet">
   <div class="dialog-head"><div><div class="eyebrow">BUSINESS SETTINGS</div><h2>Settings</h2></div><button class="icon-btn" data-close-dialog="settingsDialog">✕</button></div>
   <div class="settings-grid">
+    <div id="accountSection" class="account-section"></div>
     <label>Business name<input id="businessNameInput" type="text" placeholder="FlipLedger" /></label>
     <label>Opening profit reserve<input id="openingProfitInput" type="number" step="0.01" inputmode="decimal" /></label>
     <p class="help">Only use this if you already had business profit saved before you started tracking in this app.</p>
@@ -167,6 +171,9 @@
 </dialog>
 
 <div id="toast" class="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/cloud-config.js"></script>
+<script src="./cloud.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>
