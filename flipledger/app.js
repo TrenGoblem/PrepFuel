@@ -1,8 +1,22 @@
 const STORAGE_KEY='flipledger_v2';
-const DEFAULT_STATE={projects:[],transactions:[],settings:{businessName:'FlipLedger',openingProfit:0}};
-let state=loadState();
+const DEFAULT_STATE={projects:[],transactions:[],settings:{businessName:'FlipLedger',openingProfit:0},meta:{updatedAt:null}};
+let state=normalizeState(loadState());
 let currentType=null;
 let inventoryStatus='active';
+let cloudReady=false;
+let cloudSyncing=false;
+let cloudSaveTimer=null;
+let lastCloudSaveAt=null;
+
+function normalizeState(value){
+  const v=value&&typeof value==='object'?value:{};
+  return {
+    projects:Array.isArray(v.projects)?v.projects:[],
+    transactions:Array.isArray(v.transactions)?v.transactions:[],
+    settings:{...DEFAULT_STATE.settings,...(v.settings||{})},
+    meta:{...DEFAULT_STATE.meta,...(v.meta||{})}
+  }
+}
 
 function uid(prefix='id'){return prefix+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function money(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(Number(n||0))}
@@ -15,7 +29,46 @@ function loadState(){
   catch(e){}
   return structuredClone(DEFAULT_STATE)
 }
-function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+function save(options={}){
+  const touch=options.touch!==false;
+  if(touch)state.meta.updatedAt=new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+  if(cloudReady&&window.FlipLedgerCloud?.user&&!options.localOnly)scheduleCloudSave();
+}
+function scheduleCloudSave(){
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer=setTimeout(()=>saveCloudNow().catch(err=>{
+    console.warn('FlipLedger cloud save:',err);
+    setCloudBadge('Offline copy','');
+  }),450);
+}
+async function saveCloudNow(){
+  if(!window.FlipLedgerCloud?.user)return;
+  cloudSyncing=true;setCloudBadge('Saving…','syncing');
+  const result=await window.FlipLedgerCloud.saveState(state);
+  lastCloudSaveAt=result?.updated_at||new Date().toISOString();
+  cloudSyncing=false;setCloudBadge('Synced','online');renderAccountSection();
+}
+function hasBusinessData(s){return Boolean((s?.projects?.length||0)||(s?.transactions?.length||0)||Number(s?.settings?.openingProfit||0))}
+function stateTime(s){const t=Date.parse(s?.meta?.updatedAt||'');return Number.isFinite(t)?t:0}
+function mergeFirstSync(localState,cloudState){
+  const local=normalizeState(localState), remote=normalizeState(cloudState);
+  if(!hasBusinessData(local))return remote;
+  if(!hasBusinessData(remote))return local;
+  const newer=stateTime(local)>=stateTime(remote)?local:remote;
+  const older=newer===local?remote:local;
+  const projects=[...newer.projects];
+  const pids=new Set(projects.map(x=>x.id));
+  older.projects.forEach(x=>{if(!pids.has(x.id))projects.push(x)});
+  const transactions=[...newer.transactions];
+  const tids=new Set(transactions.map(x=>x.id));
+  older.transactions.forEach(x=>{if(!tids.has(x.id))transactions.push(x)});
+  return normalizeState({...newer,projects,transactions,meta:{updatedAt:new Date().toISOString()}});
+}
+function setCloudBadge(label,mode=''){
+  const el=document.getElementById('cloudStatusBtn');if(!el)return;
+  el.textContent=label;el.classList.toggle('online',mode==='online');el.classList.toggle('syncing',mode==='syncing');
+}
 function projectTx(projectId){return state.transactions.filter(t=>t.projectId===projectId)}
 function projectStats(projectId){
   const tx=projectTx(projectId);
@@ -92,7 +145,8 @@ document.addEventListener('click',e=>{
   if(quick){document.getElementById('projectDialog').close();currentType=quick.dataset.quickAction;setView('add');setTimeout(()=>{const sel=document.querySelector('[name=projectId]');if(sel)sel.value=quick.dataset.projectId},0)}
 });
 document.getElementById('addBackBtn').onclick=()=>{currentType=null;renderAdd()};
-document.getElementById('settingsBtn').onclick=()=>{syncSettingsUI();document.getElementById('settingsDialog').showModal()};
+document.getElementById('settingsBtn').onclick=()=>{syncSettingsUI();renderAccountSection();document.getElementById('settingsDialog').showModal()};
+document.getElementById('cloudStatusBtn').onclick=()=>{syncSettingsUI();renderAccountSection();document.getElementById('settingsDialog').showModal()};
 document.getElementById('ledgerSearch').oninput=renderLedger;
 document.getElementById('ledgerTypeFilter').onchange=renderLedger;
 document.getElementById('inventorySearch').oninput=renderInventory;
@@ -256,12 +310,84 @@ function exportCsv(){
   const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');downloadBlob(csv,'flipledger-ledger.csv','text/csv');toast('CSV exported')
 }
 function downloadBlob(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function renderAccountSection(){
+  const box=document.getElementById('accountSection');if(!box)return;
+  const cloud=window.FlipLedgerCloud;
+  if(!cloud?.configured){
+    box.innerHTML='<div class="account-card"><div class="account-head"><div><strong>Cloud account unavailable</strong><small>Your data is still saved locally on this device.</small></div></div></div>';
+    setCloudBadge('Local','');return
+  }
+  if(cloud.user){
+    const stamp=lastCloudSaveAt?new Date(lastCloudSaveAt).toLocaleString():state.meta.updatedAt?new Date(state.meta.updatedAt).toLocaleString():'Not yet';
+    box.innerHTML='<div class="account-card signed-in"><div class="account-head"><div><strong>'+esc(cloud.user.email||'Signed in')+'</strong><small>Your FlipLedger data is backed up to your account and restores on other devices.</small></div><span class="account-state">Cloud on</span></div><div class="sync-line"><span>Last saved</span><strong>'+esc(stamp)+'</strong></div><div class="auth-actions" style="margin-top:11px"><button id="syncNowBtn" class="outline-btn" type="button">Sync now</button><button id="signOutBtn" class="outline-btn" type="button">Sign out</button></div></div>';
+    box.querySelector('#syncNowBtn').onclick=async()=>{try{await saveCloudNow();toast('Cloud backup updated')}catch(e){alert(e.message||'Could not sync')}};
+    box.querySelector('#signOutBtn').onclick=async()=>{await cloud.signOut();cloudReady=false;renderAccountSection();setCloudBadge('Local','');toast('Signed out — local copy kept')};
+    setCloudBadge(cloudSyncing?'Saving…':'Synced',cloudSyncing?'syncing':'online');
+    return
+  }
+  box.innerHTML='<div class="account-card"><div class="account-head"><div><strong>Back up FlipLedger</strong><small>Sign in with the same account system as Fuelr. Your projects and ledger will follow you between devices.</small></div></div><form id="authForm" class="auth-form"><div class="auth-row"><input name="email" type="email" autocomplete="email" placeholder="Email" required><input name="password" type="password" autocomplete="current-password" placeholder="Password" minlength="6" required></div><div class="auth-actions"><button class="primary-small" name="action" value="signin" type="submit">Sign in</button><button class="outline-btn" name="action" value="signup" type="submit">Create account</button></div><div class="auth-note">If you already made a Fuelr account, use the same email and password here.</div></form></div>';
+  box.querySelector('#authForm').onsubmit=async e=>{
+    e.preventDefault();
+    const fd=new FormData(e.currentTarget), email=String(fd.get('email')||'').trim(), password=String(fd.get('password')||'');
+    const action=e.submitter?.value||'signin';
+    try{
+      setCloudBadge(action==='signup'?'Creating…':'Signing in…','syncing');
+      const result=action==='signup'?await cloud.signUp(email,password):await cloud.signIn(email,password);
+      if(result.error)throw result.error;
+      if(action==='signup'&&!result.data?.session){
+        alert('Account created. Check your email to confirm it, then sign in.');
+      }else{
+        await initializeCloudState();
+        toast('Account connected');
+      }
+      renderAccountSection();
+    }catch(err){setCloudBadge('Local','');alert(err.message||'Account sign-in failed')}
+  };
+  setCloudBadge('Local','')
+}
+async function initializeCloudState(){
+  const cloud=window.FlipLedgerCloud;
+  if(!cloud?.configured||!cloud.user){cloudReady=false;renderAccountSection();return}
+  cloudReady=false;setCloudBadge('Restoring…','syncing');
+  try{
+    const remote=await cloud.getState();
+    if(remote?.state){
+      state=mergeFirstSync(state,remote.state);
+      save({touch:false,localOnly:true});
+    }else{
+      state.meta.updatedAt=state.meta.updatedAt||new Date().toISOString();
+      save({touch:false,localOnly:true});
+    }
+    cloudReady=true;
+    await saveCloudNow();
+    renderAll();
+  }catch(err){
+    console.warn('FlipLedger cloud restore:',err);
+    cloudReady=true;
+    setCloudBadge('Offline copy','');
+  }
+  renderAccountSection()
+}
+async function initCloud(){
+  const cloud=window.FlipLedgerCloud;
+  if(!cloud?.configured){setCloudBadge('Local','');return}
+  try{
+    await cloud.init();
+    if(cloud.user)await initializeCloudState();
+    else renderAccountSection();
+  }catch(err){console.warn('FlipLedger cloud init:',err);setCloudBadge('Local','')}
+}
+window.addEventListener('flipledger-auth-change',async e=>{
+  if(e.detail?.user&&!cloudReady)await initializeCloudState();
+  if(!e.detail?.user){cloudReady=false;setCloudBadge('Local','');renderAccountSection()}
+});
+
 function syncSettingsUI(){document.getElementById('businessNameInput').value=state.settings.businessName||'FlipLedger';document.getElementById('openingProfitInput').value=state.settings.openingProfit||0}
 document.getElementById('businessNameInput').onchange=e=>{state.settings.businessName=e.target.value||'FlipLedger';save();renderAll()}
 document.getElementById('openingProfitInput').onchange=e=>{state.settings.openingProfit=Number(e.target.value||0);save();renderAll()}
 document.getElementById('backupBtn').onclick=()=>downloadBlob(JSON.stringify(state,null,2),'flipledger-backup-'+today()+'.json','application/json');
 document.getElementById('restoreInput').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data.projects||!data.transactions)throw Error();state={...DEFAULT_STATE,...data};save();renderAll();document.getElementById('settingsDialog').close();toast('Backup restored')}catch{alert('That backup file is not valid.')}e.target.value=''}
-document.getElementById('clearDataBtn').onclick=()=>{if(!confirm('Clear every project and ledger entry? This cannot be undone unless you have a backup.'))return;state=structuredClone(DEFAULT_STATE);state.settings.demoOnEmpty=false;save();renderAll();document.getElementById('settingsDialog').close();toast('All data cleared')}
+document.getElementById('clearDataBtn').onclick=()=>{if(!confirm('Clear every project and ledger entry? This cannot be undone unless you have a backup.'))return;state=structuredClone(DEFAULT_STATE);save();renderAll();document.getElementById('settingsDialog').close();toast('All data cleared')}
 function renderAll(){renderHome();renderLedger();renderInventory();renderAnalytics()}
-renderAdd();renderAll();
+renderAdd();renderAll();initCloud();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
