@@ -1,4 +1,5 @@
 const STORAGE_KEY='flipledger_v2';
+const LOCAL_OWNER_KEY='flipledger_local_owner_v1';
 const DEFAULT_STATE={projects:[],transactions:[],settings:{businessName:'FlipLedger',openingProfit:0},meta:{updatedAt:null}};
 let state=normalizeState(loadState());
 let currentType=null;
@@ -351,13 +352,18 @@ async function initializeCloudState(){
   cloudReady=false;setCloudBadge('Restoring…','syncing');
   try{
     const remote=await cloud.getState();
-    if(remote?.state){
+    const cachedOwner=localStorage.getItem(LOCAL_OWNER_KEY);
+    if(cachedOwner&&cachedOwner!==cloud.user.id){
+      state=remote?.state?normalizeState(remote.state):structuredClone(DEFAULT_STATE);
+      save({touch:false,localOnly:true});
+    }else if(remote?.state){
       state=mergeFirstSync(state,remote.state);
       save({touch:false,localOnly:true});
     }else{
       state.meta.updatedAt=state.meta.updatedAt||new Date().toISOString();
       save({touch:false,localOnly:true});
     }
+    localStorage.setItem(LOCAL_OWNER_KEY,cloud.user.id);
     cloudReady=true;
     await saveCloudNow();
     renderAll();
