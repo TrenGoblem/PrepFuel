@@ -1,6 +1,6 @@
 const STORAGE_KEY='flipledger_v2';
 const LOCAL_OWNER_KEY='flipledger_local_owner_v1';
-const DEFAULT_STATE={projects:[],transactions:[],settings:{businessName:'FlipLedger',openingProfit:0},meta:{updatedAt:null}};
+const DEFAULT_STATE={projects:[],transactions:[],studio:{videos:[],tasks:[],weeks:[]},settings:{businessName:'FlipLedger',openingProfit:0},meta:{updatedAt:null}};
 let state=normalizeState(loadState());
 let currentType=null;
 let inventoryStatus='active';
@@ -14,6 +14,7 @@ function normalizeState(value){
   return {
     projects:Array.isArray(v.projects)?v.projects:[],
     transactions:Array.isArray(v.transactions)?v.transactions:[],
+    studio:normalizeStudio(v.studio),
     settings:{...DEFAULT_STATE.settings,...(v.settings||{})},
     meta:{...DEFAULT_STATE.meta,...(v.meta||{})}
   }
@@ -50,7 +51,7 @@ async function saveCloudNow(){
   lastCloudSaveAt=result?.updated_at||new Date().toISOString();
   cloudSyncing=false;setCloudBadge('Synced','online');renderAccountSection();
 }
-function hasBusinessData(s){return Boolean((s?.projects?.length||0)||(s?.transactions?.length||0)||Number(s?.settings?.openingProfit||0))}
+function hasBusinessData(s){return Boolean((s?.projects?.length||0)||(s?.transactions?.length||0)||Number(s?.settings?.openingProfit||0)||Object.values(s?.studio||{}).some(a=>Array.isArray(a)&&a.length))}
 function stateTime(s){const t=Date.parse(s?.meta?.updatedAt||'');return Number.isFinite(t)?t:0}
 function mergeFirstSync(localState,cloudState){
   const local=normalizeState(localState), remote=normalizeState(cloudState);
@@ -64,7 +65,7 @@ function mergeFirstSync(localState,cloudState){
   const transactions=[...newer.transactions];
   const tids=new Set(transactions.map(x=>x.id));
   older.transactions.forEach(x=>{if(!tids.has(x.id))transactions.push(x)});
-  return normalizeState({...newer,projects,transactions,meta:{updatedAt:new Date().toISOString()}});
+  return normalizeState({...newer,projects,transactions,studio:mergeStudio(local.studio,remote.studio),meta:{updatedAt:new Date().toISOString()}});
 }
 function setCloudBadge(label,mode=''){
   const el=document.getElementById('cloudStatusBtn');if(!el)return;
@@ -101,7 +102,7 @@ function businessStats(){
     const sale=projectTx(x.p.id).filter(t=>t.type==='sale').sort((a,b)=>b.date.localeCompare(a.date))[0];
     return sale&&sale.date.startsWith(month)
   }).reduce((s,x)=>s+x.net,0);
-  const freeProfit=Number(state.settings.openingProfit||0)+realized-tied;
+  const freeProfit=Number(state.settings.openingProfit||0)+state.transactions.reduce((sum,t)=>sum+((t.type==='sale'||(t.type==='adjustment'&&t.direction==='in'))?1:-1)*Math.abs(Number(t.amount||0)),0);
   return {realized,tied,sales,avgRoi,monthProfit,freeProfit,soldCount:sold.length,activeCount:active.length}
 }
 function clearLegacyDemoOnce(){
@@ -122,6 +123,7 @@ function setView(view){
   if(view==='ledger')renderLedger();
   if(view==='inventory')renderInventory();
   if(view==='analytics')renderAnalytics();
+  if(view==='studio')renderStudio();
   if(view==='home')renderHome();
   window.scrollTo({top:0,behavior:'smooth'})
 }
@@ -392,8 +394,108 @@ function syncSettingsUI(){document.getElementById('businessNameInput').value=sta
 document.getElementById('businessNameInput').onchange=e=>{state.settings.businessName=e.target.value||'FlipLedger';save();renderAll()}
 document.getElementById('openingProfitInput').onchange=e=>{state.settings.openingProfit=Number(e.target.value||0);save();renderAll()}
 document.getElementById('backupBtn').onclick=()=>downloadBlob(JSON.stringify(state,null,2),'flipledger-backup-'+today()+'.json','application/json');
-document.getElementById('restoreInput').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data.projects||!data.transactions)throw Error();state={...DEFAULT_STATE,...data};save();renderAll();document.getElementById('settingsDialog').close();toast('Backup restored')}catch{alert('That backup file is not valid.')}e.target.value=''}
-document.getElementById('clearDataBtn').onclick=()=>{if(!confirm('Clear every project and ledger entry? This cannot be undone unless you have a backup.'))return;state=structuredClone(DEFAULT_STATE);save();renderAll();document.getElementById('settingsDialog').close();toast('All data cleared')}
-function renderAll(){renderHome();renderLedger();renderInventory();renderAnalytics()}
-renderAdd();renderAll();initCloud();
+document.getElementById('restoreInput').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data.projects||!data.transactions)throw Error();state=normalizeState(data);save();renderAll();document.getElementById('settingsDialog').close();toast('Backup restored')}catch{alert('That backup file is not valid.')}e.target.value=''}
+document.getElementById('clearDataBtn').onclick=()=>{if(!confirm('Clear every project, ledger entry and Studio record? This cannot be undone unless you have a backup.'))return;state=structuredClone(DEFAULT_STATE);save();renderAll();document.getElementById('settingsDialog').close();toast('All data cleared')}
+function renderAll(){renderHome();renderLedger();renderInventory();renderAnalytics();renderStudio();renderStudioHome()}
+
+/* Studio: creator records share the existing account JSON, with per-record merge and tombstones. */
+function normalizeStudio(v){v=v||{};return Object.fromEntries(['videos','tasks','weeks'].map(k=>[k,Array.isArray(v[k])?v[k]:[]]))}
+function mergeStudio(a,b){a=normalizeStudio(a);b=normalizeStudio(b);return Object.fromEntries(Object.keys(a).map(k=>{const m=new Map();for(const x of [...a[k],...b[k]]){if(!m.has(x.id)||String(x.updatedAt||'')>=String(m.get(x.id).updatedAt||''))m.set(x.id,x)}return [k,[...m.values()]]}))}
+function studioRows(k){return normalizeStudio(state.studio)[k].filter(x=>!x.deleted)}
+function studioSave(k,row){state.studio=normalizeStudio(state.studio);row={...row,id:row.id||uid(k),updatedAt:new Date().toISOString()};const i=state.studio[k].findIndex(x=>x.id===row.id);if(i>=0)state.studio[k][i]=row;else state.studio[k].push(row);save();renderStudio();renderStudioHome();return row}
+let studioTab='overview',studioEdit=null,studioProject='',studioVideo='',mediaURL=null;
+const stages=['Idea','Filming','Ready to edit','Editing','Ready to upload','Scheduled','Published'];
+function studioDate(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+function studioProjectName(id){return state.projects.find(p=>p.id===id)?.name||'Standalone / unlinked'}
+function studioOptions(list,current){return list.map(x=>'<option '+(String(x[0])===String(current||'')?'selected ':'')+'value="'+esc(x[0])+'">'+esc(x[1])+'</option>').join('')}
+function studioProjectOptions(current){return studioOptions([['','Standalone / no project'],...state.projects.map(p=>[p.id,p.name])],current)}
+function studioVideoOptions(current){return studioOptions([['','No linked video'],...studioRows('videos').map(v=>[v.id,v.title])],current)}
+function studioLink(s){try{const u=new URL(s);return ['https:','http:'].includes(u.protocol)?u.href:''}catch{return ''}}
+function studioMetric(n,v,sub){return '<article class="metric-card"><span>'+esc(n)+'</span><strong>'+esc(v)+'</strong><small>'+esc(sub||'')+'</small></article>'}
+function studioNum(n){return Number(n||0).toLocaleString('en-US')}
+function studioWeek(){const d=new Date();const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+function studioRecent(){return studioRows('weeks').sort((a,b)=>b.week.localeCompare(a.week))}
+function studioDue(){return studioRows('tasks').filter(t=>!t.done).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'))}
+function studioDueText(d){return !d?'No deadline':d<studioDate()?'Overdue · '+d:d===studioDate()?'Due today':d}
+function studioButton(label,action,id,cls='outline-btn'){return '<button type="button" class="'+cls+'" data-studio-action="'+action+'" '+(id?'data-studio-id="'+esc(id)+'"':'')+'>'+esc(label)+'</button>'}
+function setupStudio(){
+ const css=document.createElement('style');css.textContent='.studio-tabs{display:flex;gap:8px;overflow:auto;margin:12px 0 18px;padding-bottom:4px}.studio-tabs button{white-space:nowrap;flex:1}.studio-tabs .selected{background:var(--accent);color:#10170e;border-color:var(--accent)}.studio-card{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:16px;margin:10px 0}.studio-card h3{margin:0 0 8px;font-size:18px}.studio-card p{color:var(--muted);font-size:13px;margin:6px 0;overflow-wrap:anywhere}.studio-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.studio-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.studio-note{font-size:12px;color:var(--muted);line-height:1.5}.studio-stage{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}.studio-stage:last-child{border:0}.studio-due{color:var(--warn)}.studio-link{color:var(--accent);overflow-wrap:anywhere}.studio-video{width:100%;max-height:65vh}.studio-form{margin:12px 0}.studio-form label{display:block}.studio-form input,.studio-form textarea,.studio-form select{width:100%;min-width:0}.studio-form .field{min-width:0}.studio-form .form-actions{display:flex;flex-wrap:wrap;gap:8px}.studio-form input[type=file]{padding:10px}.studio-form .form-actions button{flex:1}.studio-history{display:grid;gap:8px}.studio-bar{height:8px;background:var(--panel3);border-radius:9px;overflow:hidden}.studio-bar i{display:block;height:100%;background:var(--accent)}.studio-card a{color:var(--accent)}';document.head.append(css);
+ document.querySelector('main').insertAdjacentHTML('beforeend','<section class="view" data-view="studio"><div class="section-head"><div><div class="eyebrow">CREATOR BUSINESS</div><h2>Studio</h2></div><a class="outline-btn" href="https://studio.youtube.com/" target="_blank" rel="noopener">YouTube Studio</a></div><div class="studio-tabs" id="studioTabs"></div><div id="studioContent"></div></section>');
+ const nav=document.querySelector('.bottom-nav [data-nav=analytics]');nav.dataset.nav='studio';nav.innerHTML='<span>▷</span><small>Studio</small>';
+ document.querySelector('.bottom-nav [data-nav=inventory] small').textContent='Projects';
+ document.querySelector('[data-view=inventory] h2').textContent='Projects';
+ document.querySelector('.topbar .eyebrow').textContent='PROJECT & CREATOR BUSINESS';
+ document.querySelector('.hero-sub').textContent='Opening reserve + all recorded cash in − all recorded cash out';
+ document.querySelector('[data-view=home] .hero-card').insertAdjacentHTML('afterend','<div id="studioHome"></div>');
+ document.getElementById('studioContent').addEventListener('submit',studioSubmit);
+ document.addEventListener('click',studioClick);
+ document.getElementById('projectDialog').addEventListener('click',e=>{if(e.target.id==='studioProjectShortcut'){document.getElementById('projectDialog').close();studioTab='videos';studioEdit=null;studioProject=e.target.dataset.pid;setView('studio')}});
+ const oldOpen=openProject;openProject=function(id){oldOpen(id);const p=state.projects.find(x=>x.id===id);if(!p)return;const n=studioRows('videos').filter(v=>v.projectId===id).length;document.querySelector('#projectDialogContent .project-actions')?.insertAdjacentHTML('beforeend','<button type="button" class="outline-btn" id="studioProjectShortcut" data-pid="'+esc(id)+'">Videos ('+n+')</button>')};
+}
+function renderStudioHome(){
+ const el=document.getElementById('studioHome');if(!el)return;const w=studioRecent()[0];const due=studioDue().filter(t=>t.due&&t.due<=studioDate()).length;const v=studioRows('videos').filter(x=>x.stage!=='Published').length;
+ el.innerHTML='<article class="studio-card"><div class="studio-row"><div><div class="eyebrow">CONTENT & BUSINESS</div><h3>Creator snapshot</h3></div><button class="outline-btn" data-nav="studio">Open Studio</button></div><div class="metric-grid">'+studioMetric('Weekly views',w?studioNum(w.views):'—',w?'Week of '+w.week:'No snapshot')+studioMetric('Videos in progress',v,'Unpublished')+studioMetric('Tasks due',due,'Today or overdue')+studioMetric('Creator cash',money(studioCreatorCash()),'Recorded ledger entries')+'</div><div class="studio-actions"><button class="outline-btn" data-nav="analytics">Financial analytics</button><button class="outline-btn" data-nav="add" data-add-type="adjustment">Other income / spending</button></div></article>';
+}
+function studioCreatorCash(){return state.transactions.filter(t=>!t.projectId&&String(t.category||'').startsWith('Creator:')).reduce((n,t)=>n+(t.direction==='in'?1:-1)*Number(t.amount||0),0)}
+function studioTaskCard(t){const video=studioRows('videos').find(v=>v.id===t.videoId);return '<article class="studio-card"><div class="studio-row"><div><h3>'+esc(t.title)+'</h3><p class="'+(!t.done&&t.due&&t.due<=studioDate()?'studio-due':'')+'">'+esc(t.done?'Completed':studioDueText(t.due))+(video?' · '+esc(video.title):'')+'</p></div>'+studioButton(t.done?'Reopen':'Done','toggleTask',t.id,t.done?'outline-btn':'primary-small')+'</div><p>'+esc(t.notes||'')+'</p><div class="studio-actions">'+studioButton('Edit','editTask',t.id)+(t.due?studioButton('Calendar reminder','calendar',t.id):'')+studioButton('Delete','deleteTask',t.id)+'</div></article>'}
+function studioVideoCard(v){const url=studioLink(v.url);return '<article class="studio-card"><div class="studio-row"><div><div class="eyebrow">'+esc(v.format||'Long video')+'</div><h3>'+esc(v.title)+'</h3></div><span class="pill">'+esc(v.stage)+'</span></div><p>'+esc(studioProjectName(v.projectId))+(v.due?' · '+esc(studioDueText(v.due)):'')+'</p><p>'+esc(v.notes||'')+'</p>'+(url?'<p><a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Open video / footage link ↗</a></p>':'')+(v.localName?'<p>Local attachment: '+esc(v.localName)+' (this device only)</p>':'')+'<div class="studio-actions">'+studioButton('Edit','editVideo',v.id)+(v.stage!=='Published'?studioButton('Next stage','nextVideo',v.id,'primary-small'):'')+studioButton('+ Task','taskForVideo',v.id)+(v.localName?studioButton('Play local','playVideo',v.id):'')+studioButton('Delete','deleteVideo',v.id)+'</div></article>'}
+function studioField(label,name,value='',type='text',extra=''){return '<div class="field"><label>'+esc(label)+'</label><input name="'+name+'" type="'+type+'" value="'+esc(value??'')+'" '+extra+'></div>'}
+function studioSelect(label,name,opts){return '<div class="field"><label>'+esc(label)+'</label><select name="'+name+'">'+opts+'</select></div>'}
+function studioNotes(value){return '<div class="field full"><label>Notes / shot list</label><textarea name="notes">'+esc(value||'')+'</textarea></div>'}
+function studioFormActions(label){return '<div class="form-actions"><button type="submit" class="primary-btn">'+label+'</button>'+studioButton('Cancel','cancel')+'</div>'}
+function studioVideoForm(v={}){return '<form class="form-card studio-form" data-studio-form="videos"><div class="field full"><h3>'+ (v.id?'Edit video':'New video')+'</h3></div>'+studioField('Video title / idea','title',v.title,'text','required')+studioSelect('Project','projectId',studioProjectOptions(v.projectId||studioProject))+studioSelect('Format','format',studioOptions([['Long video','Long video'],['Short','Short'],['Other','Other']],v.format||'Long video'))+studioSelect('Production stage','stage',studioOptions(stages.map(x=>[x,x]),v.stage||'Idea'))+studioField('Target upload date','due',v.due,'date')+studioField('Published date','published',v.published,'date')+studioField('YouTube / cloud footage URL','url',v.url,'url')+'<div class="field full"><label>Attach video (optional; local device only)</label><input type="file" name="media" accept="video/*"><small class="studio-note">Keep the original in Photos or your drive. Large files are not included in cloud sync or JSON backups.</small></div>'+studioNotes(v.notes)+studioFormActions('Save video')+'</form>'}
+function studioTaskForm(t={}){return '<form class="form-card studio-form" data-studio-form="tasks"><div class="field full"><h3>'+ (t.id?'Edit task':'New reminder')+'</h3></div>'+studioField('Task','title',t.title,'text','required placeholder="Edit engine swap video"')+studioField('Due date','due',t.due||studioDate(),'date')+studioSelect('Linked video','videoId',studioVideoOptions(t.videoId||studioVideo))+studioNotes(t.notes)+studioFormActions('Save reminder')+'</form>'}
+function studioWeekForm(w={}){return '<form class="form-card studio-form" data-studio-form="weeks"><div class="field full"><h3>Weekly YouTube snapshot</h3><p class="studio-note">Enter Monday for a consistent seven-day reporting period. Copy the numbers from YouTube Studio. Estimated earnings are not recorded as cash until paid.</p></div>'+studioField('Week starting','week',w.week||studioWeek(),'date','required')+studioField('Views','views',w.views??'','number','required min="0" step="1"')+studioField('Watch hours','hours',w.hours??'','number','min="0" step=".01"')+studioField('Subscribers gained / lost','subs',w.subs??'','number','step="1"')+studioField('Estimated revenue ($)','revenue',w.revenue??'','number','min="0" step=".01"')+studioFormActions('Save week')+'</form>'}
+function studioMoneyForm(){return '<form class="form-card studio-form" data-studio-form="money"><div class="field full"><h3>Creator cash transaction</h3><p class="studio-note">Actual money received or paid; recorded in the existing business ledger.</p></div>'+studioSelect('Category','category',studioOptions([['YouTube payout','YouTube payout'],['Sponsorship','Sponsorship'],['Affiliate income','Affiliate income'],['Equipment','Equipment'],['Editing / software','Editing / software'],['Other creator income','Other creator income'],['Other creator expense','Other creator expense']],'YouTube payout'))+studioField('Amount ($)','amount','','number','required min=".01" step=".01"')+studioField('Date','date',studioDate(),'date','required')+studioField('Details','details')+studioFormActions('Record cash')+'</form>'}
+function renderStudio(){
+ const el=document.getElementById('studioContent');if(!el)return;
+ document.getElementById('studioTabs').innerHTML=[['overview','Overview'],['videos','Videos'],['tasks','Reminders'],['weeks','Channel stats']].map(([k,l])=>'<button class="outline-btn '+(studioTab===k?'selected':'')+'" data-studio-action="tab" data-studio-id="'+k+'">'+l+'</button>').join('');
+ const videos=studioRows('videos'),tasks=studioDue(),weeks=studioRecent(),w=weeks[0],prev=weeks[1];
+ if(studioTab==='overview'){
+  const delta=w&&prev?Number(w.views)-Number(prev.views):null;
+  el.innerHTML='<div class="metric-grid">'+studioMetric('Weekly views',w?studioNum(w.views):'—',delta===null?'Manual snapshot':(delta>=0?'+':'')+studioNum(delta)+' vs prior snapshot')+studioMetric('Watch hours',w?studioNum(w.hours):'—',w?'Week of '+w.week:'No data')+studioMetric('Subscribers',w?studioNum(w.subs):'—','Net change, latest snapshot')+studioMetric('Creator cash',money(studioCreatorCash()),'All recorded creator cash')+'</div><article class="studio-card"><h3>Production pipeline</h3>'+stages.map(stage=>'<div class="studio-stage"><span>'+stage+'</span><strong>'+videos.filter(v=>v.stage===stage).length+'</strong></div>').join('')+'<div class="studio-actions">'+studioButton('+ Video','newVideo',null,'primary-small')+studioButton('+ Reminder','newTask')+studioButton('Log views','newWeek')+studioButton('Record creator cash','money')+'</div></article>'+(studioEdit?.k==='money'?studioMoneyForm():'')+'<div class="section-head"><h2>Next up</h2></div>'+(tasks.length?tasks.slice(0,3).map(studioTaskCard).join(''):'<div class="empty">No outstanding reminders.</div>');
+ }else if(studioTab==='videos'){
+  const v=studioEdit?.k==='videos'?videos.find(x=>x.id===studioEdit.id)||{}:null;const list=studioProject?videos.filter(v=>v.projectId===studioProject):videos;
+  el.innerHTML='<div class="studio-row"><strong>'+list.length+' videos</strong>'+studioButton('+ New video','newVideo',null,'primary-small')+'</div><div class="studio-card"><label>Filter by project<select id="studioProjectFilter" style="width:100%;margin-top:8px">'+studioOptions([['','All projects'],...state.projects.map(p=>[p.id,p.name])],studioProject)+'</select></label></div>'+(v!==null?studioVideoForm(v):'')+(list.length?list.slice().reverse().map(studioVideoCard).join(''):'<div class="empty">No videos here yet. Add your first build or video idea.</div>');
+  document.getElementById('studioProjectFilter').onchange=e=>{studioProject=e.target.value;renderStudio()};
+ }else if(studioTab==='tasks'){
+  const t=studioEdit?.k==='tasks'?studioRows('tasks').find(x=>x.id===studioEdit.id)||{}:null;const done=studioRows('tasks').filter(x=>x.done);
+  el.innerHTML='<div class="studio-row"><strong>'+tasks.length+' open reminders</strong>'+studioButton('+ Reminder','newTask',null,'primary-small')+'</div><p class="studio-note">Due dates are shown inside the app. Export any reminder to your calendar for notifications.</p>'+(t!==null?studioTaskForm(t):'')+(tasks.length?tasks.map(studioTaskCard).join(''):'<div class="empty">No outstanding reminders.</div>')+(done.length?'<details><summary>Completed ('+done.length+')</summary>'+done.map(studioTaskCard).join('')+'</details>':'');
+ }else{
+  const edit=studioEdit?.k==='weeks'?weeks.find(x=>x.id===studioEdit.id)||{}:null;const max=Math.max(1,...weeks.map(x=>Number(x.views)));
+  el.innerHTML='<div class="studio-row"><strong>Weekly performance</strong>'+studioButton('+ Log week','newWeek',null,'primary-small')+'</div><p class="studio-note">Manual YouTube Studio snapshots; no Google account connection yet.</p>'+(edit!==null?studioWeekForm(edit):'')+(weeks.length?'<article class="studio-card"><h3>Views by reporting week</h3><div class="studio-history">'+weeks.slice(0,12).reverse().map(x=>'<div><div class="studio-row"><span>'+esc(x.week)+'</span><strong>'+studioNum(x.views)+'</strong></div><div class="studio-bar"><i style="width:'+100*Number(x.views)/max+'%"></i></div></div>').join('')+'</div></article>'+weeks.map(x=>'<article class="studio-card"><h3>Week of '+esc(x.week)+'</h3><p>'+studioNum(x.views)+' views · '+studioNum(x.hours)+' watch hours · '+studioNum(x.subs)+' net subscribers · '+money2(x.revenue)+' estimated revenue</p><div class="studio-actions">'+studioButton('Edit','editWeek',x.id)+studioButton('Delete','deleteWeek',x.id)+'</div></article>').join(''):'<div class="empty">Log your first week to start tracking growth.</div>');
+ }
+}
+async function studioSubmit(e){
+ const f=e.target.closest('[data-studio-form]');if(!f)return;e.preventDefault();const k=f.dataset.studioForm,d=Object.fromEntries(new FormData(f));const old=studioRows(k==='money'?'videos':k).find(x=>x.id===studioEdit?.id)||{};let row;
+ if(k==='videos'){const {media,...fields}=d;row={...old,...fields,title:d.title.trim()};if(!row.title)return;if(row.url&&!studioLink(row.url))return toast('Use an http or https link');if(row.stage==='Published'&&!row.published)row.published=studioDate();if(media?.size){row.id=row.id||uid('videos');try{await studioStoreMedia(row.id,media);row.localName=media.name}catch(err){return alert('Video could not be saved on this device. Try a cloud link or a smaller file.')}}}
+ if(k==='tasks'){row={...old,...d,title:d.title.trim(),done:old.done||false};if(!row.title)return}
+ if(k==='weeks'){const dup=studioRows('weeks').find(x=>x.week===d.week&&x.id!==old.id);if(dup&&old.id)return alert('That week already exists. Edit that snapshot instead.');row={...old,...dup,week:d.week,views:Number(d.views),hours:Number(d.hours||0),subs:Number(d.subs||0),revenue:Number(d.revenue||0)}}
+ if(k==='money'){const amt=Number(d.amount);if(!(amt>0))return;state.transactions.push({id:uid('t'),projectId:'',type:'adjustment',category:'Creator: '+d.category,date:d.date,amount:amt,vendor:'',details:d.details,direction:['Equipment','Editing / software','Other creator expense'].includes(d.category)?'out':'in'});studioEdit=null;save();renderAll();toast('Creator cash recorded');return}
+ studioEdit=null;studioSave(k,row);toast('Saved');
+}
+async function studioClick(e){
+ const b=e.target.closest('[data-studio-action]');if(!b)return;const a=b.dataset.studioAction,id=b.dataset.studioId;
+ if(a==='tab'){studioTab=id;studioEdit=null;studioProject='';studioVideo=''}
+ else if(a==='cancel'){studioEdit=null;studioVideo=''}
+ else if(a==='newVideo'||a==='editVideo'){studioTab='videos';studioEdit={k:'videos',id:a==='editVideo'?id:null}}
+ else if(a==='newTask'||a==='editTask'||a==='taskForVideo'){studioTab='tasks';studioVideo=a==='taskForVideo'?id:'';studioEdit={k:'tasks',id:a==='editTask'?id:null}}
+ else if(a==='newWeek'||a==='editWeek'){studioTab='weeks';studioEdit={k:'weeks',id:a==='editWeek'?id:null}}
+ else if(a==='money'){studioTab='overview';studioEdit={k:'money'}}
+ else if(a==='nextVideo'){const v=studioRows('videos').find(x=>x.id===id);if(v){const stage=stages[Math.min(stages.length-1,stages.indexOf(v.stage)+1)];studioSave('videos',{...v,stage,published:stage==='Published'?(v.published||studioDate()):v.published})}return}
+ else if(a==='toggleTask'){const t=studioRows('tasks').find(x=>x.id===id);if(t)studioSave('tasks',{...t,done:!t.done});return}
+ else if(a.startsWith('delete')){const k={deleteVideo:'videos',deleteTask:'tasks',deleteWeek:'weeks'}[a];const x=studioRows(k).find(x=>x.id===id);if(x&&confirm('Delete this record?')){if(k==='videos')try{await studioDeleteMedia(id)}catch{}studioSave(k,{...x,deleted:true});toast('Deleted')}return}
+ else if(a==='calendar'){const t=studioRows('tasks').find(x=>x.id===id);if(t?.due)studioCalendar(t);return}
+ else if(a==='playVideo'){await studioPlayMedia(id);return}
+ renderStudio();
+}
+function studioCalendar(t){const clean=x=>String(x||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');const date=t.due.replaceAll('-','');const stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';downloadBlob(['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//FlipLedger//Studio//EN','BEGIN:VEVENT','UID:'+t.id+'@flipledger','DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+date,'SUMMARY:'+clean(t.title),'DESCRIPTION:'+clean(t.notes),'BEGIN:VALARM','TRIGGER:-PT9H','ACTION:DISPLAY','DESCRIPTION:'+clean(t.title),'END:VALARM','END:VEVENT','END:VCALENDAR',''].join('\r\n'),'flipledger-reminder.ics','text/calendar');toast('Calendar file ready')}
+function studioMediaDB(){return new Promise((resolve,reject)=>{const q=indexedDB.open('flipledger-studio-media',1);q.onupgradeneeded=()=>q.result.createObjectStore('videos');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)})}
+async function studioMediaOp(mode,fn){const db=await studioMediaDB();return new Promise((resolve,reject)=>{const tx=db.transaction('videos',mode),req=fn(tx.objectStore('videos'));tx.oncomplete=()=>{db.close();resolve(req.result)};tx.onerror=tx.onabort=()=>{db.close();reject(tx.error||req.error)}})}
+function studioMediaKey(id){return (window.FlipLedgerCloud?.user?.id||localStorage.getItem(LOCAL_OWNER_KEY)||'local')+':'+id}
+function studioStoreMedia(id,file){return studioMediaOp('readwrite',s=>s.put(file,studioMediaKey(id)))}
+function studioDeleteMedia(id){return studioMediaOp('readwrite',s=>s.delete(studioMediaKey(id)))}
+async function studioPlayMedia(id){try{const file=await studioMediaOp('readonly',s=>s.get(studioMediaKey(id)));if(!file)return alert('The attachment is not on this device. Use its cloud link or reattach it.');const dialog=document.createElement('dialog');dialog.className='sheet-dialog';mediaURL=URL.createObjectURL(file);dialog.innerHTML='<div class="dialog-head"><h2>Local video</h2><button class="icon-btn">✕</button></div><video class="studio-video" controls playsinline></video>';dialog.querySelector('video').src=mediaURL;dialog.querySelector('button').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{URL.revokeObjectURL(mediaURL);mediaURL=null;dialog.remove()});document.body.append(dialog);dialog.showModal()}catch{alert('Unable to open local video.')}}
+
+setupStudio();renderAdd();renderAll();initCloud();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
