@@ -1,4 +1,4 @@
-const CACHE='flipledger-v4-cloud';
+const CACHE='flipledger-v5-studio';
 const ASSETS=['./','./index.html','./styles.css','./app.js','./cloud.js','../assets/cloud-config.js','./manifest.json','./icon.svg'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(
